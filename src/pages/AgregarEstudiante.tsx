@@ -13,28 +13,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export default function AddStudent() {
+export default function AgregarEstudiante() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    lastName: "",
-    firstName: "",
+    apellido: "",
+    nombre: "",
     dni: "",
-    career: "",
-    commissionId: "",
+    carrera: "",
+    comision_id: "",
   });
 
   const handleChange = (field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.lastName.trim() || !form.firstName.trim() || !form.dni.trim() || !form.career.trim()) {
+    if (!form.apellido.trim() || !form.nombre.trim() || !form.dni.trim() || !form.carrera.trim()) {
       toast.error("Por favor completá todos los campos obligatorios.");
       return;
     }
-    // Mock: just navigate back with success
-    toast.success(`Estudiante ${form.lastName}, ${form.firstName} creado exitosamente.`);
+    const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/estudiantes`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        }
+      );
+
+    if (!res.ok) throw new Error("Error al guardar la publicación");
+    toast.success(`Estudiante ${form.apellido}, ${form.nombre} creado exitosamente.`);
     navigate("/?view=students");
   };
 
@@ -62,21 +71,21 @@ export default function AddStudent() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="space-y-2">
-                <Label htmlFor="lastName">Apellido *</Label>
+                <Label htmlFor="apellido">Apellido *</Label>
                 <Input
-                  id="lastName"
+                  id="apellido"
                   placeholder="Ej: Martínez"
-                  value={form.lastName}
-                  onChange={e => handleChange("lastName", e.target.value)}
+                  value={form.apellido}
+                  onChange={e => handleChange("apellido", e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="firstName">Nombre *</Label>
+                <Label htmlFor="nombre">Nombre *</Label>
                 <Input
-                  id="firstName"
+                  id="nombre"
                   placeholder="Ej: Lucía"
-                  value={form.firstName}
-                  onChange={e => handleChange("firstName", e.target.value)}
+                  value={form.nombre}
+                  onChange={e => handleChange("nombre", e.target.value)}
                 />
               </div>
             </div>
@@ -92,12 +101,12 @@ export default function AddStudent() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="career">Carrera *</Label>
+                <Label htmlFor="carrera">Carrera *</Label>
                 <Input
-                  id="career"
+                  id="carrera"
                   placeholder="Ej: Lic. en Informática"
-                  value={form.career}
-                  onChange={e => handleChange("career", e.target.value)}
+                  value={form.carrera}
+                  onChange={e => handleChange("carrera", e.target.value)}
                 />
               </div>
             </div>
@@ -105,8 +114,8 @@ export default function AddStudent() {
             <div className="space-y-2">
               <Label htmlFor="commission">Comisión (opcional)</Label>
               <Select
-                value={form.commissionId}
-                onValueChange={val => handleChange("commissionId", val)}
+                value={form.comision_id}
+                onValueChange={val => handleChange("comision_id", val)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar comisión..." />

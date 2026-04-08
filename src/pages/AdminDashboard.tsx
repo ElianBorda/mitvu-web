@@ -1,25 +1,77 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { commissions, tutors, students, attendanceByCommission, getCommissionAvgAttendance } from "@/data/mockData";
+import { commissions, attendanceByCommission, getCommissionAvgAttendance } from "@/data/mockData";
 import DataTable from "@/components/DataTable";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 
-type AdminView = "commissions" | "tutors" | "students";
+type AdminView = "commissions" | "tutores" | "estudiantes";
 
 export default function AdminDashboard() {
   const [view, setView] = useState<AdminView>("commissions");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const [estudiantes, setEstudiantes] = useState<any[]>([]);
+  const [tutores, setTutores] = useState<any[]>([]);
+
   useEffect(() => {
     const viewParam = searchParams.get("view");
-    if (viewParam === "students") {
-      setView("students");
+    if (viewParam === "estudiantes") {
+      setView("estudiantes");
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, setSearchParams]);
 
-  const totalStudents = students.length;
+  useEffect(() => {
+    const fetchEstudiantes = async () => {
+
+      try {
+        const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/estudiantes`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+        if (!res.ok) {
+          const html = await res.text();
+          throw new Error("Error HTTP: " + res.status + "\n" + html);
+        }
+
+        const data = await res.json();
+        setEstudiantes(data);
+      } catch (error) {
+        console.error("Error al obtener estudiantes:", error);
+      }
+    };
+
+    const fetchTutores = async () => {
+      try {
+        const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/tutores`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      if (!res.ok) {
+          const html = await res.text();
+          throw new Error("Error HTTP: " + res.status + "\n" + html);
+        }
+
+        const data = await res.json();
+        setTutores(data);
+      } catch (error) {
+        console.error("Error al obtener tutores:", error);
+      }
+    };
+
+    fetchEstudiantes();
+    fetchTutores();
+  }, []);
+
+  const totalStudents = estudiantes.length;
   const avgGlobal = Math.round(
     commissions.reduce((s, c) => s + getCommissionAvgAttendance(c.id), 0) / commissions.length
   );
@@ -37,7 +89,7 @@ export default function AdminDashboard() {
   }));
 
   const localityData = Object.entries(
-    students.reduce<Record<string, number>>((acc, s) => {
+    estudiantes.reduce<Record<string, number>>((acc, s) => {
       const comm = commissions.find(c => c.id === s.commissionId);
       const loc = comm?.locality || "Otro";
       acc[loc] = (acc[loc] || 0) + 1;
@@ -48,38 +100,38 @@ export default function AdminDashboard() {
   const PIE_COLORS = ["hsl(350,82%,27%)", "hsl(350,82%,45%)", "hsl(350,82%,60%)", "hsl(0,0%,80%)"];
 
   const commissionData = commissions.map(c => {
-    const t = tutors.find(tt => tt.id === c.tutorId);
+    const t = tutores.find(tt => tt.id === c.tutorId);
     return {
       nombre: c.name,
       localidad: c.locality,
       departamento: c.department,
       horario: c.schedule,
-      tutor: t ? `${t.lastName}, ${t.firstName}` : "—",
+      tutor: t ? `${t.apellido}, ${t.nombre}` : "—",
       estudiantes: c.studentIds.length,
       asistencia: `${getCommissionAvgAttendance(c.id)}%`,
     };
   });
 
-  const tutorData = tutors.map(t => ({
-    apellido: t.lastName,
-    nombre: t.firstName,
-    mail: t.email,
-    horario: t.preferredSchedule,
-    localidad: t.locality,
-    comisiones: t.commissionIds.length,
+  const tutorData = tutores.map(t => ({
+    apellido: t.apellido,
+    nombre: t.nombre,
+    // mail: t.email,
+    // horario: t.preferredSchedule,
+    // localidad: t.locality,
+    comisiones: t.comisiones_ids.length,
   }));
 
-  const studentData = students.map(s => {
+  const studentData = estudiantes.map(s => {
     const comm = commissions.find(c => c.id === s.commissionId);
-    const pres = s.attendance.filter(a => a === "present").length;
-    const total = s.attendance.filter(a => a !== "none").length;
+    // const pres = s.attendance.filter(a => a === "present").length;
+    // const total = s.attendance.filter(a => a !== "none").length;
     return {
-      apellido: s.lastName,
-      nombre: s.firstName,
+      apellido: s.apellido,
+      nombre: s.nombre,
       dni: s.dni,
-      carrera: s.career,
-      comision: comm?.name || "—",
-      estado: total > 0 ? `${Math.round((pres / total) * 100)}%` : "—",
+      carrera: s.carrera,
+      comision: comm?.name || "No especificada",
+      // estado: total > 0 ? `${Math.round((pres / total) * 100)}%` : "—",
     };
   });
 
@@ -97,7 +149,7 @@ export default function AdminDashboard() {
       data: commissionData,
       addLabel: "Agregar comisión",
     },
-    tutors: {
+    tutores: {
       columns: [
         { key: "apellido", label: "Apellido" },
         { key: "nombre", label: "Nombre" },
@@ -109,7 +161,7 @@ export default function AdminDashboard() {
       data: tutorData,
       addLabel: "Agregar tutor",
     },
-    students: {
+    estudiantes: {
       columns: [
         { key: "apellido", label: "Apellido" },
         { key: "nombre", label: "Nombre" },
@@ -126,8 +178,8 @@ export default function AdminDashboard() {
   const config = tableConfigs[view];
   const tabs: { id: AdminView; label: string }[] = [
     { id: "commissions", label: "Comisiones" },
-    { id: "tutors", label: "Tutores" },
-    { id: "students", label: "Estudiantes" },
+    { id: "tutores", label: "Tutores" },
+    { id: "estudiantes", label: "Estudiantes" },
   ];
 
   return (
@@ -152,8 +204,11 @@ export default function AdminDashboard() {
           columns={config.columns}
           data={config.data}
           onAdd={() => {
-            if (view === "students") {
-              navigate("/admin/add-student");
+            if (view === "estudiantes") {
+              navigate("/admin/agregar-estudiante");
+            }
+            if (view === "tutores") {
+              navigate("/admin/agregar-tutor");
             }
           }}
           addLabel={config.addLabel}
