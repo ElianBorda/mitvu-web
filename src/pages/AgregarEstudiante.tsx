@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import { commissions } from "@/data/mockData";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +21,7 @@ export default function AgregarEstudiante() {
     carrera: "",
     comision_id: "",
   });
+  const [comisiones, setComisiones] = useState<any[]>([]);
 
   const handleChange = (field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -41,11 +41,28 @@ export default function AgregarEstudiante() {
           body: JSON.stringify(form),
         }
       );
+      console.log(form);
 
     if (!res.ok) throw new Error("Error al guardar la publicación");
     toast.success(`Estudiante ${form.apellido}, ${form.nombre} creado exitosamente.`);
     navigate("/?view=students");
   };
+
+  const fetchComisiones = async () => {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/comisiones`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    if (!res.ok) throw new Error("Error al cargar las comisiones");
+    const data = await res.json();
+    setComisiones(data);
+  }
+
+  useEffect(() => {
+    fetchComisiones();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -112,20 +129,27 @@ export default function AgregarEstudiante() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="commission">Comisión (opcional)</Label>
+              <Label htmlFor="comision">Comisión (opcional)</Label>
               <Select
                 value={form.comision_id}
                 onValueChange={val => handleChange("comision_id", val)}
+                onOpenChange={fetchComisiones}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar comisión..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {commissions.map(c => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name} — {c.locality}
-                    </SelectItem>
-                  ))}
+                  {comisiones.length === 0 ? (
+                    <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+                      Aún no hay comisiones en el sistema
+                    </div>
+                  ) : (
+                    comisiones.map(c => (
+                      <SelectItem key={c.id} value={c.id}>
+                        Comision {c.numero} - {c.departamento} - {c.localidad} - {c.horarioInicio} a {c.horarioFin}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>

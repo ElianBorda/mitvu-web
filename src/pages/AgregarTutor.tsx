@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ChevronDown, Check } from "lucide-react";
-import { commissions } from "@/data/mockData";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,8 +16,10 @@ export default function AgregarTutor() {
     apellido: "",
     nombre: "",
     dni: "",
+    mail: "",
     comisiones_ids: [] as string[],
   });
+  const [comisiones, setComisiones] = useState<any[]>([]);
 
   const handleChange = (field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -53,9 +54,21 @@ export default function AgregarTutor() {
     navigate("/?view=tutors");
   };
 
-  const selectedLabels = commissions
+  const fetchComisiones = async () => {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/comisiones/sin-tutor`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    if (!res.ok) throw new Error("Error al cargar las comisiones");
+    const data = await res.json();
+    setComisiones(data);
+  }
+
+  const selectedLabels = comisiones
     .filter(c => form.comisiones_ids.includes(c.id))
-    .map(c => c.name);
+    .map(c => c.horarioInicio.hora + ":00" + " a " + c.horarioFin.hora + ":00" + " - " + c.departamento + " - " + c.localidad);
 
   return (
     <div className="min-h-screen bg-background">
@@ -99,6 +112,16 @@ export default function AgregarTutor() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="mail">Correo electrónico *</Label>
+              <Input
+                id="mail"
+                placeholder="Ej: carlos.gonzalez@example.com"
+                value={form.mail}
+                onChange={e => handleChange("mail", e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="dni">DNI *</Label>
               <Input
                 id="dni"
@@ -115,6 +138,7 @@ export default function AgregarTutor() {
                   <button
                     type="button"
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    onClick={fetchComisiones}
                   >
                     <span className="truncate text-muted-foreground">
                       {selectedLabels.length > 0
@@ -125,7 +149,14 @@ export default function AgregarTutor() {
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-1 max-h-60 overflow-y-auto" align="start">
-                  {commissions.map(c => {
+                  {comisiones.map(c => {
+                    if (comisiones.length === 0) {
+                      return (
+                        <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+                          Aún no hay comisiones en el sistema
+                        </div>
+                      );
+                    }
                     const selected = form.comisiones_ids.includes(c.id);
                     return (
                       <button
@@ -137,7 +168,7 @@ export default function AgregarTutor() {
                         <span className="flex h-4 w-4 items-center justify-center rounded border border-primary shrink-0">
                           {selected && <Check className="h-3 w-3 text-primary" />}
                         </span>
-                        {c.name} — {c.locality}
+                        Comision {c.numero} - {c.departamento} - {c.localidad} - {c.horarioInicio.hora}:00 a {c.horarioFin.hora}:00
                       </button>
                     );
                   })}
