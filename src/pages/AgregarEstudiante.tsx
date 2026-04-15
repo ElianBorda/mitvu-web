@@ -41,8 +41,6 @@ export default function AgregarEstudiante() {
           body: JSON.stringify(form),
         }
       );
-      console.log(form);
-
     if (!res.ok) throw new Error("Error al guardar la publicación");
     toast.success(`Estudiante ${form.apellido}, ${form.nombre} creado exitosamente.`);
     navigate("/?view=students");

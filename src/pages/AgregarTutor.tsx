@@ -149,29 +149,28 @@ export default function AgregarTutor() {
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-1 max-h-60 overflow-y-auto" align="start">
-                  {comisiones.map(c => {
-                    if (comisiones.length === 0) {
-                      return (
-                        <div className="px-2 py-4 text-sm text-muted-foreground text-center">
-                          Aún no hay comisiones en el sistema
-                        </div>
-                      );
-                    }
-                    const selected = form.comisiones_ids.includes(c.id);
-                    return (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => toggleCommission(c.id)}
-                        className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer"
-                      >
-                        <span className="flex h-4 w-4 items-center justify-center rounded border border-primary shrink-0">
-                          {selected && <Check className="h-3 w-3 text-primary" />}
-                        </span>
-                        Comision {c.numero} - {c.departamento} - {c.localidad} - {c.horarioInicio.hora}:00 a {c.horarioFin.hora}:00
-                      </button>
-                    );
-                  })}
+                  {comisiones.length === 0 ? (
+    <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+      Aún no hay comisiones en el sistema
+    </div>
+  ) : (
+    comisiones.map(c => {
+      const selected = form.comisiones_ids.includes(c.id);
+      return (
+        <button
+          key={c.id}
+          type="button"
+          onClick={() => toggleCommission(c.id)}
+          className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer"
+        >
+          <span className="flex h-4 w-4 items-center justify-center rounded border border-primary shrink-0">
+            {selected && <Check className="h-3 w-3 text-primary" />}
+          </span>
+          Comision {c.numero} - {c.departamento} - {c.localidad} - {c.horarioInicio.hora}:00 a {c.horarioFin.hora}:00
+        </button>
+      );
+    })
+  )}
                 </PopoverContent>
               </Popover>
             </div>
