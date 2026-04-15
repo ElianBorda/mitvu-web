@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { commissions, attendanceByCommission, getCommissionAvgAttendance } from "@/data/mockData";
+import { attendanceByCommission, getCommissionAvgAttendance } from "@/data/mockData";
 import DataTable from "@/components/DataTable";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-type AdminView = "commissions" | "tutores" | "estudiantes";
+type AdminView = "comisiones" | "tutores" | "estudiantes";
 
 export default function AdminDashboard() {
-  const [view, setView] = useState<AdminView>("commissions");
+  const [view, setView] = useState<AdminView>("comisiones");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [estudiantes, setEstudiantes] = useState<any[]>([]);
   const [tutores, setTutores] = useState<any[]>([]);
+  const [comisiones, setComisiones] = useState<any[]>([]);
 
   useEffect(() => {
     const viewParam = searchParams.get("view");
@@ -65,18 +67,63 @@ export default function AdminDashboard() {
       } catch (error) {
         console.error("Error al obtener tutores:", error);
       }
+
+      
     };
 
+    const fetchComisiones = async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/comisiones`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+        if (!res.ok) {
+          const html = await res.text();
+          throw new Error("Error HTTP: " + res.status + "\n" + html);
+        }
+        const data = await res.json();
+        setComisiones(data);
+      } catch (error) {
+        console.error("Error al obtener comisiones:", error);
+      }
+    };
+    
+    fetchComisiones();
     fetchEstudiantes();
     fetchTutores();
   }, []);
 
-  const totalStudents = estudiantes.length;
+  const asignarComision = async (estudianteId: number, comisionId: number) => {
+    console.log(`Asignar estudiante ${estudianteId} a comisión ${comisionId}`);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/estudiantes/${estudianteId}/asignar-comision/${comisionId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ estudianteId, comisionId }),
+        }
+      );
+      if (!res.ok) {
+        const html = await res.text();
+        throw new Error("Error HTTP: " + res.status + "\n" + html);
+      }
+      const data = await res.json();
+      setEstudiantes((prev) => prev.map(e => e.id === estudianteId ? { ...e, comision_id: comisionId } : e));
+    } catch (error) {
+      console.error("Error al asignar comisión:", error);
+    }
+  };
+
+  const totalEstudiantes = estudiantes.length;
   const avgGlobal = Math.round(
-    commissions.reduce((s, c) => s + getCommissionAvgAttendance(c.id), 0) / commissions.length
+    comisiones.reduce((s, c) => s + getCommissionAvgAttendance(c.id), 0) / comisiones.length
   );
 
-  const barData = commissions.map(c => ({
+  const barData = comisiones.map(c => ({
     name: c.name,
     asistencia: getCommissionAvgAttendance(c.id),
   }));
@@ -84,13 +131,13 @@ export default function AdminDashboard() {
   const lineData = Array.from({ length: 6 }, (_, i) => ({
     name: `Enc. ${i + 1}`,
     asistencia: Math.round(
-      commissions.reduce((s, c) => s + (attendanceByCommission[c.id]?.[i]?.percentage || 0), 0) / commissions.length
+      comisiones.reduce((s, c) => s + (attendanceByCommission[c.id]?.[i]?.percentage || 0), 0) / comisiones.length
     ),
   }));
 
   const localityData = Object.entries(
     estudiantes.reduce<Record<string, number>>((acc, s) => {
-      const comm = commissions.find(c => c.id === s.commissionId);
+      const comm = comisiones.find(c => c.id === s.comisionId);
       const loc = comm?.locality || "Otro";
       acc[loc] = (acc[loc] || 0) + 1;
       return acc;
@@ -99,54 +146,102 @@ export default function AdminDashboard() {
 
   const PIE_COLORS = ["hsl(350,82%,27%)", "hsl(350,82%,45%)", "hsl(350,82%,60%)", "hsl(0,0%,80%)"];
 
-  const commissionData = commissions.map(c => {
+  const comisionData = comisiones.map(c => {
     const t = tutores.find(tt => tt.id === c.tutorId);
     return {
-      nombre: c.name,
-      localidad: c.locality,
-      departamento: c.department,
-      horario: c.schedule,
-      tutor: t ? `${t.apellido}, ${t.nombre}` : "—",
-      estudiantes: c.studentIds.length,
-      asistencia: `${getCommissionAvgAttendance(c.id)}%`,
+      numero: c.numero,
+      localidad: c.localidad,
+      departamento: c.departamento,
+      turno: c.turno,
+      tutor: t ? `${t.apellido}, ${t.nombre}` : "No definido",
+      // estudiantes: c.estudianteIds.length,
+      // asistencia: `${getCommissionAvgAttendance(c.id)}%`,
     };
   });
 
   const tutorData = tutores.map(t => ({
     apellido: t.apellido,
     nombre: t.nombre,
-    // mail: t.email,
+    mail: t.mail,
     // horario: t.preferredSchedule,
     // localidad: t.locality,
     comisiones: t.comisiones_ids.length,
   }));
 
-  const studentData = estudiantes.map(s => {
-    const comm = commissions.find(c => c.id === s.commissionId);
+  const estudianteData = estudiantes.map(e => {
+    const com = comisiones.find(c => c.id === e.comision_id);
     // const pres = s.attendance.filter(a => a === "present").length;
     // const total = s.attendance.filter(a => a !== "none").length;
     return {
-      apellido: s.apellido,
-      nombre: s.nombre,
-      dni: s.dni,
-      carrera: s.carrera,
-      comision: comm?.name || "No especificada",
+      apellido: e.apellido,
+      nombre: e.nombre,
+      dni: e.dni,
+      carrera: e.carrera,
+      comision: (
+  <div className="flex items-center gap-2">
+    {com ? (
+  <span>Comisión {com.numero} - {com.departamento} - {com.localidad}</span>
+) : (
+
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:opacity-90"
+        >
+          Asignar +
+        </button>
+      </PopoverTrigger>
+
+      <PopoverContent
+        className="w-72 p-1 max-h-60 overflow-y-auto"
+        align="start"
+      >
+        {comisiones.length === 0 ? (
+          <div className="px-2 py-3 text-sm text-muted-foreground text-center">
+            No hay comisiones disponibles
+          </div>
+        ) : (
+          <>
+            <div className="px-2 py-1 text-xs text-muted-foreground">
+              Seleccionar comisión
+            </div>
+
+            {comisiones.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => {
+                  asignarComision(e.id, c.id);
+                }}
+                className="w-full text-left px-2 py-2 rounded text-sm hover:bg-accent hover:text-accent-foreground"
+              >
+                Comisión {c.numero} - {c.departamento} - {c.localidad} - {c.horarioInicio.hora}:00
+              </button>
+            ))}
+          </>
+        )}
+      </PopoverContent>
+    </Popover>
+)}
+  </div>
+)
       // estado: total > 0 ? `${Math.round((pres / total) * 100)}%` : "—",
     };
   });
 
   const tableConfigs: Record<AdminView, { columns: { key: string; label: string }[]; data: Record<string, any>[]; addLabel: string }> = {
-    commissions: {
+    comisiones: {
       columns: [
         { key: "nombre", label: "Nombre" },
         { key: "localidad", label: "Localidad" },
         { key: "departamento", label: "Departamento" },
-        { key: "horario", label: "Horario" },
+        { key: "turno", label: "Turno" },
         { key: "tutor", label: "Tutor/a" },
         { key: "estudiantes", label: "Estudiantes" },
         { key: "asistencia", label: "Asistencia %" },
       ],
-      data: commissionData,
+      data: comisionData,
       addLabel: "Agregar comisión",
     },
     tutores: {
@@ -170,14 +265,14 @@ export default function AdminDashboard() {
         { key: "comision", label: "Comisión" },
         { key: "estado", label: "Estado" },
       ],
-      data: studentData,
+      data: estudianteData,
       addLabel: "Agregar estudiante",
     },
   };
 
   const config = tableConfigs[view];
   const tabs: { id: AdminView; label: string }[] = [
-    { id: "commissions", label: "Comisiones" },
+    { id: "comisiones", label: "Comisiones" },
     { id: "tutores", label: "Tutores" },
     { id: "estudiantes", label: "Estudiantes" },
   ];
@@ -222,7 +317,7 @@ export default function AdminDashboard() {
         {/* KPI cards */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-card rounded-lg shadow-card border border-border p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">{totalStudents}</p>
+            <p className="text-2xl font-bold text-foreground">{totalEstudiantes}</p>
             <p className="text-[10px] text-muted-foreground mt-1">Total estudiantes</p>
           </div>
           <div className="bg-card rounded-lg shadow-card border border-border p-4 text-center">
