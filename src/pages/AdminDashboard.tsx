@@ -4,6 +4,7 @@ import { attendanceByCommission, getCommissionAvgAttendance } from "@/data/mockD
 import DataTable from "@/components/DataTable";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Comision } from "@/types/comisionType";
 
 type AdminView = "comisiones" | "tutores" | "estudiantes";
 
@@ -14,12 +15,15 @@ export default function AdminDashboard() {
 
   const [estudiantes, setEstudiantes] = useState<any[]>([]);
   const [tutores, setTutores] = useState<any[]>([]);
-  const [comisiones, setComisiones] = useState<any[]>([]);
+  const [comisiones, setComisiones] = useState<Comision[]>([]);
 
   useEffect(() => {
     const viewParam = searchParams.get("view");
     if (viewParam === "estudiantes") {
       setView("estudiantes");
+      setSearchParams({}, { replace: true });
+    } else if (viewParam === "commissions") {
+      setView("comisiones");
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, setSearchParams]);
@@ -96,7 +100,7 @@ export default function AdminDashboard() {
     fetchTutores();
   }, []);
 
-  const asignarComision = async (estudianteId: number, comisionId: number) => {
+  const asignarComision = async (estudianteId: number, comisionId: string) => {
     console.log(`Asignar estudiante ${estudianteId} a comisión ${comisionId}`);
     try {
       const res = await fetch(
@@ -124,8 +128,8 @@ export default function AdminDashboard() {
   );
 
   const barData = comisiones.map(c => ({
-    name: c.name,
-    asistencia: getCommissionAvgAttendance(c.id),
+    name: 'comision',
+    asistencia: 'No definido',
   }));
 
   const lineData = Array.from({ length: 6 }, (_, i) => ({
@@ -138,7 +142,7 @@ export default function AdminDashboard() {
   const localityData = Object.entries(
     estudiantes.reduce<Record<string, number>>((acc, s) => {
       const comm = comisiones.find(c => c.id === s.comisionId);
-      const loc = comm?.locality || "Otro";
+      const loc = comm?.localidad || "Otro";
       acc[loc] = (acc[loc] || 0) + 1;
       return acc;
     }, {})
@@ -147,8 +151,9 @@ export default function AdminDashboard() {
   const PIE_COLORS = ["hsl(350,82%,27%)", "hsl(350,82%,45%)", "hsl(350,82%,60%)", "hsl(0,0%,80%)"];
 
   const comisionData = comisiones.map(c => {
-    const t = tutores.find(tt => tt.id === c.tutorId);
+    const t = tutores.find(tt => tt.id === c.tutor.id);
     return {
+      id: c.id,
       numero: c.numero,
       localidad: c.localidad,
       departamento: c.departamento,
@@ -216,7 +221,7 @@ export default function AdminDashboard() {
                 }}
                 className="w-full text-left px-2 py-2 rounded text-sm hover:bg-accent hover:text-accent-foreground"
               >
-                Comisión {c.numero} - {c.departamento} - {c.localidad} - {c.horarioInicio.hora}:00
+                Comisión {c.numero} - {c.departamento} - {c.localidad} - {c.horarioInicio}
               </button>
             ))}
           </>
@@ -305,8 +310,15 @@ export default function AdminDashboard() {
             if (view === "tutores") {
               navigate("/admin/agregar-tutor");
             }
+            if (view === "comisiones") {
+              navigate("/admin/agregar-comision");
+            }
           }}
           addLabel={config.addLabel}
+          onEdit={(row) => {
+            if (view === "comisiones" && row.id) navigate(`/admin/editar-comision/${row.id}`);
+          }}
+
         />
       </div>
 
