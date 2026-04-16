@@ -1,4 +1,4 @@
-import { Tutor } from "./tutorType";
+import { Tutor } from "./TutorType";
 
 export type ComisionBody = {
   localidad: string;

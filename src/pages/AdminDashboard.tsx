@@ -4,7 +4,7 @@ import { attendanceByCommission, getCommissionAvgAttendance } from "@/data/mockD
 import DataTable from "@/components/DataTable";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Comision } from "@/types/comisionType";
+import { Comision } from "@/types/ComisionType";
 
 type AdminView = "comisiones" | "tutores" | "estudiantes";
 
