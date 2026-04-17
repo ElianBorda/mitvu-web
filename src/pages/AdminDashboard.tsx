@@ -318,7 +318,11 @@ export default function AdminDashboard() {
           onEdit={(row) => {
             if (view === "comisiones" && row.id) navigate(`/admin/editar-comision/${row.id}`);
           }}
-
+          onDelete={(row, index) => {
+            const dataCon = [...config.data];
+            dataCon.splice(index, 1);
+            config.data = dataCon;
+          }}
         />
       </div>
 

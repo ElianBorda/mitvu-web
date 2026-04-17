@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { de } from "date-fns/locale";
 import { deleteComision } from "@/service/ApiComision";
+import { set } from "date-fns";
 
 
 interface Column {
@@ -26,22 +27,23 @@ interface Props {
   onAdd?: () => void;
   addLabel?: string;
   onEdit?: (row: Record<string, any>) => void;
+  onDelete?: (row: Record<string, any>, index: number) => void;
 }
 
-export default function DataTable({ columns, data, onAdd, addLabel = "Agregar", onEdit }: Props) {
+export default function DataTable({ columns, data, onAdd, addLabel = "Agregar", onEdit, onDelete }: Props) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const perPage = 10;
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
 
   const handleConfirmDelete = () => {
-    data.splice(deleteIndex, 1);
     deleteComision(data[deleteIndex].id).then(() => {
       toast.success("Elemento eliminado correctamente");
+      onDelete?.(data, deleteIndex);
       setDeleteIndex(null);
     }).catch(() => {
       toast.error("Error al eliminar el elemento");
-    })
+    }) 
   };
 
   const filtered = data.filter(row =>
