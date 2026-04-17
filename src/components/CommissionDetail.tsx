@@ -74,9 +74,9 @@ export default function CommissionDetail({ commission, role, onBack }: Props) {
                     <th className="px-4 py-2.5 text-left font-medium">Nº</th>
                     <th className="px-4 py-2.5 text-left font-medium">Apellido</th>
                     <th className="px-4 py-2.5 text-left font-medium">Nombre</th>
-                    <th className="px-4 py-2.5 text-left font-medium">DNI</th>
                     <th className="px-4 py-2.5 text-left font-medium">Carrera</th>
-                    <th className="px-4 py-2.5 text-left font-medium">Asistencia</th>
+                    {role === "tutor" && <th className="px-4 py-2.5 text-left font-medium">DNI</th>}
+                    {role === "tutor" && <th className="px-4 py-2.5 text-left font-medium">Asistencia</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -89,15 +89,17 @@ export default function CommissionDetail({ commission, role, onBack }: Props) {
                         <td className="px-4 py-2.5 text-muted-foreground">{i + 1}</td>
                         <td className="px-4 py-2.5 font-medium text-foreground">{s.lastName}</td>
                         <td className="px-4 py-2.5 text-foreground">{s.firstName}</td>
-                        <td className="px-4 py-2.5 text-muted-foreground">{s.dni}</td>
+                        {role === "tutor" && <td className="px-4 py-2.5 text-muted-foreground">{s.dni}</td>}
                         <td className="px-4 py-2.5 text-muted-foreground">{s.career}</td>
-                        <td className="px-4 py-2.5">
-                          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                            pct >= 75 ? "bg-green-100 text-green-700" : pct >= 50 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
-                          }`}>
-                            {pct}%
-                          </span>
-                        </td>
+                        {role === "tutor" && (
+                          <td className="px-4 py-2.5">
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                              pct >= 75 ? "bg-green-100 text-green-700" : pct >= 50 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
+                            }`}>
+                              {pct}%
+                            </span>
+                          </td>
+                        )}
                       </tr>
                     );
                   })}
