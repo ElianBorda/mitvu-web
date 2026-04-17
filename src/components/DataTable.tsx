@@ -25,25 +25,28 @@ interface Props {
   columns: Column[];
   data: Record<string, any>[];
   onAdd?: () => void;
+  view?: string;
   addLabel?: string;
   onEdit?: (row: Record<string, any>) => void;
   onDelete?: (row: Record<string, any>, index: number) => void;
 }
 
-export default function DataTable({ columns, data, onAdd, addLabel = "Agregar", onEdit, onDelete }: Props) {
+export default function DataTable({ columns, data, onAdd, addLabel = "Agregar", onEdit, onDelete, view}: Props) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const perPage = 10;
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
 
   const handleConfirmDelete = () => {
-    deleteComision(data[deleteIndex].id).then(() => {
-      toast.success("Elemento eliminado correctamente");
-      onDelete?.(data, deleteIndex);
-      setDeleteIndex(null);
-    }).catch(() => {
-      toast.error("Error al eliminar el elemento");
-    }) 
+    if (view === "comisiones") {
+      deleteComision(data[deleteIndex].id).then(() => {
+        toast.success("Elemento eliminado correctamente");
+        onDelete?.(data, deleteIndex);
+        setDeleteIndex(null);
+      }).catch(() => {
+        toast.error("Error al eliminar el elemento");
+      }) 
+    }
   };
 
   const filtered = data.filter(row =>

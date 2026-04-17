@@ -12,10 +12,11 @@ export default function AdminDashboard() {
   const [view, setView] = useState<AdminView>("comisiones");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-
   const [estudiantes, setEstudiantes] = useState<any[]>([]);
   const [tutores, setTutores] = useState<any[]>([]);
   const [comisiones, setComisiones] = useState<Comision[]>([]);
+  const [clickDelete, setClickDelete] = useState(false);
+
 
   useEffect(() => {
     const viewParam = searchParams.get("view");
@@ -28,8 +29,7 @@ export default function AdminDashboard() {
     }
   }, [searchParams, setSearchParams]);
 
-  useEffect(() => {
-    const fetchEstudiantes = async () => {
+ const fetchEstudiantes = async () => {
 
       try {
         const res = await fetch(
@@ -94,11 +94,12 @@ export default function AdminDashboard() {
         console.error("Error al obtener comisiones:", error);
       }
     };
-    
+
+  useEffect(() => {
     fetchComisiones();
     fetchEstudiantes();
     fetchTutores();
-  }, []);
+  }, [clickDelete]);
 
   const asignarComision = async (estudianteId: number, comisionId: string) => {
     console.log(`Asignar estudiante ${estudianteId} a comisión ${comisionId}`);
@@ -151,7 +152,7 @@ export default function AdminDashboard() {
   const PIE_COLORS = ["hsl(350,82%,27%)", "hsl(350,82%,45%)", "hsl(350,82%,60%)", "hsl(0,0%,80%)"];
 
   const comisionData = comisiones.map(c => {
-    const t = tutores.find(tt => tt.id === c.tutor.id);
+    const t = tutores.find(tt => tt.id === (c.tutor?.id || ""));
     return {
       id: c.id,
       numero: c.numero,
@@ -282,6 +283,8 @@ export default function AdminDashboard() {
     { id: "estudiantes", label: "Estudiantes" },
   ];
 
+  
+
   return (
     <div className="flex flex-col xl:flex-row gap-6">
       {/* Left: Table */}
@@ -303,6 +306,7 @@ export default function AdminDashboard() {
         <DataTable
           columns={config.columns}
           data={config.data}
+          view={view}
           onAdd={() => {
             if (view === "estudiantes") {
               navigate("/admin/agregar-estudiante");
@@ -322,6 +326,7 @@ export default function AdminDashboard() {
             const dataCon = [...config.data];
             dataCon.splice(index, 1);
             config.data = dataCon;
+            setClickDelete(!clickDelete);
           }}
         />
       </div>
