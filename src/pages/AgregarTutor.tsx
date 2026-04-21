@@ -55,7 +55,7 @@ export default function AgregarTutor() {
   };
 
   const fetchComisiones = async () => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/comisiones/sin-tutor`,
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/comisiones/sinTutor`,
       {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -68,7 +68,7 @@ export default function AgregarTutor() {
 
   const selectedLabels = comisiones
     .filter(c => form.comisiones_ids.includes(c.id))
-    .map(c => c.horarioInicio.hora + ":00" + " a " + c.horarioFin.hora + ":00" + " - " + c.departamento + " - " + c.localidad);
+    .map(c => c.horarioInicio + " a " + c.horarioFin + " - " + c.departamento + " - " + c.localidad);
 
   return (
     <div className="min-h-screen bg-background">
@@ -166,7 +166,7 @@ export default function AgregarTutor() {
           <span className="flex h-4 w-4 items-center justify-center rounded border border-primary shrink-0">
             {selected && <Check className="h-3 w-3 text-primary" />}
           </span>
-          Comision {c.numero} - {c.departamento} - {c.localidad} - {c.horarioInicio.hora}:00 a {c.horarioFin.hora}:00
+          Comision {c.numero} - {c.departamento} - {c.localidad} - {c.horarioInicio} a {c.horarioFin}
         </button>
       );
     })

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { commissions, calendarEvents } from "@/data/mockData";
-import CommissionDetail from "@/components/CommissionDetail";
+import CommissionDetail from "@/components/ComisionDetalle";
 import SlidePanel from "@/components/SlidePanel";
 import CalendarPanel from "@/components/CalendarPanel";
 

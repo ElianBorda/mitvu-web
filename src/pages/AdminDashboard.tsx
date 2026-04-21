@@ -4,7 +4,7 @@ import { attendanceByCommission, getCommissionAvgAttendance } from "@/data/mockD
 import DataTable from "@/components/DataTable";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Comision } from "@/types/ComisionType";
+import { Comision } from "@/types/comisionType";
 
 type AdminView = "comisiones" | "tutores" | "estudiantes";
 
@@ -12,11 +12,14 @@ export default function AdminDashboard() {
   const [view, setView] = useState<AdminView>("comisiones");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
   const [estudiantes, setEstudiantes] = useState<any[]>([]);
   const [tutores, setTutores] = useState<any[]>([]);
   const [comisiones, setComisiones] = useState<Comision[]>([]);
   const [clickDelete, setClickDelete] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  const triggerRefresh = () => setRefreshTrigger(prev => prev + 1);
 
   useEffect(() => {
     const viewParam = searchParams.get("view");
@@ -44,7 +47,6 @@ export default function AdminDashboard() {
           const html = await res.text();
           throw new Error("Error HTTP: " + res.status + "\n" + html);
         }
-
         const data = await res.json();
         setEstudiantes(data);
       } catch (error) {
@@ -99,10 +101,9 @@ export default function AdminDashboard() {
     fetchComisiones();
     fetchEstudiantes();
     fetchTutores();
-  }, [clickDelete]);
+  }, [clickDelete, refreshTrigger]);
 
   const asignarComision = async (estudianteId: number, comisionId: string) => {
-    console.log(`Asignar estudiante ${estudianteId} a comisión ${comisionId}`);
     try {
       const res = await fetch(
         `${import.meta.env.VITE_API_URL}/api/estudiantes/${estudianteId}/asignar-comision/${comisionId}`,
@@ -118,6 +119,7 @@ export default function AdminDashboard() {
       }
       const data = await res.json();
       setEstudiantes((prev) => prev.map(e => e.id === estudianteId ? { ...e, comision_id: comisionId } : e));
+      triggerRefresh();
     } catch (error) {
       console.error("Error al asignar comisión:", error);
     }
@@ -160,7 +162,7 @@ export default function AdminDashboard() {
       departamento: c.departamento,
       turno: c.turno,
       tutor: t ? `${t.apellido}, ${t.nombre}` : "No definido",
-      // estudiantes: c.estudianteIds.length,
+      estudiantes: c.estudiantes.length,
       // asistencia: `${getCommissionAvgAttendance(c.id)}%`,
     };
   });
@@ -171,20 +173,23 @@ export default function AdminDashboard() {
     mail: t.mail,
     // horario: t.preferredSchedule,
     // localidad: t.locality,
-    comisiones: t.comisiones_ids.length,
+    comisiones: t.comisiones.length,
   }));
 
   const estudianteData = estudiantes.map(e => {
-    const com = comisiones.find(c => c.id === e.comision_id);
     // const pres = s.attendance.filter(a => a === "present").length;
     // const total = s.attendance.filter(a => a !== "none").length;
+    var com;
+    if (e.comision?.id) {
+      com = comisiones.find(c => c.id === e.comision.id);
+    }
     return {
       apellido: e.apellido,
       nombre: e.nombre,
       dni: e.dni,
       carrera: e.carrera,
       comision: (
-  <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
     {com ? (
   <span>Comisión {com.numero} - {com.departamento} - {com.localidad}</span>
 ) : (
@@ -222,7 +227,7 @@ export default function AdminDashboard() {
                 }}
                 className="w-full text-left px-2 py-2 rounded text-sm hover:bg-accent hover:text-accent-foreground"
               >
-                Comisión {c.numero} - {c.departamento} - {c.localidad} - {c.horarioInicio}
+                Comisión {c.numero} - {c.departamento} - {c.localidad} - {c.horarioInicio} a {c.horarioFin}
               </button>
             ))}
           </>

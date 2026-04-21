@@ -1,22 +1,49 @@
-import { useState } from "react";
-import { Commission, Role } from "@/data/types";
-import { getStudentsForCommission, getTutorForCommission, announcements } from "@/data/mockData";
+import { useEffect, useState } from "react";
+import { Role } from "@/data/types";
+import { announcements } from "@/data/mockData";
 import { Building, MapPin, GraduationCap, Building2, Hash, Clock, Sun, User, Mail } from "lucide-react";
 import AnnouncementPanel from "./AnnouncementPanel";
 import MetricsPanel from "./MetricsPanel";
+import { Comision } from "@/types/comisionType";
+import { obtenerEstudiantesDeComision } from "@/service/apiComision";
+import { obtenerTutorDeLaComision } from "@/service/apiTutor";
+import { Tutor } from "@/types/TutorType";
 
 interface Props {
-  commission: Commission;
+  comision: Comision;
   role: Role;
   onBack?: () => void;
 }
 
-export default function CommissionDetail({ commission, role, onBack }: Props) {
+export default function CommissionDetail({ comision, role, onBack }: Props) {
   const [activeTab, setActiveTab] = useState<"participants" | "metrics">("participants");
-  const students = getStudentsForCommission(commission.id);
-  const tutor = getTutorForCommission(commission.id);
-  const commAnnouncements = announcements.filter(a => a.commissionId === commission.id);
+  const [estudiantes, setEstudiantes] = useState<any[]>([]);
+  const [tutor, setTutor] = useState<Tutor>(null);
+  const commAnnouncements = announcements.filter(a => a.commissionId === comision.id);
   const showMetricsTab = role === "tutor" || role === "admin";
+
+  useEffect(() => {
+    const fetchTutor = async () => {
+      try {
+        const response = await obtenerTutorDeLaComision(comision.id);
+        setTutor(response.data);
+      } catch (error) {
+        console.error("Error fetching tutor:", error);
+      }
+    };
+
+    const fetchEstudiantes = async () => {
+      try {
+        //const response = await obtenerEstudiantesDeComision(comision.id);
+        //setEstudiantes(response.data);
+      }
+      catch (error) {
+        console.error("Error fetching students:", error);
+      }
+    };
+    fetchTutor();
+    fetchEstudiantes();
+  }, [comision.id]);
 
   return (
     <div className="h-full">
@@ -26,7 +53,7 @@ export default function CommissionDetail({ commission, role, onBack }: Props) {
           {onBack && (
             <button onClick={onBack} className="text-sm text-primary hover:underline">← Volver</button>
           )}
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{commission.name}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{comision.numero}</h1>
         </div>
         <div className="flex gap-1 bg-secondary rounded-lg p-1 w-fit">
           <button
@@ -54,15 +81,15 @@ export default function CommissionDetail({ commission, role, onBack }: Props) {
             <div className="bg-card rounded-lg shadow-card p-5 mb-6 border border-border">
               <h3 className="text-sm font-semibold text-foreground mb-4">Datos de la comisión</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <InfoRow icon={Building} label="Aula" value={commission.classroom} />
-                <InfoRow icon={MapPin} label="Localidad" value={commission.locality} />
-                {commission.career && <InfoRow icon={GraduationCap} label="Carrera" value={commission.career} />}
-                <InfoRow icon={Building2} label="Departamento" value={commission.department} />
-                <InfoRow icon={Hash} label="Nº Comisión" value={String(commission.number)} />
-                <InfoRow icon={Clock} label="Horario" value={commission.schedule} />
-                <InfoRow icon={Sun} label="Turno" value={commission.shift} />
-                {tutor && <InfoRow icon={User} label="Tutor/a" value={`${tutor.firstName} ${tutor.lastName}`} />}
-                {tutor && <InfoRow icon={Mail} label="Mail tutor/a" value={tutor.email} />}
+                <InfoRow icon={Building} label="Aula" value={comision.aula} />
+                <InfoRow icon={MapPin} label="Localidad" value={comision.localidad} />
+                {comision.carrera && <InfoRow icon={GraduationCap} label="Carrera" value={comision.carrera} />}
+                <InfoRow icon={Building2} label="Departamento" value={comision.departamento} />
+                <InfoRow icon={Hash} label="Nº Comisión" value={String(comision.numero)} />
+                <InfoRow icon={Clock} label="Horario" value={`${comision.horarioInicio} a ${comision.horarioFin}`} />
+                <InfoRow icon={Sun} label="Turno" value={comision.turno} />
+                {tutor && <InfoRow icon={User} label="Tutor/a" value={`${tutor.nombre} ${tutor.apellido}`} />}
+                {tutor && <InfoRow icon={Mail} label="Mail tutor/a" value={tutor.mail} />}
               </div>
             </div>
 
@@ -80,11 +107,18 @@ export default function CommissionDetail({ commission, role, onBack }: Props) {
                   </tr>
                 </thead>
                 <tbody>
-                  {students.map((s, i) => {
-                    const presentCount = s.attendance.filter(a => a === "present").length;
-                    const totalCount = s.attendance.filter(a => a !== "none").length;
-                    const pct = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
-                    return (
+                  {estudiantes.length === 0 ? (
+                    <tr className="bg-card">
+                      <td colSpan={role === "tutor" ? 5 : 4} className="px-4 py-2.5 text-center text-muted-foreground">
+                        No hay estudiantes en esta comisión.
+                      </td>
+                    </tr>
+                  ) : (
+                    estudiantes.map((s, i) => {
+                      const presentCount = s.attendance.filter(a => a === "present").length;
+                      const totalCount = s.attendance.filter(a => a !== "none").length;
+                      const pct = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+                      return (
                       <tr key={s.id} className={i % 2 === 0 ? "bg-card" : "bg-[hsl(350,50%,98%)]"}>
                         <td className="px-4 py-2.5 text-muted-foreground">{i + 1}</td>
                         <td className="px-4 py-2.5 font-medium text-foreground">{s.lastName}</td>
@@ -102,7 +136,9 @@ export default function CommissionDetail({ commission, role, onBack }: Props) {
                         )}
                       </tr>
                     );
-                  })}
+                  }
+                )
+                  )}
                 </tbody>
               </table>
             </div>
@@ -114,7 +150,7 @@ export default function CommissionDetail({ commission, role, onBack }: Props) {
           </div>
         </div>
       ) : (
-        <MetricsPanel commissionId={commission.id} commissionNumber={commission.number} />
+        <MetricsPanel commissionId={comision.id} commissionNumber={comision.numero} />
       )}
     </div>
   );

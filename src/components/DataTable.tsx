@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { de } from "date-fns/locale";
-import { deleteComision } from "@/service/ApiComision";
+import { deleteComision } from "@/service/apiComision";
 import { set } from "date-fns";
 
 
