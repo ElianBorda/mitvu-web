@@ -4,7 +4,7 @@ import { attendanceByCommission, getCommissionAvgAttendance } from "@/data/mockD
 import DataTable from "@/components/DataTable";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Comision } from "@/types/ComisionType";
+import { Comision } from "@/types/comisionType";
 
 type AdminView = "comisiones" | "tutores" | "estudiantes";
 
@@ -101,7 +101,7 @@ export default function AdminDashboard() {
     fetchComisiones();
     fetchEstudiantes();
     fetchTutores();
-  }, [refreshTrigger]);
+  }, [clickDelete, refreshTrigger]);
 
   const asignarComision = async (estudianteId: number, comisionId: string) => {
     try {

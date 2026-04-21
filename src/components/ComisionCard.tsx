@@ -1,9 +1,9 @@
-import { Commission } from "@/data/types";
 import { getCommissionAvgAttendance, getStudentsForCommission, getTutorForCommission } from "@/data/mockData";
 import { MapPin, Clock, Users } from "lucide-react";
+import { Comision } from "@/types/comisionType";
 
 interface Props {
-  commission: Commission;
+  commission: Comision;
   onClick: () => void;
 }
 
@@ -20,7 +20,7 @@ export default function CommissionCard({ commission, onClick }: Props) {
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors">
-            {commission.name} — {commission.locality}
+            {commission.numero} — {commission.localidad}
           </h3>
           {tutor && (
             <p className="text-xs text-muted-foreground mt-0.5">Tutor/a: {tutor.firstName} {tutor.lastName}</p>
@@ -33,8 +33,8 @@ export default function CommissionCard({ commission, onClick }: Props) {
       </div>
 
       <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-        <span className="flex items-center gap-1"><MapPin size={12} /> {commission.locality}</span>
-        <span className="flex items-center gap-1"><Clock size={12} /> {commission.schedule}</span>
+        <span className="flex items-center gap-1"><MapPin size={12} /> {commission.localidad}</span>
+        <span className="flex items-center gap-1"><Clock size={12} /> {commission.horarioInicio} a {commission.horarioFin}</span>
       </div>
 
       {/* Progress bar */}
