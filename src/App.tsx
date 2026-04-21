@@ -7,6 +7,7 @@ import Index from "./pages/Index.tsx";
 import AgregarEstudiante from "./pages/AgregarEstudiante.tsx";
 import AgregarTutor from "./pages/AgregarTutor.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import AgregarComision from "./pages/AgregarComision.tsx";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/admin/agregar-estudiante" element={<AgregarEstudiante />} />
           <Route path="/admin/agregar-tutor" element={<AgregarTutor />} />
+          <Route path="/admin/agregar-comision" element={<AgregarComision />} />
+          <Route path="/admin/editar-comision/:id" element={<AgregarComision />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
