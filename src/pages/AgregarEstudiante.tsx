@@ -18,6 +18,7 @@ export default function AgregarEstudiante() {
     apellido: "",
     nombre: "",
     dni: "",
+    mail: "",
     carrera: "",
     comision_id: "",
   });
