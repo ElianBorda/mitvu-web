@@ -3,13 +3,15 @@ import { Role } from "@/data/types";
 import AppSidebar from "@/components/AppSidebar";
 import { useNavigate } from "react-router-dom";
 import Topbar from "@/components/Topbar";
-import StudentDashboard from "@/pages/StudentDashboard";
+import StudentDashboard from "@/pages/EstudianteDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import { obtenerTodosLosTutores } from "@/service/apiTutor";
-import { Tutor } from "@/types/TutorType";
+import { Tutor } from "@/types/tutorType";
+import { Estudiante } from "@/types/estudianteType";
+import { obtenerTodosLosEstudiantes } from "@/service/apiEstudiante";
 
 const userNames: Record<Role, string> = {
-  student: "Lucía Martínez",
+  estudiante: "Lucía Martínez",
   tutor: "María González",
   admin: "Admin TVU",
 };
@@ -20,11 +22,12 @@ export default function Index() {
   const [showStudentCalendar, setShowStudentCalendar] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [tutores, setTutores] = useState<Tutor[]>([]);
+  const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
   const navigate = useNavigate();
 
   const handleSidebarClick = (id: string) => {
     setActiveItem(id);
-    if (role === "student" && id === "calendar") {
+    if (role === "estudiante" && id === "calendar") {
       setShowStudentCalendar(prev => !prev);
     }
     if (id === "redes") {
@@ -39,10 +42,13 @@ export default function Index() {
     if (newRole !== "tutor") navigate("/");
   };
 
-  // Nueva función para navegar al tutor seleccionado
   const handleTutorSelect = (tutorId: number) => {
     navigate(`/tutor/${tutorId}`);
   };
+
+  const handleEstudianteSelect = (estudianteId: number) => {
+    navigate(`/estudiante/${estudianteId}`);
+  }
 
   useEffect(() => {
     const fetchTutores = async () => {
@@ -53,18 +59,28 @@ export default function Index() {
         console.error("Error fetching tutores:", error);
       }
     };
+
+    const fetchEstudiantes = async () => {
+      try {
+        const response = await obtenerTodosLosEstudiantes();
+        setEstudiantes(response.data);
+      } catch (error) {
+        console.error("Error fetching estudiantes:", error);
+      }
+    };
+    fetchEstudiantes();
     fetchTutores();
   }, []);
 
   const renderContent = () => {
-    if (role === "student") {
-      return (
-        <StudentDashboard
-          showCalendar={showStudentCalendar}
-          onCloseCalendar={() => setShowStudentCalendar(false)}
-        />
-      );
-    }
+    //if (role === "estudiante") {
+    //  return (
+    //    <StudentDashboard
+    //      showCalendar={showStudentCalendar}
+    //      onCloseCalendar={() => setShowStudentCalendar(false)}
+    //    />
+    //  );
+    //}
     if (role === "admin") return <AdminDashboard />;
     return null;
   };
@@ -86,6 +102,8 @@ export default function Index() {
           onMenuClick={() => setMobileMenuOpen(true)}
           tutores={tutores}
           onTutorSelect={handleTutorSelect}
+          estudiantes={estudiantes}
+          onEstudianteSelect={handleEstudianteSelect}
         />
         <main className="flex-1 p-3 sm:p-6">
           {renderContent()}

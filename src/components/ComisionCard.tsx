@@ -3,14 +3,14 @@ import { MapPin, Clock, Users } from "lucide-react";
 import { Comision } from "@/types/comisionType";
 
 interface Props {
-  commission: Comision;
+  comision: Comision;
   onClick: () => void;
 }
 
-export default function CommissionCard({ commission, onClick }: Props) {
-  const avg = getCommissionAvgAttendance(commission.id);
-  const studentCount = getStudentsForCommission(commission.id).length;
-  const tutor = getTutorForCommission(commission.id);
+export default function ComisionCard({ comision, onClick }: Props) {
+  const avg = getCommissionAvgAttendance(comision.id);
+  const studentCount = getStudentsForCommission(comision.id).length;
+  const tutor = getTutorForCommission(comision.id);
 
   return (
     <button
@@ -20,7 +20,7 @@ export default function CommissionCard({ commission, onClick }: Props) {
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors">
-            {commission.numero} — {commission.localidad}
+            Comision {comision.numero} — {comision.localidad} - {comision.departamento} {comision.carrera? `- ${comision.carrera}` : ""}
           </h3>
           {tutor && (
             <p className="text-xs text-muted-foreground mt-0.5">Tutor/a: {tutor.firstName} {tutor.lastName}</p>
@@ -33,8 +33,8 @@ export default function CommissionCard({ commission, onClick }: Props) {
       </div>
 
       <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-        <span className="flex items-center gap-1"><MapPin size={12} /> {commission.localidad}</span>
-        <span className="flex items-center gap-1"><Clock size={12} /> {commission.horarioInicio} a {commission.horarioFin}</span>
+        <span className="flex items-center gap-1"><MapPin size={12} /> {comision.localidad}</span>
+        <span className="flex items-center gap-1"><Clock size={12} /> {comision.horarioInicio} a {comision.horarioFin}</span>
       </div>
 
       {/* Progress bar */}

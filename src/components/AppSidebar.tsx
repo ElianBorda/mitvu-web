@@ -11,7 +11,7 @@ interface SidebarItem {
 }
 
 const sidebarItems: Record<Role, SidebarItem[]> = {
-  student: [
+  estudiante: [
     { icon: Home, label: "Inicio", id: "home" },
     { icon: Calendar, label: "Calendario", id: "calendar" },
     { icon: LinkIcon, label: "Redes UNQ", id: "redes" },

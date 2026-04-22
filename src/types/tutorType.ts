@@ -2,5 +2,7 @@ export type Tutor = {
   id: string,
   nombre: string,
   apellido: string,
-  mail: string
+  dni: string,
+  mail: string,
+  comisiones_ids: string[]
 }
