@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { set } from "date-fns";
-import { getObtenerComision, postCrearComision, putModificarComision } from "@/service/ApiComision";
+import { getObtenerComision, postCrearComision, putModificarComision } from "@/service/apiComision";
 import { error } from "console";
 
 export default function AgregarComision() {

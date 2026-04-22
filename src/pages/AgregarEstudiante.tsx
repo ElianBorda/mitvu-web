@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Comision } from "@/types/comisionType";
 
 export default function AgregarEstudiante() {
   const navigate = useNavigate();
@@ -22,42 +23,44 @@ export default function AgregarEstudiante() {
     carrera: "",
     comision_id: "",
   });
-  const [comisiones, setComisiones] = useState<any[]>([]);
+  const [comisiones, setComisiones] = useState<Comision[]>([]);
 
   const handleChange = (field: string, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }));
+    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.apellido.trim() || !form.nombre.trim() || !form.dni.trim() || !form.carrera.trim()) {
+    if (
+      !form.apellido.trim() ||
+      !form.nombre.trim() ||
+      !form.dni.trim() ||
+      !form.carrera.trim()
+    ) {
       toast.error("Por favor completá todos los campos obligatorios.");
       return;
     }
-    const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/estudiantes`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        }
-      );
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/estudiantes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
     if (!res.ok) throw new Error("Error al guardar la publicación");
-    toast.success(`Estudiante ${form.apellido}, ${form.nombre} creado exitosamente.`);
+    toast.success(
+      `Estudiante ${form.apellido}, ${form.nombre} creado exitosamente.`,
+    );
     navigate("/?view=students");
   };
 
   const fetchComisiones = async () => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/comisiones`,
-      {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/comisiones`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
     if (!res.ok) throw new Error("Error al cargar las comisiones");
     const data = await res.json();
     setComisiones(data);
-  }
+  };
 
   useEffect(() => {
     fetchComisiones();
@@ -81,7 +84,8 @@ export default function AgregarEstudiante() {
             Agregar estudiante
           </h1>
           <p className="text-sm text-muted-foreground mb-8">
-            Completá los datos del nuevo estudiante para darlo de alta en el sistema.
+            Completá los datos del nuevo estudiante para darlo de alta en el
+            sistema.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -92,7 +96,7 @@ export default function AgregarEstudiante() {
                   id="apellido"
                   placeholder="Ej: Martínez"
                   value={form.apellido}
-                  onChange={e => handleChange("apellido", e.target.value)}
+                  onChange={(e) => handleChange("apellido", e.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -101,7 +105,7 @@ export default function AgregarEstudiante() {
                   id="nombre"
                   placeholder="Ej: Lucía"
                   value={form.nombre}
-                  onChange={e => handleChange("nombre", e.target.value)}
+                  onChange={(e) => handleChange("nombre", e.target.value)}
                 />
               </div>
             </div>
@@ -113,25 +117,36 @@ export default function AgregarEstudiante() {
                   id="dni"
                   placeholder="Ej: 42356789"
                   value={form.dni}
-                  onChange={e => handleChange("dni", e.target.value)}
+                  onChange={(e) => handleChange("dni", e.target.value)}
                 />
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="carrera">Carrera *</Label>
+                <Label htmlFor="mail">Correo electrónico *</Label>
                 <Input
-                  id="carrera"
-                  placeholder="Ej: Lic. en Informática"
-                  value={form.carrera}
-                  onChange={e => handleChange("carrera", e.target.value)}
+                  id="mail"
+                  placeholder="Ej: carlos.gonzalez@example.com"
+                  value={form.mail}
+                  onChange={(e) => handleChange("mail", e.target.value)}
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="carrera">Carrera *</Label>
+              <Input
+                id="carrera"
+                placeholder="Ej: Lic. en Informática"
+                value={form.carrera}
+                onChange={(e) => handleChange("carrera", e.target.value)}
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="comision">Comisión (opcional)</Label>
               <Select
                 value={form.comision_id}
-                onValueChange={val => handleChange("comision_id", val)}
+                onValueChange={(val) => handleChange("comision_id", val)}
                 onOpenChange={fetchComisiones}
               >
                 <SelectTrigger>
@@ -143,9 +158,10 @@ export default function AgregarEstudiante() {
                       Aún no hay comisiones en el sistema
                     </div>
                   ) : (
-                    comisiones.map(c => (
+                    comisiones.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
-                        Comision {c.numero} - {c.departamento} - {c.localidad} - {c.horarioInicio} a {c.horarioFin}
+                        Comision {c.numero} - {c.departamento} - {c.localidad} -{" "}
+                        {c.horarioInicio} a {c.horarioFin}
                       </SelectItem>
                     ))
                   )}

@@ -6,5 +6,5 @@ export const postCrearComision = (comision: ComisionBody) => axios.post('/api/co
 export const deleteComision = (id: string) => axios.delete(`/api/comisiones/${id}`);
 export const getObtenerComision = (id: string) => axios.get(`/api/comisiones/${id}`);
 export const putModificarComision = (id: string, comision: ComisionBody) => axios.put(`/api/comisiones/${id}`, comision);
-export const obtenerEstudiantesDeComision = (id: string) => axios.get(`/api/comisiones/${id}/estudiantes`);
 export const obtenerComisionesDelTutor = (id: string) => axios.get(`/api/comisiones/tutor/${id}`)
+export const obtenerComisionesDelEstudiante = (id: string) => axios.get(`/api/comisiones/estudiante/${id}`)

@@ -1,13 +1,23 @@
 import { useEffect, useState } from "react";
 import { Role } from "@/data/types";
 import { announcements } from "@/data/mockData";
-import { Building, MapPin, GraduationCap, Building2, Hash, Clock, Sun, User, Mail } from "lucide-react";
+import {
+  Building,
+  MapPin,
+  GraduationCap,
+  Building2,
+  Hash,
+  Clock,
+  Sun,
+  User,
+  Mail,
+} from "lucide-react";
 import AnnouncementPanel from "./AnnouncementPanel";
 import MetricsPanel from "./MetricsPanel";
 import { Comision } from "@/types/comisionType";
-import { obtenerEstudiantesDeComision } from "@/service/apiComision";
+import { obtenerEstudiantesDeComision } from "@/service/apiEstudiante";
 import { obtenerTutorDeLaComision } from "@/service/apiTutor";
-import { Tutor } from "@/types/TutorType";
+import { Tutor } from "@/types/tutorType";
 
 interface Props {
   comision: Comision;
@@ -15,11 +25,15 @@ interface Props {
   onBack?: () => void;
 }
 
-export default function CommissionDetail({ comision, role, onBack }: Props) {
-  const [activeTab, setActiveTab] = useState<"participants" | "metrics">("participants");
+export default function ComisionDetalle({ comision, role, onBack }: Props) {
+  const [activeTab, setActiveTab] = useState<"participants" | "metrics">(
+    "participants",
+  );
   const [estudiantes, setEstudiantes] = useState<any[]>([]);
   const [tutor, setTutor] = useState<Tutor>(null);
-  const commAnnouncements = announcements.filter(a => a.commissionId === comision.id);
+  const commAnnouncements = announcements.filter(
+    (a) => a.commissionId === comision.id,
+  );
   const showMetricsTab = role === "tutor" || role === "admin";
 
   useEffect(() => {
@@ -34,10 +48,9 @@ export default function CommissionDetail({ comision, role, onBack }: Props) {
 
     const fetchEstudiantes = async () => {
       try {
-        //const response = await obtenerEstudiantesDeComision(comision.id);
-        //setEstudiantes(response.data);
-      }
-      catch (error) {
+        const response = await obtenerEstudiantesDeComision(comision.id);
+        setEstudiantes(response.data);
+      } catch (error) {
         console.error("Error fetching students:", error);
       }
     };
@@ -51,9 +64,18 @@ export default function CommissionDetail({ comision, role, onBack }: Props) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
         <div className="flex items-center gap-3">
           {onBack && (
-            <button onClick={onBack} className="text-sm text-primary hover:underline">← Volver</button>
+            <button
+              onClick={onBack}
+              className="text-sm text-primary hover:underline"
+            >
+              ← Volver
+            </button>
           )}
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{comision.numero}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+            Comision {comision.numero} — {comision.localidad} -{" "}
+            Dep. {comision.departamento}{" "}
+            {comision.carrera ? `- ${comision.carrera}` : ""}
+          </h1>
         </div>
         <div className="flex gap-1 bg-secondary rounded-lg p-1 w-fit">
           <button
@@ -79,17 +101,53 @@ export default function CommissionDetail({ comision, role, onBack }: Props) {
           <div className="flex-1 min-w-0">
             {/* Commission data */}
             <div className="bg-card rounded-lg shadow-card p-5 mb-6 border border-border">
-              <h3 className="text-sm font-semibold text-foreground mb-4">Datos de la comisión</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-4">
+                Datos de la comisión
+              </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <InfoRow icon={Building} label="Aula" value={comision.aula} />
-                <InfoRow icon={MapPin} label="Localidad" value={comision.localidad} />
-                {comision.carrera && <InfoRow icon={GraduationCap} label="Carrera" value={comision.carrera} />}
-                <InfoRow icon={Building2} label="Departamento" value={comision.departamento} />
-                <InfoRow icon={Hash} label="Nº Comisión" value={String(comision.numero)} />
-                <InfoRow icon={Clock} label="Horario" value={`${comision.horarioInicio} a ${comision.horarioFin}`} />
+                <InfoRow
+                  icon={MapPin}
+                  label="Localidad"
+                  value={comision.localidad}
+                />
+                {comision.carrera && (
+                  <InfoRow
+                    icon={GraduationCap}
+                    label="Carrera"
+                    value={comision.carrera}
+                  />
+                )}
+                <InfoRow
+                  icon={Building2}
+                  label="Departamento"
+                  value={comision.departamento}
+                />
+                <InfoRow
+                  icon={Hash}
+                  label="Nº Comisión"
+                  value={String(comision.numero)}
+                />
+                <InfoRow
+                  icon={Clock}
+                  label="Horario"
+                  value={`${comision.horarioInicio} a ${comision.horarioFin}`}
+                />
                 <InfoRow icon={Sun} label="Turno" value={comision.turno} />
-                {tutor && <InfoRow icon={User} label="Tutor/a" value={`${tutor.nombre} ${tutor.apellido}`} />}
-                {tutor && <InfoRow icon={Mail} label="Mail tutor/a" value={tutor.mail} />}
+                {tutor && (
+                  <InfoRow
+                    icon={User}
+                    label="Tutor/a"
+                    value={`${tutor.nombre} ${tutor.apellido}`}
+                  />
+                )}
+                {tutor && (
+                  <InfoRow
+                    icon={Mail}
+                    label="Mail tutor/a"
+                    value={tutor.mail}
+                  />
+                )}
               </div>
             </div>
 
@@ -99,45 +157,85 @@ export default function CommissionDetail({ comision, role, onBack }: Props) {
                 <thead>
                   <tr className="bg-primary text-primary-foreground">
                     <th className="px-4 py-2.5 text-left font-medium">Nº</th>
-                    <th className="px-4 py-2.5 text-left font-medium">Apellido</th>
-                    <th className="px-4 py-2.5 text-left font-medium">Nombre</th>
-                    <th className="px-4 py-2.5 text-left font-medium">Carrera</th>
-                    {role === "tutor" && <th className="px-4 py-2.5 text-left font-medium">DNI</th>}
-                    {role === "tutor" && <th className="px-4 py-2.5 text-left font-medium">Asistencia</th>}
+                    <th className="px-4 py-2.5 text-left font-medium">
+                      Apellido
+                    </th>
+                    <th className="px-4 py-2.5 text-left font-medium">
+                      Nombre
+                    </th>
+                    {role === "tutor" && (
+                      <th className="px-4 py-2.5 text-left font-medium">DNI</th>
+                    )}
+                    <th className="px-4 py-2.5 text-left font-medium">
+                      Carrera
+                    </th>
+                    {role === "tutor" && (
+                      <th className="px-4 py-2.5 text-left font-medium">
+                        Asistencia
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
                   {estudiantes.length === 0 ? (
                     <tr className="bg-card">
-                      <td colSpan={role === "tutor" ? 5 : 4} className="px-4 py-2.5 text-center text-muted-foreground">
+                      <td
+                        colSpan={role === "tutor" ? 5 : 4}
+                        className="px-4 py-2.5 text-center text-muted-foreground"
+                      >
                         No hay estudiantes en esta comisión.
                       </td>
                     </tr>
                   ) : (
-                    estudiantes.map((s, i) => {
-                      const presentCount = s.attendance.filter(a => a === "present").length;
-                      const totalCount = s.attendance.filter(a => a !== "none").length;
-                      const pct = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+                    estudiantes.map((e, i) => {
+                      const presentCount = 0; // s.attendance.filter(a => a === "present").length;
+                      const totalCount = 0; // s.attendance.filter(a => a !== "none").length;
+                      const pct =
+                        totalCount > 0
+                          ? Math.round((presentCount / totalCount) * 100)
+                          : 0;
                       return (
-                      <tr key={s.id} className={i % 2 === 0 ? "bg-card" : "bg-[hsl(350,50%,98%)]"}>
-                        <td className="px-4 py-2.5 text-muted-foreground">{i + 1}</td>
-                        <td className="px-4 py-2.5 font-medium text-foreground">{s.lastName}</td>
-                        <td className="px-4 py-2.5 text-foreground">{s.firstName}</td>
-                        {role === "tutor" && <td className="px-4 py-2.5 text-muted-foreground">{s.dni}</td>}
-                        <td className="px-4 py-2.5 text-muted-foreground">{s.career}</td>
-                        {role === "tutor" && (
-                          <td className="px-4 py-2.5">
-                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                              pct >= 75 ? "bg-green-100 text-green-700" : pct >= 50 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
-                            }`}>
-                              {pct}%
-                            </span>
+                        <tr
+                          key={e.id}
+                          className={
+                            i % 2 === 0 ? "bg-card" : "bg-[hsl(350,50%,98%)]"
+                          }
+                        >
+                          <td className="px-4 py-2.5 text-muted-foreground">
+                            {i + 1}
                           </td>
-                        )}
-                      </tr>
-                    );
-                  }
-                )
+                          <td className="px-4 py-2.5 font-medium text-foreground">
+                            {e.apellido}
+                          </td>
+                          <td className="px-4 py-2.5 text-foreground">
+                            {e.nombre}
+                          </td>
+                          <td className="px-4 py-2.5 text-muted-foreground">
+                            {e.dni}
+                          </td>
+                          {role === "tutor" && (
+                            <td className="px-4 py-2.5 text-muted-foreground">
+                              {e.carrera}
+                            </td>
+                          )}
+                          {role === "tutor" && (
+                            <td className="px-4 py-2.5">
+                              <span
+                                className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  pct >= 75
+                                    ? "bg-green-100 text-green-700"
+                                    : pct >= 50
+                                      ? "bg-yellow-100 text-yellow-700"
+                                      : "bg-red-100 text-red-700"
+                                }`}
+                              >
+                                {pct}%
+                              </span>
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -146,17 +244,31 @@ export default function CommissionDetail({ comision, role, onBack }: Props) {
 
           {/* Right: Announcements */}
           <div className="w-full lg:w-80 shrink-0">
-            <AnnouncementPanel announcements={commAnnouncements} canCreate={role === "tutor" || role === "admin"} />
+            <AnnouncementPanel
+              announcements={commAnnouncements}
+              canCreate={role === "tutor" || role === "admin"}
+            />
           </div>
         </div>
       ) : (
-        <MetricsPanel commissionId={comision.id} commissionNumber={comision.numero} />
+        <MetricsPanel
+          commissionId={comision.id}
+          commissionNumber={comision.numero}
+        />
       )}
     </div>
   );
 }
 
-function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+function InfoRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="flex items-center gap-2">
       <Icon size={14} className="text-primary shrink-0" />
