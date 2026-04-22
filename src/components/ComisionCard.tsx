@@ -1,5 +1,9 @@
-import { getCommissionAvgAttendance, getStudentsForCommission, getTutorForCommission } from "@/data/mockData";
-import { MapPin, Clock, Users } from "lucide-react";
+import {
+  getCommissionAvgAttendance,
+  getStudentsForCommission,
+  getTutorForCommission,
+} from "@/data/mockData";
+import { MapPin, Clock, Users, Building, Calendar1Icon } from "lucide-react";
 import { Comision } from "@/types/comisionType";
 
 interface Props {
@@ -9,8 +13,8 @@ interface Props {
 
 export default function ComisionCard({ comision, onClick }: Props) {
   const avg = getCommissionAvgAttendance(comision.id);
-  const studentCount = getStudentsForCommission(comision.id).length;
-  const tutor = getTutorForCommission(comision.id);
+  const cantEstudiantes = comision.estudiantes.length;
+  const aula = comision.aula;
 
   return (
     <button
@@ -20,21 +24,38 @@ export default function ComisionCard({ comision, onClick }: Props) {
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors">
-            Comision {comision.numero} — {comision.localidad} - {comision.departamento} {comision.carrera? `- ${comision.carrera}` : ""}
+            Comision {comision.numero} — {comision.localidad} -{" "}
+            {comision.departamento}{" "}
+            {comision.carrera ? `- ${comision.carrera}` : ""}
           </h3>
-          {tutor && (
-            <p className="text-xs text-muted-foreground mt-0.5">Tutor/a: {tutor.firstName} {tutor.lastName}</p>
-          )}
+          <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+            {aula ? (
+              <span className="flex items-center gap-1">
+                <Building size={12}/> Aula: {aula}
+              </span>
+            ) : (
+              <span className="flex items-center gap-1">
+                <Building size={12}/> Aula aún no definida
+              </span>
+            )}
+            <span className="flex items-center gap-1">
+              <Calendar1Icon size={12}/> Día hábil: {comision.diaHabil}
+            </span>
+          </div>
         </div>
         <span className="flex items-center gap-1 text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-full">
           <Users size={12} />
-          {studentCount}
+          {cantEstudiantes}
         </span>
       </div>
 
       <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-        <span className="flex items-center gap-1"><MapPin size={12} /> {comision.localidad}</span>
-        <span className="flex items-center gap-1"><Clock size={12} /> {comision.horarioInicio} a {comision.horarioFin}</span>
+        <span className="flex items-center gap-1">
+          <MapPin size={12} /> {comision.localidad}
+        </span>
+        <span className="flex items-center gap-1">
+          <Clock size={12} /> {comision.horarioInicio} a {comision.horarioFin}
+        </span>
       </div>
 
       {/* Progress bar */}

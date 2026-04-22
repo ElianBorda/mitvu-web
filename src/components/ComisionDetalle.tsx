@@ -8,9 +8,9 @@ import {
   Building2,
   Hash,
   Clock,
-  Sun,
   User,
   Mail,
+  Calendar1Icon,
 } from "lucide-react";
 import AnnouncementPanel from "./AnnouncementPanel";
 import MetricsPanel from "./MetricsPanel";
@@ -72,8 +72,8 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
             </button>
           )}
           <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-            Comision {comision.numero} — {comision.localidad} -{" "}
-            Dep. {comision.departamento}{" "}
+            Comision {comision.numero} — {comision.localidad} - Dep.{" "}
+            {comision.departamento}{" "}
             {comision.carrera ? `- ${comision.carrera}` : ""}
           </h1>
         </div>
@@ -105,7 +105,9 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                 Datos de la comisión
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <InfoRow icon={Building} label="Aula" value={comision.aula} />
+                {comision.aula && (
+                  <InfoRow icon={Building} label="Aula" value={comision.aula} />
+                )}
                 <InfoRow
                   icon={MapPin}
                   label="Localidad"
@@ -133,7 +135,18 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                   label="Horario"
                   value={`${comision.horarioInicio} a ${comision.horarioFin}`}
                 />
-                <InfoRow icon={Sun} label="Turno" value={comision.turno} />
+                <InfoRow
+                  icon={Calendar1Icon}
+                  label="Día hábil"
+                  value={comision.diaHabil}
+                />
+                <InfoRow
+                  icon={Clock}
+                  label="Turno"
+                  value={comision.turno}
+                />
+              </div>
+              <div className="flex items-center text-sm text-muted-foreground gap-6 mt-4">
                 {tutor && (
                   <InfoRow
                     icon={User}
@@ -144,7 +157,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                 {tutor && (
                   <InfoRow
                     icon={Mail}
-                    label="Mail tutor/a"
+                    label="Mail"
                     value={tutor.mail}
                   />
                 )}
@@ -210,14 +223,14 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                           <td className="px-4 py-2.5 text-foreground">
                             {e.nombre}
                           </td>
-                          <td className="px-4 py-2.5 text-muted-foreground">
-                            {e.dni}
-                          </td>
                           {role === "tutor" && (
                             <td className="px-4 py-2.5 text-muted-foreground">
-                              {e.carrera}
+                              {e.dni}
                             </td>
                           )}
+                          <td className="px-4 py-2.5 text-muted-foreground">
+                            {e.carrera}
+                          </td>
                           {role === "tutor" && (
                             <td className="px-4 py-2.5">
                               <span

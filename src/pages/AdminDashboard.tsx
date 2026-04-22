@@ -25,7 +25,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Comision } from "@/types/comisionType";
-import { obtenerTodosLosEstudiantes } from "@/service/apiEstudiante";
+import { obtenerTodosLosEstudiantes, asignarEstudianteAComision } from "@/service/apiEstudiante";
+import { obtenerTodosLosTutores } from "@/service/apiTutor";
+import { obtenerTodasLasComisiones } from "@/service/apiComision";
 
 type AdminView = "comisiones" | "tutores" | "estudiantes";
 
@@ -64,17 +66,8 @@ export default function AdminDashboard() {
 
   const fetchTutores = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/tutores`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!res.ok) {
-        const html = await res.text();
-        throw new Error("Error HTTP: " + res.status + "\n" + html);
-      }
-
-      const data = await res.json();
-      setTutores(data);
+      const response = await obtenerTodosLosTutores();
+      setTutores(response.data);
     } catch (error) {
       console.error("Error al obtener tutores:", error);
     }
@@ -82,19 +75,8 @@ export default function AdminDashboard() {
 
   const fetchComisiones = async () => {
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/comisiones`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-      if (!res.ok) {
-        const html = await res.text();
-        throw new Error("Error HTTP: " + res.status + "\n" + html);
-      }
-      const data = await res.json();
-      setComisiones(data);
+      const response = await obtenerTodasLasComisiones();
+      setComisiones(response.data);
     } catch (error) {
       console.error("Error al obtener comisiones:", error);
     }
@@ -108,19 +90,7 @@ export default function AdminDashboard() {
 
   const asignarComision = async (estudianteId: number, comisionId: string) => {
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/estudiantes/${estudianteId}/asignar-comision/${comisionId}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ estudianteId, comisionId }),
-        },
-      );
-      if (!res.ok) {
-        const html = await res.text();
-        throw new Error("Error HTTP: " + res.status + "\n" + html);
-      }
-      const data = await res.json();
+      const response = await asignarEstudianteAComision(estudianteId, comisionId);
       setEstudiantes((prev) =>
         prev.map((e) =>
           e.id === estudianteId ? { ...e, comision_id: comisionId } : e,
@@ -172,13 +142,14 @@ export default function AdminDashboard() {
   const comisionData = comisiones.map((c) => {
     const t = tutores.find((tt) => tt.id === (c.tutor?.id || ""));
     return {
-      id: c.id,
-      numero: c.numero,
       localidad: c.localidad,
       departamento: c.departamento,
-      turno: c.turno,
+      carrera: c.carrera ? c.carrera : "No definida",
+      numero: c.numero,
+      diaHabil: c.diaHabil,
+      horario: `${c.horarioInicio} - ${c.horarioFin}`,
       tutor: t ? `${t.apellido}, ${t.nombre}` : "No definido",
-      estudiantes: c.estudiantes.length,
+      aula: c.aula ? c.aula : "No definida",
       // asistencia: `${getCommissionAvgAttendance(c.id)}%`,
     };
   });
@@ -195,7 +166,7 @@ export default function AdminDashboard() {
   const estudianteData = estudiantes.map((e) => {
     // const pres = s.attendance.filter(a => a === "present").length;
     // const total = s.attendance.filter(a => a !== "none").length;
-    var com;
+    var com: Comision;
     if (e.comision?.id) {
       com = comisiones.find((c) => c.id === e.comision.id);
     }
@@ -256,7 +227,6 @@ export default function AdminDashboard() {
           )}
         </div>
       ),
-      // estado: total > 0 ? `${Math.round((pres / total) * 100)}%` : "—",
     };
   });
 
@@ -270,13 +240,14 @@ export default function AdminDashboard() {
   > = {
     comisiones: {
       columns: [
-        { key: "nombre", label: "Nombre" },
         { key: "localidad", label: "Localidad" },
         { key: "departamento", label: "Departamento" },
-        { key: "turno", label: "Turno" },
+        { key: "carrera", label: "Carrera" },
+        { key: "numero", label: "Numero" },
+        { key: "diaHabil", label: "Día hábil" },
+        { key: "horario", label: "Horario" },
         { key: "tutor", label: "Tutor/a" },
-        { key: "estudiantes", label: "Estudiantes" },
-        { key: "asistencia", label: "Asistencia %" },
+        { key: "aula", label: "Aula" },
       ],
       data: comisionData,
       addLabel: "Agregar comisión",
@@ -286,8 +257,6 @@ export default function AdminDashboard() {
         { key: "apellido", label: "Apellido" },
         { key: "nombre", label: "Nombre" },
         { key: "mail", label: "Mail" },
-        { key: "horario", label: "Horario pref." },
-        { key: "localidad", label: "Localidad" },
         { key: "comisiones", label: "Comisiones" },
       ],
       data: tutorData,

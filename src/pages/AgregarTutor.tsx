@@ -9,6 +9,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { comisionesSinTutor } from "@/service/apiComision";
+import { crearTutor } from "@/service/apiTutor";
 
 export default function AgregarTutor() {
   const navigate = useNavigate();
@@ -22,14 +24,14 @@ export default function AgregarTutor() {
   const [comisiones, setComisiones] = useState<any[]>([]);
 
   const handleChange = (field: string, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }));
+    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const toggleCommission = (id: string) => {
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
       comisiones_ids: prev.comisiones_ids.includes(id)
-        ? prev.comisiones_ids.filter(c => c !== id)
+        ? prev.comisiones_ids.filter((c) => c !== id)
         : [...prev.comisiones_ids, id],
     }));
   };
@@ -40,35 +42,41 @@ export default function AgregarTutor() {
       toast.error("Por favor completá todos los campos obligatorios.");
       return;
     }
-    const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/tutores`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        }
+   
+    try {
+      const res = await crearTutor(form);
+      toast.success(
+        `Tutor ${form.apellido}, ${form.nombre} creado exitosamente.`,
       );
-
-    if (!res.ok) throw new Error("Error al guardar la publicación");
-    toast.success(`Tutor ${form.apellido}, ${form.nombre} creado exitosamente.`);
-    navigate("/?view=tutors");
+      navigate("/?view=tutors");
+    } catch (error) {
+      toast.error("Error al crear el tutor.");
+      throw new Error("Error al crear el tutor");
+    }
+    
   };
 
   const fetchComisiones = async () => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/comisiones/sinTutor`,
-      {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-    if (!res.ok) throw new Error("Error al cargar las comisiones");
-    const data = await res.json();
-    setComisiones(data);
-  }
+    try {
+      const res = await comisionesSinTutor();
+      setComisiones(res.data);
+    } catch (error) {
+      console.error("Error al cargar las comisiones:", error);
+    }
+  };
 
   const selectedLabels = comisiones
-    .filter(c => form.comisiones_ids.includes(c.id))
-    .map(c => c.horarioInicio + " a " + c.horarioFin + " - " + c.departamento + " - " + c.localidad);
+    .filter((c) => form.comisiones_ids.includes(c.id))
+    .map(
+      (c) =>
+        c.horarioInicio +
+        " a " +
+        c.horarioFin +
+        " - " +
+        c.departamento +
+        " - " +
+        c.localidad,
+    );
 
   return (
     <div className="min-h-screen bg-background">
@@ -97,7 +105,7 @@ export default function AgregarTutor() {
                   id="apellido"
                   placeholder="Ej: González"
                   value={form.apellido}
-                  onChange={e => handleChange("apellido", e.target.value)}
+                  onChange={(e) => handleChange("apellido", e.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -106,7 +114,7 @@ export default function AgregarTutor() {
                   id="nombre"
                   placeholder="Ej: Carlos"
                   value={form.nombre}
-                  onChange={e => handleChange("nombre", e.target.value)}
+                  onChange={(e) => handleChange("nombre", e.target.value)}
                 />
               </div>
             </div>
@@ -117,7 +125,7 @@ export default function AgregarTutor() {
                 id="mail"
                 placeholder="Ej: carlos.gonzalez@example.com"
                 value={form.mail}
-                onChange={e => handleChange("mail", e.target.value)}
+                onChange={(e) => handleChange("mail", e.target.value)}
               />
             </div>
 
@@ -127,7 +135,7 @@ export default function AgregarTutor() {
                 id="dni"
                 placeholder="Ej: 30456789"
                 value={form.dni}
-                onChange={e => handleChange("dni", e.target.value)}
+                onChange={(e) => handleChange("dni", e.target.value)}
               />
             </div>
 
@@ -148,29 +156,35 @@ export default function AgregarTutor() {
                     <ChevronDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-1 max-h-60 overflow-y-auto" align="start">
+                <PopoverContent
+                  className="w-[--radix-popover-trigger-width] p-1 max-h-60 overflow-y-auto"
+                  align="start"
+                >
                   {comisiones.length === 0 ? (
-    <div className="px-2 py-4 text-sm text-muted-foreground text-center">
-      Aún no hay comisiones en el sistema
-    </div>
-  ) : (
-    comisiones.map(c => {
-      const selected = form.comisiones_ids.includes(c.id);
-      return (
-        <button
-          key={c.id}
-          type="button"
-          onClick={() => toggleCommission(c.id)}
-          className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer"
-        >
-          <span className="flex h-4 w-4 items-center justify-center rounded border border-primary shrink-0">
-            {selected && <Check className="h-3 w-3 text-primary" />}
-          </span>
-          Comision {c.numero} - {c.departamento} - {c.localidad} - {c.horarioInicio} a {c.horarioFin}
-        </button>
-      );
-    })
-  )}
+                    <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+                      Aún no hay comisiones en el sistema
+                    </div>
+                  ) : (
+                    comisiones.map((c) => {
+                      const selected = form.comisiones_ids.includes(c.id);
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => toggleCommission(c.id)}
+                          className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                        >
+                          <span className="flex h-4 w-4 items-center justify-center rounded border border-primary shrink-0">
+                            {selected && (
+                              <Check className="h-3 w-3 text-primary" />
+                            )}
+                          </span>
+                          Comision {c.numero} - {c.departamento} - {c.localidad}{" "}
+                          - {c.horarioInicio} a {c.horarioFin}
+                        </button>
+                      );
+                    })
+                  )}
                 </PopoverContent>
               </Popover>
             </div>

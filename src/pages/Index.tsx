@@ -73,14 +73,6 @@ export default function Index() {
   }, []);
 
   const renderContent = () => {
-    //if (role === "estudiante") {
-    //  return (
-    //    <StudentDashboard
-    //      showCalendar={showStudentCalendar}
-    //      onCloseCalendar={() => setShowStudentCalendar(false)}
-    //    />
-    //  );
-    //}
     if (role === "admin") return <AdminDashboard />;
     return null;
   };

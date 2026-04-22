@@ -12,6 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Comision } from "@/types/comisionType";
+import { obtenerTodasLasComisiones } from "@/service/apiComision";
+import { crearEstudiante } from "@/service/apiEstudiante";
 
 export default function AgregarEstudiante() {
   const navigate = useNavigate();
@@ -40,26 +42,25 @@ export default function AgregarEstudiante() {
       toast.error("Por favor completá todos los campos obligatorios.");
       return;
     }
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/estudiantes`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    if (!res.ok) throw new Error("Error al guardar la publicación");
-    toast.success(
-      `Estudiante ${form.apellido}, ${form.nombre} creado exitosamente.`,
-    );
-    navigate("/?view=students");
+    try {
+      const res = await crearEstudiante(form);
+      toast.success(
+        `Estudiante ${form.apellido}, ${form.nombre} creado exitosamente.`,
+      );
+      navigate("/?view=students");
+    } catch (error) {
+      toast.error("Error al crear el estudiante.");
+      throw new Error("Error al crear el estudiante");
+    }
   };
 
   const fetchComisiones = async () => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/comisiones`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!res.ok) throw new Error("Error al cargar las comisiones");
-    const data = await res.json();
-    setComisiones(data);
+    try {
+      const response = await obtenerTodasLasComisiones();
+      setComisiones(response.data);
+    } catch (error) {
+      console.error("Error al obtener comisiones:", error);
+    }
   };
 
   useEffect(() => {

@@ -100,16 +100,9 @@ export default function TutorDashboard() {
     fetchComisiones();
   }, [tutorId]);
 
-  // El contenido principal cambia según el rol seleccionado en el Topbar
   const renderContent = () => {
-    //if (role === "estudiante") {
-    //  return (
-    //    <EstudianteDashboard/>
-    //  );
-    //}
     if (role === "admin") return <AdminDashboard />;
 
-    // Vista por defecto: dashboard del tutor
     if (comisionSeleccionada) {
       return (
         <CommissionDetail
