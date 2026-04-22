@@ -18,6 +18,7 @@ import { Comision } from "@/types/comisionType";
 import { obtenerEstudiantesDeComision } from "@/service/apiEstudiante";
 import { obtenerTutorDeLaComision } from "@/service/apiTutor";
 import { Tutor } from "@/types/tutorType";
+import { isAxiosError } from "axios";
 
 interface Props {
   comision: Comision;
@@ -42,7 +43,10 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
         const response = await obtenerTutorDeLaComision(comision.id);
         setTutor(response.data);
       } catch (error) {
-        console.error("Error fetching tutor:", error);
+        if (isAxiosError(error) && error.response?.status === 400) {
+        } else {
+          console.error("Error fetching comision:", error);
+        }
       }
     };
 
@@ -105,19 +109,31 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                 Datos de la comisión
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                {comision.aula && (
+                {comision.aula ? (
                   <InfoRow icon={Building} label="Aula" value={comision.aula} />
+                ) : (
+                  <InfoRow
+                    icon={Building}
+                    label="Aula"
+                    value="No especificada"
+                  />
                 )}
                 <InfoRow
                   icon={MapPin}
                   label="Localidad"
                   value={comision.localidad}
                 />
-                {comision.carrera && (
+                {comision.carrera ? (
                   <InfoRow
                     icon={GraduationCap}
                     label="Carrera"
                     value={comision.carrera}
+                  />
+                ) : (
+                  <InfoRow
+                    icon={GraduationCap}
+                    label="Carrera"
+                    value="No especificada"
                   />
                 )}
                 <InfoRow
@@ -140,26 +156,22 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                   label="Día hábil"
                   value={comision.diaHabil}
                 />
-                <InfoRow
-                  icon={Clock}
-                  label="Turno"
-                  value={comision.turno}
-                />
+                <InfoRow icon={Clock} label="Turno" value={comision.turno} />
               </div>
               <div className="flex items-center text-sm text-muted-foreground gap-6 mt-4">
-                {tutor && (
-                  <InfoRow
-                    icon={User}
-                    label="Tutor/a"
-                    value={`${tutor.nombre} ${tutor.apellido}`}
-                  />
-                )}
-                {tutor && (
-                  <InfoRow
-                    icon={Mail}
-                    label="Mail"
-                    value={tutor.mail}
-                  />
+                {tutor ? (
+                  <div className="flex items-center gap-6">
+                    <InfoRow
+                      icon={User}
+                      label="Tutor/a"
+                      value={`${tutor.nombre} ${tutor.apellido}`}
+                    />
+                    <InfoRow icon={Mail} label="Mail" value={tutor.mail} />
+                  </div>
+                ) : (
+                  <span className="font-semibold text-muted-foreground">
+                    No hay tutor asignado a esta comisión.
+                  </span>
                 )}
               </div>
             </div>
@@ -176,24 +188,24 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                     <th className="px-4 py-2.5 text-left font-medium">
                       Nombre
                     </th>
-                    {role === "tutor" && (
+                    {role === "tutor" || role === "admin" ? (
                       <th className="px-4 py-2.5 text-left font-medium">DNI</th>
-                    )}
+                    ) : null}
                     <th className="px-4 py-2.5 text-left font-medium">
                       Carrera
                     </th>
-                    {role === "tutor" && (
+                    {role === "tutor" || role === "admin" ? (
                       <th className="px-4 py-2.5 text-left font-medium">
                         Asistencia
                       </th>
-                    )}
+                    ) : null}
                   </tr>
                 </thead>
                 <tbody>
                   {estudiantes.length === 0 ? (
                     <tr className="bg-card">
                       <td
-                        colSpan={role === "tutor" ? 5 : 4}
+                        colSpan={role === "tutor" || role === "admin" ? 5 : 4}
                         className="px-4 py-2.5 text-center text-muted-foreground"
                       >
                         No hay estudiantes en esta comisión.
@@ -223,15 +235,15 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                           <td className="px-4 py-2.5 text-foreground">
                             {e.nombre}
                           </td>
-                          {role === "tutor" && (
+                          {role === "tutor" || role === "admin" ? (
                             <td className="px-4 py-2.5 text-muted-foreground">
                               {e.dni}
                             </td>
-                          )}
+                          ) : null}
                           <td className="px-4 py-2.5 text-muted-foreground">
                             {e.carrera}
                           </td>
-                          {role === "tutor" && (
+                          {role === "tutor" || role === "admin" ? (
                             <td className="px-4 py-2.5">
                               <span
                                 className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -245,7 +257,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                                 {pct}%
                               </span>
                             </td>
-                          )}
+                          ) : null}
                         </tr>
                       );
                     })

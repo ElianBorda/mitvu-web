@@ -31,7 +31,7 @@ export default function ComisionCard({ comision, onClick }: Props) {
           <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
             {aula ? (
               <span className="flex items-center gap-1">
-                <Building size={12}/> Aula: {aula}
+                <Building size={12}/>{aula}
               </span>
             ) : (
               <span className="flex items-center gap-1">
@@ -39,7 +39,7 @@ export default function ComisionCard({ comision, onClick }: Props) {
               </span>
             )}
             <span className="flex items-center gap-1">
-              <Calendar1Icon size={12}/> Día hábil: {comision.diaHabil}
+              <Calendar1Icon size={12}/>{comision.diaHabil}
             </span>
           </div>
         </div>

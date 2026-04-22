@@ -1,49 +1,42 @@
 import { useEffect, useState } from "react";
-import { calendarEvents } from "@/data/mockData";
-import SlidePanel from "@/components/SlidePanel";
-import CalendarPanel from "@/components/CalendarPanel";
 import { useNavigate, useParams } from "react-router";
 import ComisionDetalle from "@/components/ComisionDetalle";
 import { Comision } from "@/types/comisionType";
-import { obtenerComisionesDelEstudiante } from "@/service/apiComision";
+import { getObtenerComision } from "@/service/apiComision";
 import { Role } from "@/data/types";
 import AppSidebar from "@/components/AppSidebar";
 import Topbar from "@/components/Topbar";
-import AdminDashboard from "@/pages/AdminDashboard";
 import { obtenerTodosLosTutores } from "@/service/apiTutor";
 import { obtenerTodosLosEstudiantes } from "@/service/apiEstudiante";
 import { Tutor } from "@/types/tutorType";
 import { Estudiante } from "@/types/estudianteType";
 import { isAxiosError } from "axios";
+import { ArrowLeft } from "lucide-react";
 
-const userNames: Record<Role, string> = {
-  estudiante: "Lucía Martínez",
-  tutor: "María González",
-  admin: "Admin TVU",
-};
-
-export default function EstudianteDashboard() {
+export default function AdminComision() {
   const { id } = useParams<{ id: string }>();
-  const estudianteId = id;
+  const comisionId = id;
   const navigate = useNavigate();
+  const [role, setRole] = useState<Role>("admin");
 
-  const [role, setRole] = useState<Role>("estudiante");
+  const [comision, setComision] = useState<Comision | null>(null);
   const [activeItem, setActiveItem] = useState("home");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showStudentCalendar, setShowStudentCalendar] = useState(false);
   const [tutores, setTutores] = useState<Tutor[]>([]);
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
-  const [comision, setComision] = useState<Comision | null>(null);
-  const [hasNoComision, setHasNoComision] = useState(false);
-
   const [loading, setLoading] = useState(true);
 
-  const studentEvents = calendarEvents.filter(e => e.commissionId === "c1"); // reemplazar con API
+  const userNames: Record<Role, string> = {
+    estudiante: "Lucía Martínez",
+    tutor: "María González",
+    admin: "Admin TVU",
+  };
 
   const handleSidebarClick = (itemId: string) => {
     setActiveItem(itemId);
     if (role === "estudiante" && itemId === "calendar") {
-      setShowStudentCalendar(prev => !prev);
+      setShowStudentCalendar((prev) => !prev);
     }
     if (itemId === "redes") {
       window.open("https://www.unq.edu.ar", "_blank");
@@ -88,50 +81,41 @@ export default function EstudianteDashboard() {
 
   useEffect(() => {
     const fetchComision = async () => {
-    setLoading(true);
-    setHasNoComision(false);
-    try {
-      const response = await obtenerComisionesDelEstudiante(estudianteId);
-      setComision(response.data);
-    } catch (error) {
-      if (isAxiosError(error) && error.response?.status === 400) {
-        setHasNoComision(true);
-        setComision(null);
+      setLoading(true);
+      try {
+        const response = await getObtenerComision(comisionId);
+        setComision(response.data);
+      } catch (error) {
+        if (isAxiosError(error) && error.response?.status === 400) {
+          setComision(null);
+        } else {
+          console.error("Error fetching comision:", error);
+        }
+      } finally {
+        setLoading(false); // ← se ejecuta tanto si hay error como si no
       }
-      else {
-        console.error("Error fetching comision:", error);
-      }
-    } finally {
-      setLoading(false); // ← se ejecuta tanto si hay error como si no
-    }
-  };
+    };
     fetchComision();
-  }, [estudianteId]);
+  }, [comisionId]);
 
   const renderContent = () => {
     if (role === "tutor") return null;
-    if (role === "admin") return <AdminDashboard />;
     if (loading) {
-       return <p className="text-muted-foreground text-sm">Cargando comisión...</p>;
-    }
-    if (hasNoComision) {
       return (
-        <div className="inline-flex rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          Aún no tenés una comisión asignada.
-        </div>
+        <p className="text-muted-foreground text-sm">Cargando comisión...</p>
       );
     }
 
     return (
-      <div className="relative">
-        <ComisionDetalle comision={comision} role="estudiante" />
-        <SlidePanel
-          open={showStudentCalendar}
-          onClose={() => setShowStudentCalendar(false)}
-          title="Calendario académico"
+      <div>
+        <button
+          onClick={() => navigate("/?view=comisiones")}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
-          <CalendarPanel events={studentEvents} />
-        </SlidePanel>
+          <ArrowLeft size={16} />
+          Volver al panel
+        </button>
+        <ComisionDetalle comision={comision} role={role} />;
       </div>
     );
   };
@@ -156,9 +140,7 @@ export default function EstudianteDashboard() {
           estudiantes={estudiantes}
           onEstudianteSelect={handleEstudianteSelect}
         />
-        <main className="flex-1 p-3 sm:p-6">
-          {renderContent()}
-        </main>
+        <main className="flex-1 p-3 sm:p-6">{renderContent()}</main>
       </div>
     </div>
   );

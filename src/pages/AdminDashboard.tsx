@@ -25,7 +25,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Comision } from "@/types/comisionType";
-import { obtenerTodosLosEstudiantes, asignarEstudianteAComision } from "@/service/apiEstudiante";
+import {
+  obtenerTodosLosEstudiantes,
+  asignarEstudianteAComision,
+} from "@/service/apiEstudiante";
 import { obtenerTodosLosTutores } from "@/service/apiTutor";
 import { obtenerTodasLasComisiones } from "@/service/apiComision";
 
@@ -39,6 +42,7 @@ export default function AdminDashboard() {
   const [estudiantes, setEstudiantes] = useState<any[]>([]);
   const [tutores, setTutores] = useState<any[]>([]);
   const [comisiones, setComisiones] = useState<Comision[]>([]);
+  const comisionIdPorIndice = comisiones?.map((c) => c.id);
   const [clickDelete, setClickDelete] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -90,7 +94,10 @@ export default function AdminDashboard() {
 
   const asignarComision = async (estudianteId: number, comisionId: string) => {
     try {
-      const response = await asignarEstudianteAComision(estudianteId, comisionId);
+      const response = await asignarEstudianteAComision(
+        estudianteId,
+        comisionId,
+      );
       setEstudiantes((prev) =>
         prev.map((e) =>
           e.id === estudianteId ? { ...e, comision_id: comisionId } : e,
@@ -322,6 +329,12 @@ export default function AdminDashboard() {
           onEdit={(row) => {
             if (view === "comisiones" && row.id)
               navigate(`/admin/editar-comision/${row.id}`);
+          }}
+          onRowClick={(row, index) => {
+            if (view === "comisiones") {
+              const id = comisionIdPorIndice[index];
+              navigate(`/admin/comision/${id}`);
+            }
           }}
           onDelete={(row, index) => {
             const dataCon = [...config.data];

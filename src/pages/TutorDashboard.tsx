@@ -16,6 +16,7 @@ import { Role } from "@/data/types";
 import { obtenerTodosLosEstudiantes } from "@/service/apiEstudiante";
 import { Estudiante } from "@/types/estudianteType";
 import EstudianteDashboard from "@/pages/EstudianteDashboard";
+import ComisionDetalle from "@/components/ComisionDetalle";
 
 const userNames: Record<Role, string> = {
   estudiante: "Lucía Martínez",
@@ -34,8 +35,7 @@ export default function TutorDashboard() {
   const [showStudentCalendar, setShowStudentCalendar] = useState(false);
   const [tutores, setTutores] = useState<Tutor[]>([]);
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
-  const [comisionSeleccionada, setComisionSeleccionada] =
-    useState<Comision | null>(null);
+  const [comisionSeleccionada, setComisionSeleccionada] = useState<Comision | null>(null);
   const [comisiones, setComisiones] = useState<Comision[]>([]);
 
   const tutorEvents = calendarEvents.filter((e) =>
@@ -105,7 +105,7 @@ export default function TutorDashboard() {
 
     if (comisionSeleccionada) {
       return (
-        <CommissionDetail
+        <ComisionDetalle
           comision={comisionSeleccionada}
           role="tutor"
           onBack={() => setComisionSeleccionada(null)}
@@ -158,8 +158,8 @@ export default function TutorDashboard() {
           onMenuClick={() => setMobileMenuOpen(true)}
           tutores={tutores}
           onTutorSelect={handleTutorSelect}
-          estudiantes={estudiantes} // No se muestran estudiantes en el dashboard del tutor
-          onEstudianteSelect={handleEstudianteSelect} // No se seleccionan estudiantes en el dashboard del tutor
+          estudiantes={estudiantes}
+          onEstudianteSelect={handleEstudianteSelect}
         />
         <main className="flex-1 p-3 sm:p-6">{renderContent()}</main>
       </div>
