@@ -46,6 +46,7 @@ export default function AgregarComision() {
         setHorarioInicioMS(data.horarioInicio.split(":")[1]);
         setHorarioFinHS(data.horarioFin.split(":")[0]);
         setHorarioFinMS(data.horarioFin.split(":")[1]);
+        setDiaHabil(data.diaHabil ?? "");
       })
       .catch(() => {
         toast.error("La comisión no existe.");

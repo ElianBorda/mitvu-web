@@ -31,6 +31,7 @@ import {
 } from "@/service/apiEstudiante";
 import { obtenerTodosLosTutores } from "@/service/apiTutor";
 import { obtenerTodasLasComisiones } from "@/service/apiComision";
+import { C } from "vitest/dist/chunks/reporters.d.BFLkQcL6.js";
 
 type AdminView = "comisiones" | "tutores" | "estudiantes";
 
@@ -326,9 +327,10 @@ export default function AdminDashboard() {
             }
           }}
           addLabel={config.addLabel}
-          onEdit={(row) => {
-            if (view === "comisiones" && row.id)
-              navigate(`/admin/editar-comision/${row.id}`);
+          onEdit={(row, index) => {
+            const id = comisionIdPorIndice[index]
+            if (view === "comisiones" && id)
+              navigate(`/admin/editar-comision/${id}`);
           }}
           onRowClick={(row, index) => {
             if (view === "comisiones") {
@@ -336,6 +338,7 @@ export default function AdminDashboard() {
               navigate(`/admin/comision/${id}`);
             }
           }}
+          rowIds={comisionIdPorIndice}
           onDelete={(row, index) => {
             const dataCon = [...config.data];
             dataCon.splice(index, 1);

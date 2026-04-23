@@ -34,9 +34,10 @@ interface Props {
   onAdd?: () => void;
   view?: string;
   addLabel?: string;
-  onEdit?: (row: Record<string, any>) => void;
+  onEdit?: (row: Record<string, any>, index: number) => void;
   onDelete?: (row: Record<string, any>, index: number) => void;
   onRowClick?: (row: Record<string, any>, index: number) => void;
+  rowIds?: string[];
 }
 
 export default function DataTable({
@@ -48,6 +49,7 @@ export default function DataTable({
   onDelete,
   view,
   onRowClick,
+  rowIds,
 }: Props) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -56,7 +58,8 @@ export default function DataTable({
 
   const handleConfirmDelete = () => {
     if (view === "comisiones") {
-      deleteComision(data[deleteIndex].id)
+      const id = rowIds?.[deleteIndex] ?? data[deleteIndex]?.id;
+      deleteComision(id)
         .then(() => {
           toast.success("Elemento eliminado correctamente");
           onDelete?.(data, deleteIndex);
@@ -145,7 +148,7 @@ export default function DataTable({
                       <Eye size={14} className="text-muted-foreground" />
                     </button>
                     <button
-                      onClick={() => onEdit?.(row)}
+                      onClick={() => onEdit?.(row, page * perPage + i)}
                       className="p-1 rounded hover:bg-secondary"
                     >
                       <Pencil size={14} className="text-muted-foreground" />
