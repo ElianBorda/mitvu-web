@@ -15,10 +15,14 @@ import {
 import AnnouncementPanel from "./AnnouncementPanel";
 import MetricsPanel from "./MetricsPanel";
 import { Comision } from "@/types/comisionType";
-import { obtenerEstudiantesDeComision } from "@/service/apiEstudiante";
+import {
+  obtenerEstudiantesDeComision,
+  obtenerEstudiantesDadosDeBajaDeUnaComision,
+} from "@/service/apiEstudiante";
 import { obtenerTutorDeLaComision } from "@/service/apiTutor";
 import { Tutor } from "@/types/tutorType";
 import { isAxiosError } from "axios";
+import MetricasLargoComision from "./MetricasLargoComision";
 
 interface Props {
   comision: Comision;
@@ -31,6 +35,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
     "participants",
   );
   const [estudiantes, setEstudiantes] = useState<any[]>([]);
+  const [estudiantesBaja, setEstudiantesBaja] = useState<any[]>([]);
   const [tutor, setTutor] = useState<Tutor>(null);
   const commAnnouncements = announcements.filter(
     (a) => a.commissionId === comision.id,
@@ -58,8 +63,23 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
         console.error("Error fetching students:", error);
       }
     };
+
+    const fetchEstudiantesBaja = async () => {
+      try {
+        const response = await obtenerEstudiantesDadosDeBajaDeUnaComision(
+          comision.id,
+        );
+        setEstudiantesBaja(response.data);
+      } catch (error) {
+        console.error("Error fetching students on leave:", error);
+      }
+    };
+
     fetchTutor();
     fetchEstudiantes();
+    if (role === "tutor" || role === "admin") {
+      fetchEstudiantesBaja();
+    }
   }, [comision.id]);
 
   return (
@@ -265,6 +285,77 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                 </tbody>
               </table>
             </div>
+
+            {/* Tabla de estudiantes dados de baja — solo tutor/admin */}
+            {(role === "tutor" || role === "admin") && (
+              <div className="mt-6">
+                <h3 className="text-sm font-semibold text-foreground mb-3">
+                  Estudiantes dados de baja
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">
+                    ({estudiantesBaja.length})
+                  </span>
+                </h3>
+                {estudiantesBaja.length === 0 ? (
+                  <div className="bg-card border border-border rounded-lg px-6 py-6 text-center text-sm text-muted-foreground">
+                    No hay estudiantes dados de baja en esta comisión.
+                  </div>
+                ) : (
+                  <div className="bg-card rounded-lg shadow-card border border-border overflow-x-auto">
+                    <table className="w-full text-sm min-w-[500px]">
+                      <thead>
+                        <tr className="bg-[#2d2d2d] text-white">
+                          <th className="px-4 py-2.5 text-left font-medium">
+                            Apellido
+                          </th>
+                          <th className="px-4 py-2.5 text-left font-medium">
+                            Nombre
+                          </th>
+                          <th className="px-4 py-2.5 text-left font-medium">
+                            Motivo
+                          </th>
+                          <th className="px-4 py-2.5 text-left font-medium">
+                            Detalle
+                          </th>
+                          <th className="px-4 py-2.5 text-left font-medium">
+                            Fecha de baja
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {estudiantesBaja.map((e, i) => (
+                          <tr
+                            key={e.id}
+                            className={`border-t border-border ${i % 2 === 0 ? "bg-card" : "bg-[#fafafa]"}`}
+                          >
+                            <td className="px-4 py-2.5 font-medium text-foreground">
+                              {e.apellido}
+                            </td>
+                            <td className="px-4 py-2.5 text-foreground">
+                              {e.nombre}
+                            </td>
+                            <td className="px-4 py-2.5 text-muted-foreground">
+                              {e.baja?.motivo ?? "—"}
+                            </td>
+                            <td className="px-4 py-2.5 text-muted-foreground max-w-xs truncate">
+                              {e.baja?.detalle === "" || e.baja?.detalle == null
+                                ? "No especificado"
+                                : e.baja.detalle}
+                            </td>
+                            <td className="px-4 py-2.5 text-muted-foreground">
+                              {e.baja?.fechaBaja
+                                ? new Date(e.baja.fechaBaja).toLocaleDateString(
+                                    "es-AR",
+                                  )
+                                : "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right: Announcements */}
@@ -276,10 +367,10 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
           </div>
         </div>
       ) : (
-        <MetricsPanel
-          commissionId={comision.id}
-          commissionNumber={comision.numero}
-        />
+        <MetricasLargoComision 
+          comisionId={comision.id} 
+          numeroComision={comision.numero}
+          />
       )}
     </div>
   );
