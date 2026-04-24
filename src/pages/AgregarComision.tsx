@@ -129,7 +129,7 @@ export default function AgregarComision() {
 
   return (
     // CAMBIO DE ESTILOS AQUÍ: Eliminado el min-h-screen y el padding Y excesivo, reemplazado por h-calc y centrado
-    <div className="h-[calc(100vh-5rem)] w-full flex flex-col items-center justify-center bg-background px-4">
+    <div className="h-[calc(100vh-5rem)] w-full flex flex-col items-center bg-background px-4">
       <div className="w-full max-w-2xl">
         <button
           onClick={() => navigate("/?view=comisiones")}

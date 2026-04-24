@@ -51,7 +51,6 @@ export default function AppSidebar({ role, activeItem, onItemClick, mobileOpen, 
   const dangerItems = items.filter(i => i.danger);
 
   const handleClick = (id: string) => {
-    console.log(role, id)
     onItemClick(id);
     onMobileClose();
   };

@@ -26,7 +26,8 @@ import {
 } from "@/components/ui/popover";
 import { Comision } from "@/types/comisionType";
 import {
-  obtenerTodosLosEstudiantes,
+  obtenerTodosLosEstudiantesActivos,
+  obtenerTodosLosEstudiantesDeBaja,
   asignarEstudianteAComision,
 } from "@/service/apiEstudiante";
 import { obtenerTodosLosTutores } from "@/service/apiTutor";
@@ -40,7 +41,8 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [estudiantes, setEstudiantes] = useState<any[]>([]);
+  const [estudiantesActivos, setEstudiantesActivos] = useState<any[]>([]);
+  const [estudiantesBaja, setEstudiantesBaja] = useState<any[]>([]);
   const [tutores, setTutores] = useState<any[]>([]);
   const [comisiones, setComisiones] = useState<Comision[]>([]);
   const comisionIdPorIndice = comisiones?.map((c) => c.id);
@@ -62,8 +64,10 @@ export default function AdminDashboard() {
 
   const fetchEstudiantes = async () => {
     try {
-      const response = await obtenerTodosLosEstudiantes();
-      setEstudiantes(response.data);
+      const responseActivos = await obtenerTodosLosEstudiantesActivos();
+      const responseBaja = await obtenerTodosLosEstudiantesDeBaja();
+      setEstudiantesActivos(responseActivos.data);
+      setEstudiantesBaja(responseBaja.data);
     } catch (error) {
       console.error("Error al obtener estudiantes:", error);
     }
@@ -99,7 +103,7 @@ export default function AdminDashboard() {
         estudianteId,
         comisionId,
       );
-      setEstudiantes((prev) =>
+      setEstudiantesActivos((prev) =>
         prev.map((e) =>
           e.id === estudianteId ? { ...e, comision_id: comisionId } : e,
         ),
@@ -110,7 +114,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const totalEstudiantes = estudiantes.length;
+  const totalEstudiantes = estudiantesActivos.length;
   const avgGlobal = Math.round(
     comisiones.reduce((s, c) => s + getCommissionAvgAttendance(c.id), 0) /
       comisiones.length,
@@ -132,7 +136,7 @@ export default function AdminDashboard() {
   }));
 
   const localityData = Object.entries(
-    estudiantes.reduce<Record<string, number>>((acc, s) => {
+    estudiantesActivos.reduce<Record<string, number>>((acc, s) => {
       const comm = comisiones.find((c) => c.id === s.comisionId);
       const loc = comm?.localidad || "Otro";
       acc[loc] = (acc[loc] || 0) + 1;
@@ -171,7 +175,7 @@ export default function AdminDashboard() {
     comisiones: t.comisiones.length,
   }));
 
-  const estudianteData = estudiantes.map((e) => {
+  const estudianteData = estudiantesActivos.map((e) => {
     // const pres = s.attendance.filter(a => a === "present").length;
     // const total = s.attendance.filter(a => a !== "none").length;
     var com: Comision;
@@ -237,6 +241,16 @@ export default function AdminDashboard() {
       ),
     };
   });
+
+  const bajasData = estudiantesBaja.map((e) => ({
+    apellido: e.apellido,
+    nombre: e.nombre,
+    motivo: e.baja?.motivo ?? "—",
+    detalle: e.baja?.detalle === "" || e.baja?.detalle == null ? "No especificado" : e.baja.detalle,
+    fechaBaja: e.baja?.fechaBaja
+      ? new Date(e.baja.fechaBaja).toLocaleDateString("es-AR")
+      : "—",
+  }));
 
   const tableConfigs: Record<
     AdminView,
@@ -328,7 +342,7 @@ export default function AdminDashboard() {
           }}
           addLabel={config.addLabel}
           onEdit={(row, index) => {
-            const id = comisionIdPorIndice[index]
+            const id = comisionIdPorIndice[index];
             if (view === "comisiones" && id)
               navigate(`/admin/editar-comision/${id}`);
           }}
@@ -346,6 +360,70 @@ export default function AdminDashboard() {
             setClickDelete(!clickDelete);
           }}
         />
+        {/* Tabla de estudiantes dados de baja */}
+        {view === "estudiantes" && (
+          <div className="mt-8">
+            <h2 className="text-base font-semibold text-foreground mb-3">
+              Estudiantes dados de baja
+              <span className="ml-2 text-xs font-normal text-muted-foreground">
+                ({estudiantesBaja.length})
+              </span>
+            </h2>
+            {bajasData.length === 0 ? (
+              <div className="bg-card border border-border rounded-lg px-6 py-8 text-center text-sm text-muted-foreground">
+                No hay estudiantes dados de baja.
+              </div>
+            ) : (
+              <div className="bg-card border border-border rounded-lg overflow-hidden shadow-card">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-[#2d2d2d] text-white">
+                      <th className="px-4 py-3 text-left font-medium">
+                        Apellido
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium">
+                        Nombre
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium">
+                        Motivo
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium">
+                        Detalle
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium">
+                        Fecha de baja
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bajasData.map((row, i) => (
+                      <tr
+                        key={i}
+                        className={`border-t border-border ${i % 2 === 0 ? "bg-white" : "bg-[#fafafa]"}`}
+                      >
+                        <td className="px-4 py-3 text-foreground">
+                          {row.apellido}
+                        </td>
+                        <td className="px-4 py-3 text-foreground">
+                          {row.nombre}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {row.motivo}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">
+                          {row.detalle}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {row.fechaBaja}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Right: Metrics */}
