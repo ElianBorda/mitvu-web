@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, Users, GraduationCap, Calendar, Settings, LayoutList, Megaphone, LogOut, Link as LinkIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Home, Users, GraduationCap, Calendar, Settings, LayoutList, Megaphone, LogOut, Link as LinkIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { Role } from "@/data/types";
 import logo from "@/assets/mi-tvu-logo.png";
 
@@ -11,7 +11,7 @@ interface SidebarItem {
 }
 
 const sidebarItems: Record<Role, SidebarItem[]> = {
-  estudiante: [
+  student: [
     { icon: Home, label: "Inicio", id: "home" },
     { icon: Calendar, label: "Calendario", id: "calendar" },
     { icon: LinkIcon, label: "Redes UNQ", id: "redes" },
@@ -39,35 +39,25 @@ interface AppSidebarProps {
   role: Role;
   activeItem: string;
   onItemClick: (id: string) => void;
-  mobileOpen: boolean;
-  onMobileClose: () => void;
-  hideStudentUnenroll?: boolean; 
 }
 
-export default function AppSidebar({ role, activeItem, onItemClick, mobileOpen, onMobileClose, hideStudentUnenroll }: AppSidebarProps) {
+export default function AppSidebar({ role, activeItem, onItemClick }: AppSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const items = sidebarItems[role].filter(i => !(hideStudentUnenroll && role === "estudiante" && i.id === "baja"));
+  const items = sidebarItems[role];
   const mainItems = items.filter(i => !i.danger);
   const dangerItems = items.filter(i => i.danger);
 
-  const handleClick = (id: string) => {
-    onItemClick(id);
-    onMobileClose();
-  };
-
-  const sidebarContent = (
-    <>
+  return (
+    <aside
+      className={`fixed top-0 left-0 h-screen z-40 flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ${collapsed ? "w-16" : "w-56"}`}
+    >
       {/* Logo */}
-      <div className="flex items-center justify-between h-16 px-3 border-b border-white/10">
+      <div className="flex items-center justify-center h-16 px-3 border-b border-white/10">
         {collapsed ? (
-          <span className="text-lg font-bold tracking-tight mx-auto">m</span>
+          <span className="text-lg font-bold tracking-tight">m</span>
         ) : (
           <img src={logo} alt="miTVU" className="h-8 brightness-0 invert" />
         )}
-        {/* Mobile close button */}
-        <button onClick={onMobileClose} className="md:hidden p-1 rounded hover:bg-white/10">
-          <X size={20} />
-        </button>
       </div>
 
       {/* Nav items */}
@@ -77,7 +67,7 @@ export default function AppSidebar({ role, activeItem, onItemClick, mobileOpen, 
           return (
             <button
               key={item.id}
-              onClick={() => handleClick(item.id)}
+              onClick={() => onItemClick(item.id)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors group relative
                 ${active ? "bg-sidebar-active" : "hover:bg-white/10"}`}
               title={collapsed ? item.label : undefined}
@@ -96,7 +86,7 @@ export default function AppSidebar({ role, activeItem, onItemClick, mobileOpen, 
           {dangerItems.map(item => (
             <button
               key={item.id}
-              onClick={() => handleClick(item.id)}
+              onClick={() => onItemClick(item.id)}
               className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-white/50 hover:text-white/80 hover:bg-white/5 w-full"
               title={collapsed ? item.label : undefined}
             >
@@ -107,41 +97,13 @@ export default function AppSidebar({ role, activeItem, onItemClick, mobileOpen, 
         </div>
       )}
 
-      {/* Collapse toggle - desktop only */}
+      {/* Collapse toggle */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="hidden md:flex items-center justify-center h-12 border-t border-white/10 hover:bg-white/10 transition-colors"
+        className="flex items-center justify-center h-12 border-t border-white/10 hover:bg-white/10 transition-colors"
       >
         {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
       </button>
-    </>
-  );
-
-  return (
-    <>
-      {/* Desktop sidebar */}
-      <aside
-        className={`hidden md:flex fixed top-0 left-0 h-screen z-40 flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ${collapsed ? "w-16" : "w-56"}`}
-      >
-        {sidebarContent}
-      </aside>
-
-      {/* Desktop spacer */}
-      <div className={`hidden md:block shrink-0 transition-all duration-300 ${collapsed ? "w-16" : "w-56"}`} />
-
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={onMobileClose} />
-      )}
-
-      {/* Mobile sidebar */}
-      <aside
-        className={`md:hidden fixed top-0 left-0 h-screen z-50 w-64 flex flex-col bg-sidebar text-sidebar-foreground transition-transform duration-300 ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        {sidebarContent}
-      </aside>
-    </>
+    </aside>
   );
 }
