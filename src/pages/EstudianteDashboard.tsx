@@ -21,6 +21,7 @@ export default function EstudianteDashboard({ unenrolled = false }: { unenrolled
   const studentEvents = calendarEvents.filter(e => e.commissionId === "c1"); 
 
   useEffect(() => {
+
     const fetchComision = async () => {
       setLoading(true);
       setHasNoComision(false);

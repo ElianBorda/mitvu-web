@@ -156,6 +156,14 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Pie chart */}
+        <div className="bg-card rounded-lg shadow-card border border-border p-4">
+          <h3 className="text-xs font-semibold text-foreground mb-3">
+            Estudiantes totales dados de baja.
+          </h3>
+          <MetricasGrafico />
+        </div>
+
         {/* Bar chart */}
         <div className="bg-card rounded-lg shadow-card border border-border p-4">
           <h3 className="text-xs font-semibold text-foreground mb-3">Asistencia por comisión</h3>
