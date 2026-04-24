@@ -1,89 +1,29 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router-dom"; // Corregido el import de react-router a react-router-dom
 import ComisionDetalle from "@/components/ComisionDetalle";
 import { Comision } from "@/types/comisionType";
 import { getObtenerComision } from "@/service/apiComision";
-import { Role } from "@/data/types";
-import AppSidebar from "@/components/AppSidebar";
-import Topbar from "@/components/Topbar";
-import { obtenerTodosLosTutores } from "@/service/apiTutor";
-import { obtenerTodosLosEstudiantes } from "@/service/apiEstudiante";
-import { Tutor } from "@/types/tutorType";
-import { Estudiante } from "@/types/estudianteType";
 import { isAxiosError } from "axios";
 import { ArrowLeft } from "lucide-react";
+import { useLayoutContext } from "@/App";
 
 export default function AdminComision() {
   const { id } = useParams<{ id: string }>();
-  const comisionId = id;
   const navigate = useNavigate();
-  const [role, setRole] = useState<Role>("admin");
+  
+  // Consumimos el rol desde el layout centralizado
+  const { role } = useLayoutContext();
 
   const [comision, setComision] = useState<Comision | null>(null);
-  const [activeItem, setActiveItem] = useState("home");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showStudentCalendar, setShowStudentCalendar] = useState(false);
-  const [tutores, setTutores] = useState<Tutor[]>([]);
-  const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const userNames: Record<Role, string> = {
-    estudiante: "Lucía Martínez",
-    tutor: "María González",
-    admin: "Admin TVU",
-  };
-
-  const handleSidebarClick = (itemId: string) => {
-    setActiveItem(itemId);
-    if (role === "estudiante" && itemId === "calendar") {
-      setShowStudentCalendar((prev) => !prev);
-    }
-    if (itemId === "redes") {
-      window.open("https://www.unq.edu.ar", "_blank");
-    }
-  };
-
-  const handleRoleChange = (newRole: Role) => {
-    setRole(newRole);
-    setActiveItem("home");
-    setShowStudentCalendar(false);
-    if (newRole !== "estudiante") navigate("/");
-  };
-
-  const handleTutorSelect = (selectedTutorId: number) => {
-    navigate(`/tutor/${selectedTutorId}`);
-  };
-
-  const handleEstudianteSelect = (selectedEstudianteId: number) => {
-    navigate(`/estudiante/${selectedEstudianteId}`);
-  };
-
-  useEffect(() => {
-    const fetchTutores = async () => {
-      try {
-        const response = await obtenerTodosLosTutores();
-        setTutores(response.data);
-      } catch (error) {
-        console.error("Error fetching tutores:", error);
-      }
-    };
-    const fetchEstudiantes = async () => {
-      try {
-        const response = await obtenerTodosLosEstudiantes();
-        setEstudiantes(response.data);
-      } catch (error) {
-        console.error("Error fetching estudiantes:", error);
-      }
-    };
-    fetchTutores();
-    fetchEstudiantes();
-  }, []);
 
   useEffect(() => {
     const fetchComision = async () => {
+      if (!id) return;
+      
       setLoading(true);
       try {
-        const response = await getObtenerComision(comisionId);
+        const response = await getObtenerComision(id);
         setComision(response.data);
       } catch (error) {
         if (isAxiosError(error) && error.response?.status === 400) {
@@ -92,56 +32,51 @@ export default function AdminComision() {
           console.error("Error fetching comision:", error);
         }
       } finally {
-        setLoading(false); // ← se ejecuta tanto si hay error como si no
+        setLoading(false);
       }
     };
     fetchComision();
-  }, [comisionId]);
+  }, [id]);
 
-  const renderContent = () => {
-    if (role === "tutor") return null;
-    if (loading) {
-      return (
-        <p className="text-muted-foreground text-sm">Cargando comisión...</p>
-      );
-    }
+  // Si no es admin, no renderizamos el contenido (protección de ruta básica)
+  if (role !== "admin") return null;
 
+  if (loading) {
     return (
-      <div>
-        <button
-          onClick={() => navigate("/?view=comisiones")}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft size={16} />
-          Volver al panel
-        </button>
-        <ComisionDetalle comision={comision} role={role} />;
-      </div>
+      <p className="text-muted-foreground text-sm">Cargando comisión...</p>
     );
-  };
+  }
+
+  // Manejo de caso donde la comisión no existe o falló la carga
+  if (!comision) {
+     return (
+        <div className="text-center mt-10">
+           <p className="text-muted-foreground mb-4">No se encontró la comisión solicitada.</p>
+           <button
+            onClick={() => navigate("/?view=comisiones")}
+            className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+          >
+            <ArrowLeft size={16} />
+            Volver al panel
+          </button>
+        </div>
+     );
+  }
 
   return (
-    <div className="flex min-h-screen w-full">
-      <AppSidebar
-        role={role}
-        activeItem={activeItem}
-        onItemClick={handleSidebarClick}
-        mobileOpen={mobileMenuOpen}
-        onMobileClose={() => setMobileMenuOpen(false)}
-      />
-      <div className="flex-1 flex flex-col min-w-0">
-        <Topbar
-          userName={userNames[role]}
-          role={role}
-          onRoleChange={handleRoleChange}
-          onMenuClick={() => setMobileMenuOpen(true)}
-          tutores={tutores}
-          onTutorSelect={handleTutorSelect}
-          estudiantes={estudiantes}
-          onEstudianteSelect={handleEstudianteSelect}
-        />
-        <main className="flex-1 p-3 sm:p-6">{renderContent()}</main>
-      </div>
+    <div className="w-full max-w-7xl mx-auto">
+      <button
+        onClick={() => navigate("/?view=comisiones")}
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+      >
+        <ArrowLeft size={16} />
+        Volver al panel
+      </button>
+      
+      {/* Eliminado el punto y coma (;) erróneo que estaba al final de este componente 
+        y le pasamos explícitamente el rol de admin
+      */}
+      <ComisionDetalle comision={comision} role="admin" />
     </div>
   );
 }

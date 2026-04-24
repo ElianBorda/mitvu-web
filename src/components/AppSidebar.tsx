@@ -41,15 +41,17 @@ interface AppSidebarProps {
   onItemClick: (id: string) => void;
   mobileOpen: boolean;
   onMobileClose: () => void;
+  hideStudentUnenroll?: boolean; 
 }
 
-export default function AppSidebar({ role, activeItem, onItemClick, mobileOpen, onMobileClose }: AppSidebarProps) {
+export default function AppSidebar({ role, activeItem, onItemClick, mobileOpen, onMobileClose, hideStudentUnenroll }: AppSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const items = sidebarItems[role];
+  const items = sidebarItems[role].filter(i => !(hideStudentUnenroll && role === "estudiante" && i.id === "baja"));
   const mainItems = items.filter(i => !i.danger);
   const dangerItems = items.filter(i => i.danger);
 
   const handleClick = (id: string) => {
+    console.log(role, id)
     onItemClick(id);
     onMobileClose();
   };

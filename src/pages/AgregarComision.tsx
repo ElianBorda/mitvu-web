@@ -128,27 +128,28 @@ export default function AgregarComision() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
+    // CAMBIO DE ESTILOS AQUÍ: Eliminado el min-h-screen y el padding Y excesivo, reemplazado por h-calc y centrado
+    <div className="h-[calc(100vh-5rem)] w-full flex flex-col items-center justify-center bg-background px-4">
+      <div className="w-full max-w-2xl">
         <button
           onClick={() => navigate("/?view=comisiones")}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
         >
           <ArrowLeft size={16} />
           Volver al panel
         </button>
-        <div className="bg-card rounded-xl shadow-card border border-border p-6 sm:p-8">
+        <div className="bg-card rounded-xl shadow-card border border-border p-5 sm:p-6">
           <h1 className="text-xl sm:text-2xl font-semibold text-foreground mb-1">
             {isEdit ? "Modificar comisión" : "Agregar comisión"}
           </h1>
-          <p className="text-sm text-muted-foreground mb-8">
+          <p className="text-sm text-muted-foreground mb-6">
             {isEdit
               ? "Actualizá los datos de la comisión seleccionada."
               : "Completá los datos de la nueva comisión para darla de alta en el sistema."}
           </p>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="space-y-2">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
                 <Label htmlFor="localidad">Localidad *</Label>
                 <Input
                   id="localidad"
@@ -157,7 +158,7 @@ export default function AgregarComision() {
                   onChange={(e) => setLocalidad(e.target.value)}
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="departamento">Departamento *</Label>
                 <Input
                   id="departamento"
@@ -167,8 +168,8 @@ export default function AgregarComision() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
                 <Label>Día hábil *</Label>
                 <Select value={diaHabil} onValueChange={setDiaHabil}>
                   <SelectTrigger>
@@ -184,7 +185,7 @@ export default function AgregarComision() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="aula">Aula</Label>
                 <Input
                   id="aula"
@@ -194,7 +195,7 @@ export default function AgregarComision() {
                 />
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="carrera">Carrera</Label>
               <Input
                 id="carrera"
@@ -203,7 +204,7 @@ export default function AgregarComision() {
                 onChange={(e) => setCarrera(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Horario de inicio *</Label>
               <div className="flex items-center gap-2">
                 <Input
@@ -227,7 +228,7 @@ export default function AgregarComision() {
                 />
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Horario de fin *</Label>
               <div className="flex items-center gap-2">
                 <Input
@@ -249,7 +250,7 @@ export default function AgregarComision() {
                 />
               </div>
             </div>
-            <div className="pt-4">
+            <div className="pt-2">
               <button
                 type="submit"
                 className="w-full sm:w-auto px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"

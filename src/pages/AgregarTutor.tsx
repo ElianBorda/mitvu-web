@@ -79,27 +79,28 @@ export default function AgregarTutor() {
     );
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
+    // CAMBIO DE ESTILOS AQUÍ
+    <div className="h-[calc(100vh-5rem)] w-full flex flex-col items-center justify-center bg-background px-4">
+      <div className="w-full max-w-2xl">
         <button
           onClick={() => navigate("/")}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
         >
           <ArrowLeft size={16} />
           Volver al panel
         </button>
 
-        <div className="bg-card rounded-xl shadow-card border border-border p-6 sm:p-8">
+        <div className="bg-card rounded-xl shadow-card border border-border p-5 sm:p-6">
           <h1 className="text-xl sm:text-2xl font-semibold text-foreground mb-1">
             Agregar tutor
           </h1>
-          <p className="text-sm text-muted-foreground mb-8">
+          <p className="text-sm text-muted-foreground mb-6">
             Completá los datos del nuevo tutor para darlo de alta en el sistema.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="space-y-2">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
                 <Label htmlFor="apellido">Apellido *</Label>
                 <Input
                   id="apellido"
@@ -108,7 +109,7 @@ export default function AgregarTutor() {
                   onChange={(e) => handleChange("apellido", e.target.value)}
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="nombre">Nombre *</Label>
                 <Input
                   id="nombre"
@@ -119,7 +120,7 @@ export default function AgregarTutor() {
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="mail">Correo electrónico *</Label>
               <Input
                 id="mail"
@@ -129,7 +130,7 @@ export default function AgregarTutor() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="dni">DNI *</Label>
               <Input
                 id="dni"
@@ -139,7 +140,7 @@ export default function AgregarTutor() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Comisiones a cargo (opcional)</Label>
               <Popover>
                 <PopoverTrigger asChild>
@@ -189,7 +190,7 @@ export default function AgregarTutor() {
               </Popover>
             </div>
 
-            <div className="pt-4">
+            <div className="pt-2">
               <button
                 type="submit"
                 className="w-full sm:w-auto px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
