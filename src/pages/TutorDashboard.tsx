@@ -29,6 +29,7 @@ export default function TutorDashboard() {
       }
     };
     if (id) fetchComisiones();
+    setComisionSeleccionada(null);
   }, [id]);
 
   if (role === "admin" || role === "estudiante") return null;

@@ -33,6 +33,7 @@ import {
 import { obtenerTodosLosTutores } from "@/service/apiTutor";
 import { obtenerTodasLasComisiones } from "@/service/apiComision";
 import { C } from "vitest/dist/chunks/reporters.d.BFLkQcL6.js";
+import MetricasGrafico from "@/components/MetricasGrafico";
 
 type AdminView = "comisiones" | "tutores" | "estudiantes";
 
@@ -454,6 +455,14 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Pie chart */}
+        <div className="bg-card rounded-lg shadow-card border border-border p-4">
+          <h3 className="text-xs font-semibold text-foreground mb-3">
+            Estudiantes totales dados de baja.
+          </h3>
+          <MetricasGrafico />
+        </div>
+
         {/* Bar chart */}
         <div className="bg-card rounded-lg shadow-card border border-border p-4">
           <h3 className="text-xs font-semibold text-foreground mb-3">
@@ -496,32 +505,6 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Pie chart */}
-        <div className="bg-card rounded-lg shadow-card border border-border p-4">
-          <h3 className="text-xs font-semibold text-foreground mb-3">
-            Estudiantes por localidad
-          </h3>
-          <ResponsiveContainer width="100%" height={160}>
-            <PieChart>
-              <Pie
-                data={localityData}
-                cx="50%"
-                cy="50%"
-                outerRadius={60}
-                dataKey="value"
-                strokeWidth={0}
-                label={({ name, percent }) =>
-                  `${name} ${(percent * 100).toFixed(0)}%`
-                }
-              >
-                {localityData.map((_, i) => (
-                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
       </div>
     </div>
   );

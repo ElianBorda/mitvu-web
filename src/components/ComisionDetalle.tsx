@@ -22,6 +22,7 @@ import {
 import { obtenerTutorDeLaComision } from "@/service/apiTutor";
 import { Tutor } from "@/types/tutorType";
 import { isAxiosError } from "axios";
+import MetricasLargoComision from "./MetricasLargoComision";
 
 interface Props {
   comision: Comision;
@@ -366,10 +367,10 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
           </div>
         </div>
       ) : (
-        <MetricsPanel
-          commissionId={comision.id}
-          commissionNumber={comision.numero}
-        />
+        <MetricasLargoComision 
+          comisionId={comision.id} 
+          numeroComision={comision.numero}
+          />
       )}
     </div>
   );
