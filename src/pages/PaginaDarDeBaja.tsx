@@ -45,7 +45,7 @@ const PaginaDarDeBaja = () => {
       localStorage.setItem("studentUnenrolled", "true");
       setConfirmOpen(false);
       toast.success("Te diste de baja del taller.");
-      navigate("/");
+      navigate("/estudiante/" + id);
     }).catch(() => {
       toast.error("Error al dar de baja.");
       setConfirmOpen(false);
@@ -56,11 +56,11 @@ const PaginaDarDeBaja = () => {
     <div className="h-[calc(100vh-6rem)] sm:h-[calc(100vh-8rem)] w-full flex flex-col items-center justify-center">
       <div className="w-full max-w-2xl px-4">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/estudiante/" + id)}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft size={16} />
-          Volver al panel
+          Volver
         </button>
         <div className="bg-card rounded-xl shadow-card border border-border p-6 sm:p-8">
           <h1 className="text-xl sm:text-2xl font-semibold text-foreground mb-1">
