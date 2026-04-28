@@ -23,6 +23,7 @@ import { obtenerTutorDeLaComision } from "@/service/apiTutor";
 import { Tutor } from "@/types/tutorType";
 import { isAxiosError } from "axios";
 import MetricasLargoComision from "./MetricasLargoComision";
+import PanelCalendario from "./PanelCalendario";
 
 interface Props {
   comision: Comision;
@@ -359,7 +360,8 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
           </div>
 
           {/* Right: Announcements */}
-          <div className="w-full lg:w-80 shrink-0">
+          <div className="w-full lg:w-80 shrink-0 gap-4 flex flex-col">
+            <PanelCalendario eventos={[]} onAgregarEvento={() => {}} />
             <AnnouncementPanel
               announcements={commAnnouncements}
               canCreate={role === "tutor" || role === "admin"}
@@ -367,10 +369,10 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
           </div>
         </div>
       ) : (
-        <MetricasLargoComision 
-          comisionId={comision.id} 
+        <MetricasLargoComision
+          comisionId={comision.id}
           numeroComision={comision.numero}
-          />
+        />
       )}
     </div>
   );

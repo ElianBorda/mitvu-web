@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { commissions, calendarEvents } from "@/data/mockData";
 import ComisionCard from "@/components/ComisionCard";
-import CalendarPanel from "@/components/CalendarPanel";
 import { Comision } from "@/types/comisionType";
 import { obtenerComisionesDelTutor } from "@/service/apiComision";
 import { useParams } from "react-router-dom";
 import ComisionDetalle from "@/components/ComisionDetalle";
 import { useLayoutContext } from "@/App";
+import PanelCalendario from "@/components/PanelCalendario";
 
 export default function TutorDashboard() {
   const { id } = useParams<{ id: string }>();
@@ -15,9 +14,7 @@ export default function TutorDashboard() {
   const [comisionSeleccionada, setComisionSeleccionada] = useState<Comision | null>(null);
   const [comisiones, setComisiones] = useState<Comision[]>([]);
 
-  const tutorEvents = calendarEvents.filter((e) =>
-    commissions.some((c) => c.id === e.commissionId),
-  );
+  const eventosDelTutor = []; //Se consiguen los eventos del tutor (en un principio son eventos globables)
 
   useEffect(() => {
     const fetchComisiones = async () => {
@@ -61,8 +58,8 @@ export default function TutorDashboard() {
           ))}
         </div>
       </div>
-      <div className="w-full lg:w-80 shrink-0">
-        <CalendarPanel events={tutorEvents} onAddEvent={() => {}} />
+      <div className="w-full lg:w-80 shrink-0 pt-16">
+        <PanelCalendario eventos={eventosDelTutor} onAgregarEvento={() => {}} />
       </div>
     </div>
   );
