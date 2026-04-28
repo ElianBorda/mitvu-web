@@ -34,6 +34,7 @@ import { obtenerTodosLosTutores } from "@/service/apiTutor";
 import { obtenerTodasLasComisiones } from "@/service/apiComision";
 import { C } from "vitest/dist/chunks/reporters.d.BFLkQcL6.js";
 import MetricasGrafico from "@/components/MetricasGrafico";
+import PanelCalendario from "@/components/PanelCalendario";
 
 type AdminView = "comisiones" | "tutores" | "estudiantes";
 
@@ -247,7 +248,10 @@ export default function AdminDashboard() {
     apellido: e.apellido,
     nombre: e.nombre,
     motivo: e.baja?.motivo ?? "—",
-    detalle: e.baja?.detalle === "" || e.baja?.detalle == null ? "No especificado" : e.baja.detalle,
+    detalle:
+      e.baja?.detalle === "" || e.baja?.detalle == null
+        ? "No especificado"
+        : e.baja.detalle,
     fechaBaja: e.baja?.fechaBaja
       ? new Date(e.baja.fechaBaja).toLocaleDateString("es-AR")
       : "—",
@@ -458,9 +462,16 @@ export default function AdminDashboard() {
         {/* Pie chart */}
         <div className="bg-card rounded-lg shadow-card border border-border p-4">
           <h3 className="text-xs font-semibold text-foreground mb-3">
-            Estudiantes totales dados de baja.
+            Estudiantes totales dados de baja
           </h3>
           <MetricasGrafico />
+        </div>
+
+        <div className="">
+          <h3 className="text-xs font-semibold text-foreground mb-3">
+            Calendario global
+          </h3>
+          <PanelCalendario eventos={[]} onAgregarEvento={() => {}} />
         </div>
 
         {/* Bar chart */}
@@ -504,7 +515,6 @@ export default function AdminDashboard() {
             </LineChart>
           </ResponsiveContainer>
         </div>
-
       </div>
     </div>
   );
