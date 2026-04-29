@@ -32,9 +32,12 @@ import {
 } from "@/service/apiEstudiante";
 import { obtenerTodosLosTutores } from "@/service/apiTutor";
 import { obtenerTodasLasComisiones } from "@/service/apiComision";
+import { obtenerTodosLosEventos } from "@/service/apiEvento";
 import { C } from "vitest/dist/chunks/reporters.d.BFLkQcL6.js";
 import MetricasGrafico from "@/components/MetricasGrafico";
 import PanelCalendario from "@/components/PanelCalendario";
+import { toast } from "sonner";
+import { Evento } from "@/types/eventoType";
 
 type AdminView = "comisiones" | "tutores" | "estudiantes";
 
@@ -46,6 +49,7 @@ export default function AdminDashboard() {
   const [estudiantesActivos, setEstudiantesActivos] = useState<any[]>([]);
   const [estudiantesBaja, setEstudiantesBaja] = useState<any[]>([]);
   const [tutores, setTutores] = useState<any[]>([]);
+  const [eventos, setEventos] = useState<Evento[]>([]);
   const [comisiones, setComisiones] = useState<Comision[]>([]);
   const comisionIdPorIndice = comisiones?.map((c) => c.id);
   const [clickDelete, setClickDelete] = useState(false);
@@ -93,10 +97,22 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchEventos = async () => {
+    try {
+      const response = await obtenerTodosLosEventos();
+      setEventos(response.data);
+      console.log("Eventos obtenidos:", response.data);
+    } catch (error) {
+      console.error("Error al obtener eventos:", error);
+      toast.error("Error al obtener eventos");
+    }
+  };
+
   useEffect(() => {
     fetchComisiones();
     fetchEstudiantes();
     fetchTutores();
+    fetchEventos();
   }, [clickDelete, refreshTrigger]);
 
   const asignarComision = async (estudianteId: number, comisionId: string) => {
@@ -471,7 +487,15 @@ export default function AdminDashboard() {
           <h3 className="text-xs font-semibold text-foreground mb-3">
             Calendario global
           </h3>
-          <PanelCalendario eventos={[]} onAgregarEvento={() => {}} />
+          <PanelCalendario eventos={eventos} />
+          <button
+            onClick={() =>
+              navigate("/admin/agregar-evento")
+            }
+            className="mt-4 w-full py-2 text-sm font-medium text-primary border border-primary rounded-lg hover:bg-primary/5 transition-colors mb-4"
+          >
+            + Agregar evento en el calendario
+          </button>
         </div>
 
         {/* Bar chart */}

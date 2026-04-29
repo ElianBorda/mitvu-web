@@ -24,6 +24,9 @@ import { Tutor } from "@/types/tutorType";
 import { isAxiosError } from "axios";
 import MetricasLargoComision from "./MetricasLargoComision";
 import PanelCalendario from "./PanelCalendario";
+import { obtenerTodosLosEventos } from "@/service/apiEvento";
+import { Evento } from "@/types/eventoType";
+import { toast } from "sonner";
 
 interface Props {
   comision: Comision;
@@ -36,6 +39,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
     "participants",
   );
   const [estudiantes, setEstudiantes] = useState<any[]>([]);
+  const [eventos, setEventos] = useState<Evento[]>([]);
   const [estudiantesBaja, setEstudiantesBaja] = useState<any[]>([]);
   const [tutor, setTutor] = useState<Tutor>(null);
   const commAnnouncements = announcements.filter(
@@ -44,6 +48,17 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
   const showMetricsTab = role === "tutor" || role === "admin";
 
   useEffect(() => {
+    const fetchEventos = async () => {
+      try {
+        const response = await obtenerTodosLosEventos();
+        setEventos(response.data);
+        console.log("Eventos obtenidos:", response.data);
+      } catch (error) {
+        console.error("Error al obtener eventos:", error);
+        toast.error("Error al obtener eventos");
+      }
+    };
+
     const fetchTutor = async () => {
       try {
         const response = await obtenerTutorDeLaComision(comision.id);
@@ -76,6 +91,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
       }
     };
 
+    fetchEventos();
     fetchTutor();
     fetchEstudiantes();
     if (role === "tutor" || role === "admin") {
@@ -361,7 +377,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
 
           {/* Right: Announcements */}
           <div className="w-full lg:w-80 shrink-0 gap-4 flex flex-col">
-            <PanelCalendario eventos={[]} onAgregarEvento={() => {}} />
+            <PanelCalendario eventos={eventos}/>
             <AnnouncementPanel
               announcements={commAnnouncements}
               canCreate={role === "tutor" || role === "admin"}
