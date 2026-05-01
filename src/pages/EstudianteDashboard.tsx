@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { calendarEvents } from "@/data/mockData";
 import SlidePanel from "@/components/SlidePanel";
-import CalendarPanel from "@/components/CalendarPanel";
+import PanelCalendario from "@/components/PanelCalendario";
 import { useParams } from "react-router-dom";
 import ComisionDetalle from "@/components/ComisionDetalle";
 import { Comision } from "@/types/comisionType";
@@ -24,8 +24,7 @@ export default function EstudianteDashboard({
   const [hasNoComision, setHasNoComision] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // reemplazar con API a futuro
-  const studentEvents = calendarEvents.filter((e) => e.commissionId === "c1");
+  const eventosDelEstudiante = []; //Se consiguen los eventos del tutor (en un principio son eventos globables)
 
   useEffect(() => {
     const fetchComision = async () => {
@@ -113,13 +112,6 @@ export default function EstudianteDashboard({
   return (
     <div className="relative w-full max-w-7xl mx-auto">
       <ComisionDetalle comision={comision} role="estudiante" />
-      <SlidePanel
-        open={isCalendarOpen}
-        onClose={() => setCalendarOpen(false)}
-        title="Calendario académico"
-      >
-        <CalendarPanel events={studentEvents} />
-      </SlidePanel>
     </div>
   );
 }

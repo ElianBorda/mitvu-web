@@ -23,6 +23,11 @@ import { obtenerTutorDeLaComision } from "@/service/apiTutor";
 import { Tutor } from "@/types/tutorType";
 import { isAxiosError } from "axios";
 import MetricasLargoComision from "./MetricasLargoComision";
+import PanelCalendario from "./PanelCalendario";
+import { obtenerTodosLosEventos } from "@/service/apiEvento";
+import { Evento } from "@/types/eventoType";
+import { toast } from "sonner";
+import PanelCalendarioRead from "./PanelCalendarioRead";
 
 interface Props {
   comision: Comision;
@@ -35,6 +40,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
     "participants",
   );
   const [estudiantes, setEstudiantes] = useState<any[]>([]);
+  const [eventos, setEventos] = useState<Evento[]>([]);
   const [estudiantesBaja, setEstudiantesBaja] = useState<any[]>([]);
   const [tutor, setTutor] = useState<Tutor>(null);
   const commAnnouncements = announcements.filter(
@@ -43,17 +49,13 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
   const showMetricsTab = role === "tutor" || role === "admin";
 
   useEffect(() => {
-    const fetchTutor = async () => {
-      try {
-        const response = await obtenerTutorDeLaComision(comision.id);
-        setTutor(response.data);
-      } catch (error) {
-        if (isAxiosError(error) && error.response?.status === 400) {
-        } else {
-          console.error("Error fetching comision:", error);
-        }
-      }
-    };
+    obtenerTodosLosEventos()
+      .then(({ data }) => setEventos(data))
+      .catch(() => toast.error("Error al obtener eventos"))
+
+    obtenerTutorDeLaComision(comision.id)
+      .then(({ data }) => setTutor(data))
+      .catch(() => toast.error("Error al obtener tutor"));
 
     const fetchEstudiantes = async () => {
       try {
@@ -75,7 +77,6 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
       }
     };
 
-    fetchTutor();
     fetchEstudiantes();
     if (role === "tutor" || role === "admin") {
       fetchEstudiantesBaja();
@@ -359,7 +360,8 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
           </div>
 
           {/* Right: Announcements */}
-          <div className="w-full lg:w-80 shrink-0">
+          <div className="w-full lg:w-80 shrink-0 gap-4 flex flex-col">
+            <PanelCalendarioRead eventos={eventos}/>
             <AnnouncementPanel
               announcements={commAnnouncements}
               canCreate={role === "tutor" || role === "admin"}
@@ -367,10 +369,10 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
           </div>
         </div>
       ) : (
-        <MetricasLargoComision 
-          comisionId={comision.id} 
+        <MetricasLargoComision
+          comisionId={comision.id}
           numeroComision={comision.numero}
-          />
+        />
       )}
     </div>
   );

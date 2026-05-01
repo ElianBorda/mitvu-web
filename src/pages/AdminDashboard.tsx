@@ -32,8 +32,12 @@ import {
 } from "@/service/apiEstudiante";
 import { obtenerTodosLosTutores } from "@/service/apiTutor";
 import { obtenerTodasLasComisiones } from "@/service/apiComision";
+import { obtenerTodosLosEventos } from "@/service/apiEvento";
 import { C } from "vitest/dist/chunks/reporters.d.BFLkQcL6.js";
 import MetricasGrafico from "@/components/MetricasGrafico";
+import PanelCalendario from "@/components/PanelCalendario";
+import { toast } from "sonner";
+import { Evento } from "@/types/eventoType";
 
 type AdminView = "comisiones" | "tutores" | "estudiantes";
 
@@ -45,6 +49,7 @@ export default function AdminDashboard() {
   const [estudiantesActivos, setEstudiantesActivos] = useState<any[]>([]);
   const [estudiantesBaja, setEstudiantesBaja] = useState<any[]>([]);
   const [tutores, setTutores] = useState<any[]>([]);
+  const [eventos, setEventos] = useState<Evento[]>([]);
   const [comisiones, setComisiones] = useState<Comision[]>([]);
   const comisionIdPorIndice = comisiones?.map((c) => c.id);
   const [clickDelete, setClickDelete] = useState(false);
@@ -63,39 +68,27 @@ export default function AdminDashboard() {
     }
   }, [searchParams, setSearchParams]);
 
-  const fetchEstudiantes = async () => {
-    try {
-      const responseActivos = await obtenerTodosLosEstudiantesActivos();
-      const responseBaja = await obtenerTodosLosEstudiantesDeBaja();
-      setEstudiantesActivos(responseActivos.data);
-      setEstudiantesBaja(responseBaja.data);
-    } catch (error) {
-      console.error("Error al obtener estudiantes:", error);
-    }
-  };
-
-  const fetchTutores = async () => {
-    try {
-      const response = await obtenerTodosLosTutores();
-      setTutores(response.data);
-    } catch (error) {
-      console.error("Error al obtener tutores:", error);
-    }
-  };
-
-  const fetchComisiones = async () => {
-    try {
-      const response = await obtenerTodasLasComisiones();
-      setComisiones(response.data);
-    } catch (error) {
-      console.error("Error al obtener comisiones:", error);
-    }
-  };
-
   useEffect(() => {
-    fetchComisiones();
-    fetchEstudiantes();
-    fetchTutores();
+    obtenerTodosLosEstudiantesActivos()
+      .then(({ data }) => setEstudiantesActivos(data))
+      .catch(() => toast.error("Error al obtener estudiantes activos"));
+    
+    obtenerTodosLosEstudiantesDeBaja()
+      .then(({ data }) => setEstudiantesBaja(data))
+      .catch(() => toast.error("Error al obtener estudiantes de baja"));
+
+    obtenerTodosLosTutores()
+      .then(({ data }) => setTutores(data))
+      .catch(() => toast.error("Error al obtener tutores"));
+
+    obtenerTodasLasComisiones()
+      .then(({ data }) => setComisiones(data))
+      .catch(() => toast.error("Error al obtener comisiones"));
+
+    obtenerTodosLosEventos()
+      .then(({ data }) => setEventos(data))
+      .catch(() => toast.error("Error al obtener eventos"));
+
   }, [clickDelete, refreshTrigger]);
 
   const asignarComision = async (estudianteId: number, comisionId: string) => {
@@ -247,7 +240,10 @@ export default function AdminDashboard() {
     apellido: e.apellido,
     nombre: e.nombre,
     motivo: e.baja?.motivo ?? "—",
-    detalle: e.baja?.detalle === "" || e.baja?.detalle == null ? "No especificado" : e.baja.detalle,
+    detalle:
+      e.baja?.detalle === "" || e.baja?.detalle == null
+        ? "No especificado"
+        : e.baja.detalle,
     fechaBaja: e.baja?.fechaBaja
       ? new Date(e.baja.fechaBaja).toLocaleDateString("es-AR")
       : "—",
@@ -458,9 +454,20 @@ export default function AdminDashboard() {
         {/* Pie chart */}
         <div className="bg-card rounded-lg shadow-card border border-border p-4">
           <h3 className="text-xs font-semibold text-foreground mb-3">
-            Estudiantes totales dados de baja.
+            Estudiantes totales dados de baja
           </h3>
           <MetricasGrafico />
+        </div>
+
+        <div className="">
+          <h3 className="text-xs font-semibold text-foreground mb-3">
+            Calendario global
+          </h3>
+          
+          <PanelCalendario 
+              eventos={eventos} 
+              onEventAdded={triggerRefresh} 
+          />
         </div>
 
         {/* Bar chart */}
@@ -504,7 +511,6 @@ export default function AdminDashboard() {
             </LineChart>
           </ResponsiveContainer>
         </div>
-
       </div>
     </div>
   );

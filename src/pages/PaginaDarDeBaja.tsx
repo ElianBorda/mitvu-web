@@ -53,8 +53,8 @@ const PaginaDarDeBaja = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-6rem)] sm:h-[calc(100vh-8rem)] w-full flex flex-col items-center justify-center">
-      <div className="w-full max-w-2xl px-4">
+    <div className="h-[calc(100vh-6rem)] sm:h-[calc(100vh-8rem)] w-full flex flex-col items-center">
+      <div className="w-full max-w-2xl">
         <button
           onClick={() => navigate("/estudiante/" + id)}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
