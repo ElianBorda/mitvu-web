@@ -68,51 +68,27 @@ export default function AdminDashboard() {
     }
   }, [searchParams, setSearchParams]);
 
-  const fetchEstudiantes = async () => {
-    try {
-      const responseActivos = await obtenerTodosLosEstudiantesActivos();
-      const responseBaja = await obtenerTodosLosEstudiantesDeBaja();
-      setEstudiantesActivos(responseActivos.data);
-      setEstudiantesBaja(responseBaja.data);
-    } catch (error) {
-      console.error("Error al obtener estudiantes:", error);
-    }
-  };
-
-  const fetchTutores = async () => {
-    try {
-      const response = await obtenerTodosLosTutores();
-      setTutores(response.data);
-    } catch (error) {
-      console.error("Error al obtener tutores:", error);
-    }
-  };
-
-  const fetchComisiones = async () => {
-    try {
-      const response = await obtenerTodasLasComisiones();
-      setComisiones(response.data);
-    } catch (error) {
-      console.error("Error al obtener comisiones:", error);
-    }
-  };
-
-  const fetchEventos = async () => {
-    try {
-      const response = await obtenerTodosLosEventos();
-      setEventos(response.data);
-      console.log("Eventos obtenidos:", response.data);
-    } catch (error) {
-      console.error("Error al obtener eventos:", error);
-      toast.error("Error al obtener eventos");
-    }
-  };
-
   useEffect(() => {
-    fetchComisiones();
-    fetchEstudiantes();
-    fetchTutores();
-    fetchEventos();
+    obtenerTodosLosEstudiantesActivos()
+      .then(({ data }) => setEstudiantesActivos(data))
+      .catch(() => toast.error("Error al obtener estudiantes activos"));
+    
+    obtenerTodosLosEstudiantesDeBaja()
+      .then(({ data }) => setEstudiantesBaja(data))
+      .catch(() => toast.error("Error al obtener estudiantes de baja"));
+
+    obtenerTodosLosTutores()
+      .then(({ data }) => setTutores(data))
+      .catch(() => toast.error("Error al obtener tutores"));
+
+    obtenerTodasLasComisiones()
+      .then(({ data }) => setComisiones(data))
+      .catch(() => toast.error("Error al obtener comisiones"));
+
+    obtenerTodosLosEventos()
+      .then(({ data }) => setEventos(data))
+      .catch(() => toast.error("Error al obtener eventos"));
+
   }, [clickDelete, refreshTrigger]);
 
   const asignarComision = async (estudianteId: number, comisionId: string) => {
@@ -487,15 +463,11 @@ export default function AdminDashboard() {
           <h3 className="text-xs font-semibold text-foreground mb-3">
             Calendario global
           </h3>
-          <PanelCalendario eventos={eventos} />
-          <button
-            onClick={() =>
-              navigate("/admin/agregar-evento")
-            }
-            className="mt-4 w-full py-2 text-sm font-medium text-primary border border-primary rounded-lg hover:bg-primary/5 transition-colors mb-4"
-          >
-            + Agregar evento en el calendario
-          </button>
+          
+          <PanelCalendario 
+              eventos={eventos} 
+              onEventAdded={triggerRefresh} 
+          />
         </div>
 
         {/* Bar chart */}

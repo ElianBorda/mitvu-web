@@ -9,6 +9,7 @@ import PanelCalendario from "@/components/PanelCalendario";
 import { Evento } from "@/types/eventoType";
 import { obtenerTodosLosEventos } from "@/service/apiEvento";
 import { toast } from "sonner";
+import PanelCalendarioRead from "@/components/PanelCalendarioRead";
 
 export default function TutorDashboard() {
   const { id } = useParams<{ id: string }>();
@@ -77,7 +78,7 @@ export default function TutorDashboard() {
         </div>
       </div>
       <div className="w-full lg:w-80 shrink-0 pt-16">
-        <PanelCalendario eventos={eventosDelTutor}/>
+        <PanelCalendarioRead eventos={eventosDelTutor}/>
       </div>
     </div>
   );

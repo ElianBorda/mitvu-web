@@ -2,7 +2,6 @@ export type EventoBody = {
     titulo: string,
     descripcion: string,
     fecha: string,
-    comision_id: string,
 }
 
 export type Evento = {
@@ -10,5 +9,4 @@ export type Evento = {
     titulo: string,
     descripcion: string,
     fecha: string,
-    comision_id: string
 }
