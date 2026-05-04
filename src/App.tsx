@@ -141,6 +141,7 @@ const router = createBrowserRouter([
       { index: true, element: <Index /> },
       { path: "admin/agregar-estudiante", element: <AgregarEstudiante /> },
       { path: "admin/agregar-tutor", element: <AgregarTutor /> },
+      { path: "admin/editar-tutor/:id", element: <AgregarTutor /> },
       { path: "admin/agregar-comision", element: <AgregarComision /> },
       { path: "admin/editar-comision/:id", element: <AgregarComision /> },
       { path: "admin/comision/:id", element: <AdminComision /> },

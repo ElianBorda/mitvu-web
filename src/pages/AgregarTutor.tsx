@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ChevronDown, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -9,10 +9,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { comisionesSinTutor } from "@/service/apiComision";
-import { crearTutor } from "@/service/apiTutor";
+import {
+  comisionesSinTutor,
+  obtenerComisionesDelTutor,
+} from "@/service/apiComision";
+import { crearTutor, obtenerTutor, modificarTutor } from "@/service/apiTutor";
+import { Comision } from "@/types/comisionType";
 
 export default function AgregarTutor() {
+  const { id } = useParams<{ id?: string }>();
+  const isEdit = Boolean(id);
   const navigate = useNavigate();
   const [form, setForm] = useState({
     apellido: "",
@@ -21,7 +27,37 @@ export default function AgregarTutor() {
     mail: "",
     comisiones_ids: [] as string[],
   });
-  const [comisiones, setComisiones] = useState<any[]>([]);
+  const [comisiones, setComisiones] = useState<Comision[]>([]);
+
+  useEffect(() => {
+    if (!isEdit) return;
+
+    const cargarDatosTutor = async () => {
+      try {
+        const comisionesRes = await comisionesSinTutor();
+        const tutorComisionesRes = await obtenerComisionesDelTutor(id!);
+        setComisiones(comisionesRes.data.concat(tutorComisionesRes.data));
+
+        const { data: tutorData } = await obtenerTutor(id);
+
+        setForm({
+          apellido: tutorData.apellido ?? "",
+          nombre: tutorData.nombre ?? "",
+          dni: tutorData.dni ?? "",
+          mail: tutorData.mail ?? "",
+          comisiones_ids:
+            tutorData.comisiones?.map((c: Comision) => c.id) ??
+            tutorData.comisiones_ids ??
+            [],
+        });
+      } catch {
+        toast.error("El tutor no existe.");
+        navigate("/?view=tutores");
+      }
+    };
+
+    cargarDatosTutor();
+  }, [id, isEdit, navigate]);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -42,24 +78,31 @@ export default function AgregarTutor() {
       toast.error("Por favor completá todos los campos obligatorios.");
       return;
     }
-   
+
     try {
-      const res = await crearTutor(form);
-      toast.success(
-        `Tutor ${form.apellido}, ${form.nombre} creado exitosamente.`,
-      );
+      if (isEdit) {
+        const res = await modificarTutor(id!, form);
+        toast.success(
+          `Tutor ${form.apellido}, ${form.nombre} modificado exitosamente.`,
+        );
+      } else {
+        const res = await crearTutor(form);
+        toast.success(
+          `Tutor ${form.apellido}, ${form.nombre} creado exitosamente.`,
+        );
+      }
       navigate("/?view=tutors");
     } catch (error) {
       toast.error("Error al crear el tutor.");
       throw new Error("Error al crear el tutor");
     }
-    
   };
 
   const fetchComisiones = async () => {
+    if (isEdit) return; // ← en edición ya se cargaron en el useEffect
     try {
-      const res = await comisionesSinTutor();
-      setComisiones(res.data);
+      const comisionesRes = await comisionesSinTutor();
+      setComisiones(comisionesRes.data);
     } catch (error) {
       console.error("Error al cargar las comisiones:", error);
     }
@@ -92,10 +135,12 @@ export default function AgregarTutor() {
 
         <div className="bg-card rounded-xl shadow-card border border-border p-5 sm:p-6">
           <h1 className="text-xl sm:text-2xl font-semibold text-foreground mb-1">
-            Agregar tutor
+            {isEdit ? "Modificar tutor" : "Agregar tutor"}
           </h1>
           <p className="text-sm text-muted-foreground mb-6">
-            Completá los datos del nuevo tutor para darlo de alta en el sistema.
+            {isEdit
+              ? "Completá los datos del tutor para actualizar su información."
+              : "Completá los datos del nuevo tutor para darlo de alta en el sistema."}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -195,7 +240,7 @@ export default function AgregarTutor() {
                 type="submit"
                 className="w-full sm:w-auto px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
               >
-                Confirmar y crear tutor
+                { isEdit ? "Guardar cambios" : "Crear tutor" }
               </button>
             </div>
           </form>
