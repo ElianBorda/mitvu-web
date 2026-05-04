@@ -38,6 +38,7 @@ import MetricasGrafico from "@/components/MetricasGrafico";
 import PanelCalendario from "@/components/PanelCalendario";
 import { toast } from "sonner";
 import { Evento } from "@/types/eventoType";
+import { useLayoutContext } from "@/App";
 
 type AdminView = "comisiones" | "tutores" | "estudiantes";
 
@@ -45,15 +46,21 @@ export default function AdminDashboard() {
   const [view, setView] = useState<AdminView>("comisiones");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-
+  
   const [estudiantesActivos, setEstudiantesActivos] = useState<any[]>([]);
   const [estudiantesBaja, setEstudiantesBaja] = useState<any[]>([]);
   const [tutores, setTutores] = useState<any[]>([]);
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [comisiones, setComisiones] = useState<Comision[]>([]);
   const comisionIdPorIndice = comisiones?.map((c) => c.id);
-  const [clickDelete, setClickDelete] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const rowIds = (() => {
+    if (view === "comisiones") return comisiones.map((c) => c.id);
+    if (view === "tutores") return tutores.map((t) => t.id);
+    if (view === "estudiantes") return estudiantesActivos.map((e) => e.id);
+    return [];
+  })();
+  const { refreshPeople } = useLayoutContext();
 
   const triggerRefresh = () => setRefreshTrigger((prev) => prev + 1);
 
@@ -72,7 +79,7 @@ export default function AdminDashboard() {
     obtenerTodosLosEstudiantesActivos()
       .then(({ data }) => setEstudiantesActivos(data))
       .catch(() => toast.error("Error al obtener estudiantes activos"));
-    
+
     obtenerTodosLosEstudiantesDeBaja()
       .then(({ data }) => setEstudiantesBaja(data))
       .catch(() => toast.error("Error al obtener estudiantes de baja"));
@@ -88,8 +95,7 @@ export default function AdminDashboard() {
     obtenerTodosLosEventos()
       .then(({ data }) => setEventos(data))
       .catch(() => toast.error("Error al obtener eventos"));
-
-  }, [clickDelete, refreshTrigger]);
+  }, [refreshTrigger]);
 
   const asignarComision = async (estudianteId: number, comisionId: string) => {
     try {
@@ -353,12 +359,13 @@ export default function AdminDashboard() {
               navigate(`/admin/comision/${id}`);
             }
           }}
-          rowIds={comisionIdPorIndice}
+          rowIds={rowIds}
           onDelete={(row, index) => {
-            const dataCon = [...config.data];
-            dataCon.splice(index, 1);
-            config.data = dataCon;
-            setClickDelete(!clickDelete);
+              const dataCon = [...config.data];
+              dataCon.splice(index, 1);
+              config.data = dataCon;
+              triggerRefresh();
+              refreshPeople();
           }}
         />
         {/* Tabla de estudiantes dados de baja */}
@@ -467,11 +474,8 @@ export default function AdminDashboard() {
           <h3 className="text-xs font-semibold text-foreground mb-3">
             Calendario global
           </h3>
-          
-          <PanelCalendario 
-              eventos={eventos} 
-              onEventAdded={triggerRefresh} 
-          />
+
+          <PanelCalendario eventos={eventos} onEventAdded={triggerRefresh} />
         </div>
 
         {/* Bar chart */}

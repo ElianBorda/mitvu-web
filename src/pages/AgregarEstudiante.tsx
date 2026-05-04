@@ -14,6 +14,7 @@ import {
 import { Comision } from "@/types/comisionType";
 import { obtenerTodasLasComisiones } from "@/service/apiComision";
 import { crearEstudiante } from "@/service/apiEstudiante";
+import { useLayoutContext } from "@/App";
 
 export default function AgregarEstudiante() {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ export default function AgregarEstudiante() {
     comision_id: "",
   });
   const [comisiones, setComisiones] = useState<Comision[]>([]);
+  const { refreshPeople } = useLayoutContext();
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -47,7 +49,8 @@ export default function AgregarEstudiante() {
       toast.success(
         `Estudiante ${form.apellido}, ${form.nombre} creado exitosamente.`,
       );
-      navigate("/?view=students");
+      navigate("/");
+      refreshPeople();
     } catch (error) {
       toast.error("Error al crear el estudiante.");
       throw new Error("Error al crear el estudiante");
