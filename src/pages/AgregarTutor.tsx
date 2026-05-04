@@ -15,6 +15,7 @@ import {
 } from "@/service/apiComision";
 import { crearTutor, obtenerTutor, modificarTutor } from "@/service/apiTutor";
 import { Comision } from "@/types/comisionType";
+import { useLayoutContext } from "@/App";
 
 export default function AgregarTutor() {
   const { id } = useParams<{ id?: string }>();
@@ -28,6 +29,7 @@ export default function AgregarTutor() {
     comisiones_ids: [] as string[],
   });
   const [comisiones, setComisiones] = useState<Comision[]>([]);
+  const { refreshPeople } = useLayoutContext();
 
   useEffect(() => {
     if (!isEdit) return;
@@ -52,7 +54,7 @@ export default function AgregarTutor() {
         });
       } catch {
         toast.error("El tutor no existe.");
-        navigate("/?view=tutores");
+        navigate("/");
       }
     };
 
@@ -91,7 +93,8 @@ export default function AgregarTutor() {
           `Tutor ${form.apellido}, ${form.nombre} creado exitosamente.`,
         );
       }
-      navigate("/?view=tutors");
+      navigate("/");
+      refreshPeople();
     } catch (error) {
       toast.error("Error al crear el tutor.");
       throw new Error("Error al crear el tutor");

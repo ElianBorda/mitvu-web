@@ -1,5 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createBrowserRouter, RouterProvider, Outlet, useNavigate, useOutletContext, useLocation } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Outlet,
+  useNavigate,
+  useOutletContext,
+  useLocation,
+} from "react-router-dom";
 import { Suspense, lazy, useEffect, useState } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -20,7 +27,9 @@ const AgregarTutor = lazy(() => import("./pages/AgregarTutor.tsx"));
 const AgregarComision = lazy(() => import("./pages/AgregarComision.tsx"));
 const AdminComision = lazy(() => import("./pages/AdminComision.tsx"));
 const TutorDashboard = lazy(() => import("./pages/TutorDashboard.tsx"));
-const EstudianteDashboard = lazy(() => import("./pages/EstudianteDashboard.tsx"));
+const EstudianteDashboard = lazy(
+  () => import("./pages/EstudianteDashboard.tsx"),
+);
 const PaginaDarDeBaja = lazy(() => import("./pages/PaginaDarDeBaja.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const AgregarEvento = lazy(() => import("./pages/AgregarEvento.tsx"));
@@ -37,6 +46,7 @@ export type LayoutContextType = {
   role: Role;
   isCalendarOpen: boolean;
   setCalendarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  refreshPeople: () => Promise<void>;
 };
 
 export function useLayoutContext() {
@@ -46,29 +56,49 @@ export function useLayoutContext() {
 const RootLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const [role, setRole] = useState<Role>("admin");
   const [activeItem, setActiveItem] = useState("home");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCalendarOpen, setCalendarOpen] = useState(false);
-  
+
   const [tutores, setTutores] = useState<Tutor[]>([]);
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
-  
+
   // 1. Convertimos la validación en un Estado de React
   const [studentUnenrolled, setStudentUnenrolled] = useState(
-    () => typeof window !== "undefined" && localStorage.getItem("studentUnenrolled") === "true"
+    () =>
+      typeof window !== "undefined" &&
+      localStorage.getItem("studentUnenrolled") === "true",
   );
 
   useEffect(() => {
-    obtenerTodosLosTutores().then(res => setTutores(res.data)).catch(console.error);
-    obtenerTodosLosEstudiantes().then(res => setEstudiantes(res.data)).catch(console.error);
+    obtenerTodosLosTutores()
+      .then((res) => setTutores(res.data))
+      .catch(console.error);
+    obtenerTodosLosEstudiantes()
+      .then((res) => setEstudiantes(res.data))
+      .catch(console.error);
   }, []);
 
+  // function to refresh tutores and estudiantes on demand
+  const refreshPeople = async () => {
+    try {
+      const [tRes, eRes] = await Promise.all([
+        obtenerTodosLosTutores(),
+        obtenerTodosLosEstudiantes(),
+      ]);
+      setTutores(tRes.data);
+      setEstudiantes(eRes.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
-    if (location.pathname.includes('/estudiante')) setRole('estudiante');
-    else if (location.pathname.includes('/tutor')) setRole('tutor');
-    else setRole('admin');
+    if (location.pathname.includes("/estudiante")) setRole("estudiante");
+    else if (location.pathname.includes("/tutor")) setRole("tutor");
+    else setRole("admin");
 
     // 2. Cada vez que cambia la URL, verificamos el estado real del storage
     setStudentUnenrolled(localStorage.getItem("studentUnenrolled") === "true");
@@ -78,15 +108,15 @@ const RootLayout = () => {
     setActiveItem(sidebarId);
 
     if (sidebarId === "baja" && role === "estudiante") {
-      const pathSegments = location.pathname.split('/');
-      const currentId = pathSegments[2]; 
+      const pathSegments = location.pathname.split("/");
+      const currentId = pathSegments[2];
 
       if (currentId) navigate(`/estudiante/baja/${currentId}`);
-      else navigate('/estudiante/baja'); 
+      else navigate("/estudiante/baja");
       return;
     }
 
-    if (sidebarId === "calendar") setCalendarOpen(prev => !prev);
+    if (sidebarId === "calendar") setCalendarOpen((prev) => !prev);
     if (sidebarId === "redes") window.open("https://www.unq.edu.ar", "_blank");
   };
 
@@ -109,12 +139,15 @@ const RootLayout = () => {
             setRole(newRole);
             navigate("/");
           }}
-          onMenuClick={() => setMobileMenuOpen(true)}
-          tutores={tutores}
+          onMenuClick={async () => {
+            await refreshPeople();
+            setMobileMenuOpen(true);
+          }}
+          tutores={(tutores)}
           onTutorSelect={(id) => navigate(`/tutor/${id}`)}
           estudiantes={estudiantes}
           onEstudianteSelect={(id) => {
-            // 4. FIX CLAVE: Al seleccionar un estudiante, borramos la baja anterior 
+            // 4. FIX CLAVE: Al seleccionar un estudiante, borramos la baja anterior
             // de pruebas pasadas para que el botón siempre aparezca.
             localStorage.removeItem("studentUnenrolled");
             setStudentUnenrolled(false);
@@ -123,8 +156,12 @@ const RootLayout = () => {
           }}
         />
         <main className="flex-1 p-3 sm:p-6">
-          <Suspense fallback={<p className="text-muted-foreground text-sm">Cargando...</p>}>
-            <Outlet context={{ role, isCalendarOpen, setCalendarOpen }} />
+          <Suspense
+            fallback={
+              <p className="text-muted-foreground text-sm">Cargando...</p>
+            }
+          >
+            <Outlet context={{ role, isCalendarOpen, setCalendarOpen, refreshPeople }} />
           </Suspense>
         </main>
       </div>
@@ -149,11 +186,11 @@ const router = createBrowserRouter([
       { path: "estudiante/:id", element: <EstudianteDashboard /> },
       // Actualizamos la ruta para que acepte el ID opcional o fijo
       { path: "estudiante/baja/:id", element: <PaginaDarDeBaja /> },
-      { path: "estudiante/baja", element: <PaginaDarDeBaja /> }, 
+      { path: "estudiante/baja", element: <PaginaDarDeBaja /> },
       { path: "*", element: <NotFound /> },
-      {path: "admin/agregar-evento", element: <AgregarEvento />}
-    ]
-  }
+      { path: "admin/agregar-evento", element: <AgregarEvento /> },
+    ],
+  },
 ]);
 
 const App = () => (

@@ -28,6 +28,7 @@ import { obtenerTodosLosEventos } from "@/service/apiEvento";
 import { Evento } from "@/types/eventoType";
 import { toast } from "sonner";
 import PanelCalendarioRead from "./PanelCalendarioRead";
+import { error } from "console";
 
 interface Props {
   comision: Comision;
@@ -49,13 +50,30 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
   const showMetricsTab = role === "tutor" || role === "admin";
 
   useEffect(() => {
-    obtenerTodosLosEventos()
-      .then(({ data }) => setEventos(data))
-      .catch(() => toast.error("Error al obtener eventos"))
+    const fetchEventos = async () => {
+      try {
+        const { data } = await obtenerTodosLosEventos();
+        setEventos(data);
+      } catch (error) {
+        toast.error("Error al obtener eventos");
+      }
+    };
 
-    obtenerTutorDeLaComision(comision.id)
-      .then(({ data }) => setTutor(data))
-      .catch(() => toast.error("Error al obtener tutor"));
+    const fetchTutor = async () => {
+      try {
+        const { data } = await obtenerTutorDeLaComision(comision.id);
+        setTutor(data);
+      } catch (error) {
+        if (isAxiosError(error) && error.response?.status === 400) {
+          setTutor(null);
+        } else {
+          toast.error("Error al obtener tutor");
+        }
+      }
+    };
+
+    fetchEventos();
+    fetchTutor();
 
     const fetchEstudiantes = async () => {
       try {
@@ -361,7 +379,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
 
           {/* Right: Announcements */}
           <div className="w-full lg:w-80 shrink-0 gap-4 flex flex-col">
-            <PanelCalendarioRead eventos={eventos}/>
+            <PanelCalendarioRead eventos={eventos} />
             <AnnouncementPanel
               announcements={commAnnouncements}
               canCreate={role === "tutor" || role === "admin"}
