@@ -342,6 +342,10 @@ export default function AdminDashboard() {
             const id = comisionIdPorIndice[index];
             if (view === "comisiones" && id)
               navigate(`/admin/editar-comision/${id}`);
+            if (view === "tutores") {
+              const tutorId = tutores[index].id;
+              navigate(`/admin/editar-tutor/${tutorId}`);
+            }
           }}
           onRowClick={(row, index) => {
             if (view === "comisiones") {
