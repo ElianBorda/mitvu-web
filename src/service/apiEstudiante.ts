@@ -12,3 +12,4 @@ export const obtenerEstudiantesDadosDeBajaDeUnaComision = (id: string) => axios.
 export const asignarEstudianteAComision = (estudianteId: number, comisionId: string) => axios.put(`/api/estudiantes/${estudianteId}/asignarComision/${comisionId}`);
 export const darDeBajaEstudianteDeComision = (estudianteId: string, formularioBaja: FormularioBajaType) => axios.put(`/api/estudiantes/${estudianteId}/baja`, formularioBaja);
 export const estaDadoDeBaja = (id: string) => axios.get(`/api/estudiantes/${id}/dadoDeBaja`);
+export const deleteEstudiante = (id: string) => axios.delete(`/api/estudiantes/${id}`);

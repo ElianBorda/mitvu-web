@@ -7,3 +7,4 @@ export const obtenerTutorDeLaComision = (id: string) => axios.get(`/api/tutores/
 export const crearTutor = (tutor: TutorBody) => axios.post('/api/tutores', tutor);
 export const obtenerTutor = (id: string) => axios.get(`/api/tutores/${id}`);
 export const modificarTutor = (id: string, tutor: TutorBody) => axios.put(`/api/tutores/${id}`, tutor);
+export const deleteTutor = (id: string) => axios.delete(`/api/tutores/${id}`);

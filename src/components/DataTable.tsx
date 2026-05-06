@@ -21,7 +21,9 @@ import {
 import { toast } from "sonner";
 import { de } from "date-fns/locale";
 import { deleteComision } from "@/service/apiComision";
+import { deleteTutor } from "@/service/apiTutor";
 import { set } from "date-fns";
+import { deleteEstudiante } from "@/service/apiEstudiante";
 
 interface Column {
   key: string;
@@ -56,18 +58,29 @@ export default function DataTable({
   const perPage = 10;
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
 
-  const handleConfirmDelete = () => {
-    if (view === "comisiones") {
-      const id = rowIds?.[deleteIndex] ?? data[deleteIndex]?.id;
-      deleteComision(id)
-        .then(() => {
-          toast.success("Elemento eliminado correctamente");
-          onDelete?.(data, deleteIndex);
-          setDeleteIndex(null);
-        })
-        .catch(() => {
-          toast.error("Error al eliminar el elemento");
-        });
+  const handleConfirmDelete = async () => {
+    const id = rowIds?.[deleteIndex] ?? data[deleteIndex]?.id;
+    if (!id) {
+      toast.error("No se pudo obtener el id del elemento.");
+      return;
+    }
+
+    try {
+      if (view === "comisiones") {
+        await deleteComision(id);
+        toast.success("Comisión eliminada correctamente");
+      } else if (view === "tutores") {
+        await deleteTutor(id);
+        toast.success("Tutor eliminado correctamente");
+      } else if (view === "estudiantes") {
+        await deleteEstudiante(id);
+        toast.success("Estudiante eliminado correctamente");
+      }
+
+      onDelete?.(data, deleteIndex);
+      setDeleteIndex(null);
+    } catch {
+      toast.error("Error al eliminar el elemento");
     }
   };
 
