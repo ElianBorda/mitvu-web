@@ -46,9 +46,13 @@ const PaginaDarDeBaja = () => {
       setConfirmOpen(false);
       toast.success("Te diste de baja del taller.");
       navigate("/estudiante/" + id);
-    }).catch(() => {
-      toast.error("Error al dar de baja.");
-      setConfirmOpen(false);
+    }).catch((error) => {
+      if (error.response?.status === 400) {
+        toast.error("No podés darte de baja porque no estás asignado a ninguna comisión.");
+      } else {
+        toast.error("Error al dar de baja");
+        setConfirmOpen(false);
+      }
     })
   };
 
@@ -101,7 +105,7 @@ const PaginaDarDeBaja = () => {
             <div className="pt-4">
               <button
                 type="submit"
-                className="w-full sm:w-auto px-6 py-2.5 bg-destructive text-destructive-foreground rounded-lg text-sm font-medium hover:bg-destructive/90 transition-colors"
+                className="w-full sm:w-auto px-6 py-2.5 bg-black text-destructive-foreground rounded-lg text-sm font-medium hover:bg-black/90 transition-colors"
               >
                 Confirmar baja
               </button>
@@ -123,7 +127,7 @@ const PaginaDarDeBaja = () => {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-black text-destructive-foreground hover:bg-black/90"
             >
               Sí, darme de baja
             </AlertDialogAction>
