@@ -190,11 +190,6 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                   label="Horario"
                   value={`${comision.horarioInicio} a ${comision.horarioFin}`}
                 />
-                <InfoRow
-                  icon={Calendar1Icon}
-                  label="Día hábil"
-                  value={comision.diaHabil}
-                />
                 <InfoRow icon={Clock} label="Turno" value={comision.turno} />
               </div>
               <div className="flex items-center text-sm text-muted-foreground gap-6 mt-4">

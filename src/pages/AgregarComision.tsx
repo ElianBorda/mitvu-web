@@ -32,7 +32,6 @@ export default function AgregarComision() {
   const [horarioInicioMS, setHorarioInicioMS] = useState("");
   const [horarioFinHS, setHorarioFinHS] = useState("");
   const [horarioFinMS, setHorarioFinMS] = useState("");
-  const [diaHabil, setDiaHabil] = useState("");
 
   useEffect(() => {
     if (!isEdit) return;
@@ -46,7 +45,6 @@ export default function AgregarComision() {
         setHorarioInicioMS(data.horarioInicio.split(":")[1]);
         setHorarioFinHS(data.horarioFin.split(":")[0]);
         setHorarioFinMS(data.horarioFin.split(":")[1]);
-        setDiaHabil(data.diaHabil ?? "");
       })
       .catch(() => {
         toast.error("La comisión no existe.");
@@ -61,8 +59,7 @@ export default function AgregarComision() {
     !horarioInicioHS ||
     !horarioInicioMS ||
     !horarioFinHS ||
-    !horarioFinMS ||
-    !diaHabil;
+    !horarioFinMS;
 
   const esHoraValida = (hora: string) => {
     const soloNumerosRegex = /^\d+$/;
@@ -103,7 +100,6 @@ export default function AgregarComision() {
       aula,
       horarioInicio,
       horarioFin,
-      diaHabil,
     };
 
     if (isEdit) {
@@ -169,22 +165,6 @@ export default function AgregarComision() {
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label>Día hábil *</Label>
-                <Select value={diaHabil} onValueChange={setDiaHabil}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar día hábil" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="LUNES">LUNES</SelectItem>
-                    <SelectItem value="MARTES">MARTES</SelectItem>
-                    <SelectItem value="MIERCOLES">MIERCOLES</SelectItem>
-                    <SelectItem value="JUEVES">JUEVES</SelectItem>
-                    <SelectItem value="VIERNES">VIERNES</SelectItem>
-                    <SelectItem value="SABADO">SABADO</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="space-y-1.5">
                 <Label htmlFor="aula">Aula</Label>
                 <Input
