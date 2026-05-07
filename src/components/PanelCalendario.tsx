@@ -1,5 +1,4 @@
 import { useState } from "react";
-// Importamos 'parse' para convertir el string del backend a un objeto Date real
 import { isSameDay, format, parse } from "date-fns";
 import { es } from "date-fns/locale";
 import { Evento } from "@/types/eventoType";
@@ -11,10 +10,21 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"; // Importamos el componente de alerta
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { postCrearEvento } from "@/service/apiEvento";
+import { postCrearEvento, putModificarEvento, deleteEvento } from "@/service/apiEvento";
+import { Pencil, Trash2 } from "lucide-react";
 
 interface Props {
   eventos: Evento[];
@@ -22,9 +32,19 @@ interface Props {
 }
 
 export default function PanelCalendario({ eventos, onEventAdded }: Props) {
-  const [fechaSeleccionada, setFechaSeleccionada] = useState<Date | undefined>(
-    new Date()
-  );
+  const [fechaSeleccionada, setFechaSeleccionada] = useState<Date | undefined>(new Date());
+  
+  // Estados para modales y edición
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [eventoAEliminarId, setEventoAEliminarId] = useState<string | null>(null);
+  const [eventoEditandoId, setEventoEditandoId] = useState<string | null>(null);
+
+  const [form, setForm] = useState({
+    fecha: "",
+    titulo: "",
+    descripcion: "",
+  });
 
   const parseFechaBackend = (fechaStr: string) => {
     return parse(fechaStr, "dd-MM-yyyy", new Date());
@@ -34,22 +54,50 @@ export default function PanelCalendario({ eventos, onEventAdded }: Props) {
     ? eventos.filter((e) => isSameDay(parseFechaBackend(e.fecha), fechaSeleccionada))
     : [];
 
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({
-    fecha: "",
-    titulo: "",
-    descripcion: "",
-  });
-
-  
-
   const handleOpenDialog = () => {
+    setEventoEditandoId(null);
     setForm({
       fecha: fechaSeleccionada ? format(fechaSeleccionada, "yyyy-MM-dd") : "",
       titulo: "",
       descripcion: "",
     });
     setDialogOpen(true);
+  };
+
+  const handleEdit = (evento: Evento) => {
+    const [day, month, year] = evento.fecha.split("-");
+    const fechaInput = `${year}-${month}-${day}`;
+
+    setEventoEditandoId(evento.id);
+    setForm({
+      fecha: fechaInput,
+      titulo: evento.titulo,
+      descripcion: evento.descripcion,
+    });
+    setDialogOpen(true);
+  };
+
+  // Prepara la eliminación abriendo el modal de confirmación
+  const handleDeleteClick = (id: string) => {
+    setEventoAEliminarId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  // Ejecuta la eliminación real tras la confirmación
+  const handleConfirmDelete = () => {
+    if (!eventoAEliminarId) return;
+
+    deleteEvento(eventoAEliminarId)
+      .then(() => {
+        toast.success("Evento eliminado correctamente.");
+        setDeleteDialogOpen(false);
+        setEventoAEliminarId(null);
+        if (onEventAdded) onEventAdded();
+      })
+      .catch(() => {
+        toast.error("Error al eliminar el evento.");
+        setDeleteDialogOpen(false);
+      });
   };
 
   const handleSave = () => {
@@ -60,20 +108,30 @@ export default function PanelCalendario({ eventos, onEventAdded }: Props) {
 
     const [year, month, day] = form.fecha.split("-");
     const fechaParaBackend = `${day}-${month}-${year}`;
-
-    postCrearEvento({
+    const eventoBody = {
       titulo: form.titulo,
       descripcion: form.descripcion,
-      fecha: fechaParaBackend, 
-    }).then(() => {
-        toast.success("Evento agregado al calendario.");
-        setDialogOpen(false);
-        if (onEventAdded) onEventAdded();
-        setFechaSeleccionada(new Date(`${form.fecha}T00:00:00`));
-      })
-      .catch((error) => {
-        toast.error("Error al guardar el evento.");
-      });
+      fecha: fechaParaBackend,
+      comision_id: "", 
+    };
+
+    if (eventoEditandoId) {
+      putModificarEvento(eventoEditandoId, eventoBody)
+        .then(() => {
+          toast.success("Evento modificado correctamente.");
+          setDialogOpen(false);
+          if (onEventAdded) onEventAdded();
+        })
+        .catch(() => toast.error("Error al modificar el evento."));
+    } else {
+      postCrearEvento(eventoBody)
+        .then(() => {
+          toast.success("Evento agregado al calendario.");
+          setDialogOpen(false);
+          if (onEventAdded) onEventAdded();
+        })
+        .catch(() => toast.error("Error al guardar el evento."));
+    }
   };
 
   return (
@@ -87,12 +145,8 @@ export default function PanelCalendario({ eventos, onEventAdded }: Props) {
         components={{
           DayContent: (props) => {
             const date = props.date;
-            // Usamos nuestra función parseFechaBackend acá también
-            const hayEventos = eventos.some((e) =>
-              isSameDay(parseFechaBackend(e.fecha), date)
-            );
-            const seleccionado =
-              fechaSeleccionada && isSameDay(date, fechaSeleccionada);
+            const hayEventos = eventos.some((e) => isSameDay(parseFechaBackend(e.fecha), date));
+            const seleccionado = fechaSeleccionada && isSameDay(date, fechaSeleccionada);
 
             return (
               <div className="relative w-full h-full flex items-center justify-center">
@@ -112,11 +166,25 @@ export default function PanelCalendario({ eventos, onEventAdded }: Props) {
             {format(fechaSeleccionada, "d 'de' MMMM", { locale: es })}
           </p>
           {eventosSeleccionados.map((e, i) => (
-            <div key={i} className="bg-secondary rounded-md px-3 py-2">
-              <p className="text-xs font-medium text-foreground">{e.titulo}</p>
-              <p className="text-[10px] text-muted-foreground">
-                {e.descripcion}
-              </p>
+            <div key={i} className="bg-secondary rounded-md px-3 py-2 flex items-center justify-between group">
+              <div className="flex-1 min-w-0 pr-2">
+                <p className="text-xs font-medium text-foreground truncate">{e.titulo}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{e.descripcion}</p>
+              </div>
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => handleEdit(e)}
+                  className="p-1.5 text-muted-foreground hover:text-primary hover:bg-background rounded-md transition-colors"
+                >
+                  <Pencil size={14} />
+                </button>
+                <button
+                  onClick={() => handleDeleteClick(e.id)}
+                  className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-background rounded-md transition-colors"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -129,58 +197,53 @@ export default function PanelCalendario({ eventos, onEventAdded }: Props) {
         + Agregar evento en el calendario
       </button>
 
+      {/* Modal de Creación/Edición */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Agregar evento</DialogTitle>
+            <DialogTitle>{eventoEditandoId ? "Modificar evento" : "Agregar evento"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
               <Label htmlFor="ev-date">Fecha</Label>
-              <Input
-                id="ev-date"
-                type="date"
-                value={form.fecha}
-                onChange={(e) => setForm({ ...form, fecha: e.target.value })}
-              />
+              <Input id="ev-date" type="date" value={form.fecha} onChange={(e) => setForm({ ...form, fecha: e.target.value })} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ev-title">Título del evento</Label>
-              <Input
-                id="ev-title"
-                placeholder="Ej: Feriado Institucional"
-                value={form.titulo}
-                onChange={(e) => setForm({ ...form, titulo: e.target.value })}
-              />
+              <Input id="ev-title" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ev-desc">Descripción</Label>
-              <Input
-                id="ev-desc"
-                placeholder="Ej: No se dictarán clases"
-                value={form.descripcion}
-                onChange={(e) =>
-                  setForm({ ...form, descripcion: e.target.value })
-                }
-              />
+              <Input id="ev-desc" value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} />
             </div>
           </div>
           <DialogFooter>
-            <button
-              onClick={() => setDialogOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-md border border-border hover:bg-secondary transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-            >
-              Guardar
-            </button>
+            <button onClick={() => setDialogOpen(false)} className="px-4 py-2 text-sm border rounded-md">Cancelar</button>
+            <button onClick={handleSave} className="px-4 py-2 text-sm bg-primary text-white rounded-md">Guardar</button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Alerta para Eliminación */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro de eliminar este evento?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. El evento desaparecerá permanentemente del calendario global.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setEventoAEliminarId(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
