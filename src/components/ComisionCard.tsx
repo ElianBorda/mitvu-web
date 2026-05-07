@@ -38,9 +38,6 @@ export default function ComisionCard({ comision, onClick }: Props) {
                 <Building size={12}/> Aula aún no definida
               </span>
             )}
-            <span className="flex items-center gap-1">
-              <Calendar1Icon size={12}/>{comision.diaHabil}
-            </span>
           </div>
         </div>
         <span className="flex items-center gap-1 text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-full">
