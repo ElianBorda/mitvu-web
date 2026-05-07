@@ -4,3 +4,5 @@ axios.defaults.baseURL = import.meta.env.VITE_API_URL;
 
 export const postCrearEvento = (evento: EventoBody) => axios.post('/api/eventos', evento);
 export const obtenerTodosLosEventos = () => axios.get('/api/eventos');
+export const putModificarEvento = (id: string, evento: EventoBody) => axios.put(`/api/eventos/${id}`, evento);
+export const deleteEvento = (id: string) => axios.delete(`/api/eventos/${id}`);
