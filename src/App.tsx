@@ -33,6 +33,7 @@ const EstudianteDashboard = lazy(
 const PaginaDarDeBaja = lazy(() => import("./pages/PaginaDarDeBaja.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const AgregarEvento = lazy(() => import("./pages/AgregarEvento.tsx"));
+const AsistenciaComision = lazy(() => import("./pages/AsistenciaComision.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -184,11 +185,11 @@ const router = createBrowserRouter([
       { path: "admin/comision/:id", element: <AdminComision /> },
       { path: "tutor/:id", element: <TutorDashboard /> },
       { path: "estudiante/:id", element: <EstudianteDashboard /> },
-      // Actualizamos la ruta para que acepte el ID opcional o fijo
       { path: "estudiante/baja/:id", element: <PaginaDarDeBaja /> },
       { path: "estudiante/baja", element: <PaginaDarDeBaja /> },
       { path: "*", element: <NotFound /> },
       { path: "admin/agregar-evento", element: <AgregarEvento /> },
+      { path: "comision/:id/asistencia", element: <AsistenciaComision /> },
     ],
   },
 ]);
