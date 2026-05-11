@@ -267,11 +267,11 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                     </tr>
                   ) : (
                     estudiantes.map((e, i) => {
-                      const presentCount = 0; // s.attendance.filter(a => a === "present").length;
-                      const totalCount = 0; // s.attendance.filter(a => a !== "none").length;
+                      const cantAsistenciasPresentes = e.asistencias?.filter((a: any) => a.tipoDeAsistencia === "PRESENTE" || a.tipoDeAsistencia === "AUSENCIA_JUSTIFICADA").length || 0;
+                      const cantAsistencias = e.asistencias?.length || 0;
                       const pct =
-                        totalCount > 0
-                          ? Math.round((presentCount / totalCount) * 100)
+                        cantAsistencias > 0
+                          ? Math.round((cantAsistenciasPresentes / cantAsistencias) * 100)
                           : 0;
                       return (
                         <tr
@@ -302,7 +302,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                               <span
                                 className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
                                   pct >= 75
-                                    ? "g-green-100 text-green-700"
+                                    ? "bg-green-100 text-green-700"
                                     : pct >= 50
                                       ? "bg-yellow-100 text-yellow-700"
                                       : "bg-red-100 text-red-700"
