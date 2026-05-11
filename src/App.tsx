@@ -25,7 +25,7 @@ const Index = lazy(() => import("./pages/Index.tsx"));
 const AgregarEstudiante = lazy(() => import("./pages/AgregarEstudiante.tsx"));
 const AgregarTutor = lazy(() => import("./pages/AgregarTutor.tsx"));
 const AgregarComision = lazy(() => import("./pages/AgregarComision.tsx"));
-const AdminComision = lazy(() => import("./pages/AdminComision.tsx"));
+const RolGestionComision = lazy(() => import("./pages/RolGestionComision.tsx"));
 const TutorDashboard = lazy(() => import("./pages/TutorDashboard.tsx"));
 const EstudianteDashboard = lazy(
   () => import("./pages/EstudianteDashboard.tsx"),
@@ -33,7 +33,7 @@ const EstudianteDashboard = lazy(
 const PaginaDarDeBaja = lazy(() => import("./pages/PaginaDarDeBaja.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const AgregarEvento = lazy(() => import("./pages/AgregarEvento.tsx"));
-
+const AsistenciaComision = lazy(() => import("./pages/AsistenciaComision.tsx"));
 const queryClient = new QueryClient();
 
 const userNames: Record<Role, string> = {
@@ -96,9 +96,17 @@ const RootLayout = () => {
   };
 
   useEffect(() => {
-    if (location.pathname.includes("/estudiante")) setRole("estudiante");
-    else if (location.pathname.includes("/tutor")) setRole("tutor");
-    else setRole("admin");
+    if (location.pathname.includes("/estudiante")) {
+      setRole("estudiante");
+    } else if (location.pathname.includes("/tutor")) {
+      setRole("tutor");
+    } else if (
+      location.pathname === "/" ||
+      location.pathname.includes("/admin")
+    ) {
+      // Solo resetear a admin en rutas explícitamente admin o en el index
+      setRole("admin");
+    }
 
     // 2. Cada vez que cambia la URL, verificamos el estado real del storage
     setStudentUnenrolled(localStorage.getItem("studentUnenrolled") === "true");
@@ -143,7 +151,7 @@ const RootLayout = () => {
             await refreshPeople();
             setMobileMenuOpen(true);
           }}
-          tutores={(tutores)}
+          tutores={tutores}
           onTutorSelect={(id) => navigate(`/tutor/${id}`)}
           estudiantes={estudiantes}
           onEstudianteSelect={(id) => {
@@ -161,7 +169,9 @@ const RootLayout = () => {
               <p className="text-muted-foreground text-sm">Cargando...</p>
             }
           >
-            <Outlet context={{ role, isCalendarOpen, setCalendarOpen, refreshPeople }} />
+            <Outlet
+              context={{ role, isCalendarOpen, setCalendarOpen, refreshPeople }}
+            />
           </Suspense>
         </main>
       </div>
@@ -181,14 +191,14 @@ const router = createBrowserRouter([
       { path: "admin/editar-tutor/:id", element: <AgregarTutor /> },
       { path: "admin/agregar-comision", element: <AgregarComision /> },
       { path: "admin/editar-comision/:id", element: <AgregarComision /> },
-      { path: "admin/comision/:id", element: <AdminComision /> },
+      { path: "comision/:id", element: <RolGestionComision /> },
       { path: "tutor/:id", element: <TutorDashboard /> },
       { path: "estudiante/:id", element: <EstudianteDashboard /> },
-      // Actualizamos la ruta para que acepte el ID opcional o fijo
       { path: "estudiante/baja/:id", element: <PaginaDarDeBaja /> },
       { path: "estudiante/baja", element: <PaginaDarDeBaja /> },
       { path: "*", element: <NotFound /> },
       { path: "admin/agregar-evento", element: <AgregarEvento /> },
+      { path: "comision/:id/asistencia", element: <AsistenciaComision /> },
     ],
   },
 ]);

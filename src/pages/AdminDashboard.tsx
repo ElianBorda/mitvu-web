@@ -354,7 +354,7 @@ export default function AdminDashboard() {
           onRowClick={(row, index) => {
             if (view === "comisiones") {
               const id = comisionIdPorIndice[index];
-              navigate(`/admin/comision/${id}`);
+              navigate(`/comision/${id}`);
             }
           }}
           rowIds={rowIds}

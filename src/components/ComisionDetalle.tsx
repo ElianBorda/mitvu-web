@@ -11,6 +11,7 @@ import {
   User,
   Mail,
   Calendar1Icon,
+  ClipboardList,
 } from "lucide-react";
 import AnnouncementPanel from "./AnnouncementPanel";
 import MetricsPanel from "./MetricsPanel";
@@ -28,7 +29,7 @@ import { obtenerTodosLosEventos } from "@/service/apiEvento";
 import { Evento } from "@/types/eventoType";
 import { toast } from "sonner";
 import PanelCalendarioRead from "./PanelCalendarioRead";
-import { error } from "console";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   comision: Comision;
@@ -40,14 +41,15 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
   const [activeTab, setActiveTab] = useState<"participants" | "metrics">(
     "participants",
   );
+  const navigate = useNavigate();
   const [estudiantes, setEstudiantes] = useState<any[]>([]);
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [estudiantesBaja, setEstudiantesBaja] = useState<any[]>([]);
   const [tutor, setTutor] = useState<Tutor>(null);
+  const esRolGestion = role === "tutor" || role === "admin";
   const commAnnouncements = announcements.filter(
     (a) => a.commissionId === comision.id,
   );
-  const showMetricsTab = role === "tutor" || role === "admin";
 
   useEffect(() => {
     const fetchEventos = async () => {
@@ -96,7 +98,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
     };
 
     fetchEstudiantes();
-    if (role === "tutor" || role === "admin") {
+    if (esRolGestion) {
       fetchEstudiantesBaja();
     }
   }, [comision.id]);
@@ -127,7 +129,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
           >
             Participantes
           </button>
-          {showMetricsTab && (
+          {esRolGestion && (
             <button
               onClick={() => setActiveTab("metrics")}
               className={`px-3 sm:px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${activeTab === "metrics" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
@@ -210,6 +212,24 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
               </div>
             </div>
 
+            {/* Commission actions — solo tutor/admin */}
+            {esRolGestion && (
+              <div className="flex items-center p-2 mb-6">
+                <h3 className="text-sm font-semibold text-foreground shrink-0">
+                  Acciones de la comisión:
+                </h3>
+                <button
+                  onClick={() =>
+                    navigate(`/comision/${comision.id}/asistencia`)
+                  }
+                  className="flex items-center ml-4 gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                >
+                  <ClipboardList size={16} />
+                  Tomar asistencia
+                </button>
+              </div>
+            )}
+
             {/* Participants table */}
             <div className="bg-card rounded-lg shadow-card border border-border overflow-x-auto">
               <table className="w-full text-sm min-w-[600px]">
@@ -222,13 +242,13 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                     <th className="px-4 py-2.5 text-left font-medium">
                       Nombre
                     </th>
-                    {role === "tutor" || role === "admin" ? (
+                    {esRolGestion ? (
                       <th className="px-4 py-2.5 text-left font-medium">DNI</th>
                     ) : null}
                     <th className="px-4 py-2.5 text-left font-medium">
                       Carrera
                     </th>
-                    {role === "tutor" || role === "admin" ? (
+                    {esRolGestion ? (
                       <th className="px-4 py-2.5 text-left font-medium">
                         Asistencia
                       </th>
@@ -239,7 +259,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                   {estudiantes.length === 0 ? (
                     <tr className="bg-card">
                       <td
-                        colSpan={role === "tutor" || role === "admin" ? 5 : 4}
+                        colSpan={esRolGestion ? 5 : 4}
                         className="px-4 py-2.5 text-center text-muted-foreground"
                       >
                         No hay estudiantes en esta comisión.
@@ -247,11 +267,11 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                     </tr>
                   ) : (
                     estudiantes.map((e, i) => {
-                      const presentCount = 0; // s.attendance.filter(a => a === "present").length;
-                      const totalCount = 0; // s.attendance.filter(a => a !== "none").length;
+                      const cantAsistenciasPresentes = e.asistencias?.filter((a: any) => a.tipoDeAsistencia === "PRESENTE" || a.tipoDeAsistencia === "AUSENCIA_JUSTIFICADA").length || 0;
+                      const cantAsistencias = e.asistencias?.length || 0;
                       const pct =
-                        totalCount > 0
-                          ? Math.round((presentCount / totalCount) * 100)
+                        cantAsistencias > 0
+                          ? Math.round((cantAsistenciasPresentes / cantAsistencias) * 100)
                           : 0;
                       return (
                         <tr
@@ -269,7 +289,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                           <td className="px-4 py-2.5 text-foreground">
                             {e.nombre}
                           </td>
-                          {role === "tutor" || role === "admin" ? (
+                          {esRolGestion ? (
                             <td className="px-4 py-2.5 text-muted-foreground">
                               {e.dni}
                             </td>
@@ -277,7 +297,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                           <td className="px-4 py-2.5 text-muted-foreground">
                             {e.carrera}
                           </td>
-                          {role === "tutor" || role === "admin" ? (
+                          {esRolGestion ? (
                             <td className="px-4 py-2.5">
                               <span
                                 className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -301,7 +321,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
             </div>
 
             {/* Tabla de estudiantes dados de baja — solo tutor/admin */}
-            {(role === "tutor" || role === "admin") && (
+            {esRolGestion && (
               <div className="mt-6">
                 <h3 className="text-sm font-semibold text-foreground mb-3">
                   Estudiantes dados de baja
@@ -377,7 +397,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
             <PanelCalendarioRead eventos={eventos} />
             <AnnouncementPanel
               announcements={commAnnouncements}
-              canCreate={role === "tutor" || role === "admin"}
+              canCreate={esRolGestion}
             />
           </div>
         </div>
