@@ -23,15 +23,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { postCrearEvento, putModificarEvento, deleteEvento } from "@/service/apiEvento";
+import { postCrearEvento, putModificarEvento, deleteEvento, postCrearEventoParaComision } from "@/service/apiEvento";
 import { Pencil, Trash2 } from "lucide-react";
 
 interface Props {
   eventos: Evento[];
+  idComision?: string;
   onEventAdded?: () => void;
 }
 
-export default function PanelCalendario({ eventos, onEventAdded }: Props) {
+export default function PanelCalendario({ eventos, onEventAdded, idComision }: Props) {
   const [fechaSeleccionada, setFechaSeleccionada] = useState<Date | undefined>(new Date());
   
   // Estados para modales y edición
@@ -112,7 +113,7 @@ export default function PanelCalendario({ eventos, onEventAdded }: Props) {
       titulo: form.titulo,
       descripcion: form.descripcion,
       fecha: fechaParaBackend,
-      comision_id: "", 
+      idComision: idComision || "", 
     };
 
     if (eventoEditandoId) {
@@ -123,6 +124,14 @@ export default function PanelCalendario({ eventos, onEventAdded }: Props) {
           if (onEventAdded) onEventAdded();
         })
         .catch(() => toast.error("Error al modificar el evento."));
+    } else if (idComision) {
+      postCrearEventoParaComision(eventoBody)
+        .then(() => {
+          toast.success("Evento agregado al calendario en comisión.");
+          setDialogOpen(false);
+          if (onEventAdded) onEventAdded();
+        })
+        .catch(() => toast.error("Error al guardar el evento."));
     } else {
       postCrearEvento(eventoBody)
         .then(() => {

@@ -25,7 +25,7 @@ import { Tutor } from "@/types/tutorType";
 import { isAxiosError } from "axios";
 import MetricasLargoComision from "./MetricasLargoComision";
 import PanelCalendario from "./PanelCalendario";
-import { obtenerTodosLosEventos } from "@/service/apiEvento";
+import { obtenerEventosDeUnaComision, obtenerTodosLosEventos } from "@/service/apiEvento";
 import { Evento } from "@/types/eventoType";
 import { toast } from "sonner";
 import PanelCalendarioRead from "./PanelCalendarioRead";
@@ -47,6 +47,9 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
   const [estudiantesBaja, setEstudiantesBaja] = useState<any[]>([]);
   const [tutor, setTutor] = useState<Tutor>(null);
   const esRolGestion = role === "tutor" || role === "admin";
+  const esTutor = role === "tutor";
+  const [modificoEventos, setModificoEventos] = useState(false);
+
   const commAnnouncements = announcements.filter(
     (a) => a.commissionId === comision.id,
   );
@@ -54,7 +57,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
   useEffect(() => {
     const fetchEventos = async () => {
       try {
-        const { data } = await obtenerTodosLosEventos();
+        const { data } = await obtenerEventosDeUnaComision(comision.id);
         setEventos(data);
       } catch (error) {
         toast.error("Error al obtener eventos");
@@ -101,7 +104,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
     if (esRolGestion) {
       fetchEstudiantesBaja();
     }
-  }, [comision.id]);
+  }, [comision.id, modificoEventos, esRolGestion]);
 
   return (
     <div className="h-full">
@@ -394,7 +397,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
 
           {/* Right: Announcements */}
           <div className="w-full lg:w-80 shrink-0 gap-4 flex flex-col">
-            <PanelCalendarioRead eventos={eventos} />
+            {esTutor ? <PanelCalendarioRead eventos={eventos} /> : <PanelCalendario eventos={eventos} onEventAdded={() => setModificoEventos(!modificoEventos)} idComision={comision.id}/>}
             <AnnouncementPanel
               announcements={commAnnouncements}
               canCreate={esRolGestion}
