@@ -7,6 +7,7 @@ import { Calendar } from "@/components/ui/calendar";
 
 interface Props {
   eventos: Evento[];
+  idComision?: string;
 }
 
 export default function PanelCalendarioRead({ eventos }: Props) {
