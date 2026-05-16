@@ -1,9 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  attendanceByCommission,
-  getCommissionAvgAttendance,
-} from "@/data/mockData";
+import { getCommissionAvgAttendance } from "@/data/mockData";
 import DataTable from "@/components/DataTable";
 import {
   BarChart,
@@ -15,9 +13,6 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
 import {
   Popover,
@@ -33,7 +28,7 @@ import {
 import { obtenerTodosLosTutores } from "@/service/apiTutor";
 import { obtenerTodasLasComisiones } from "@/service/apiComision";
 import { obtenerTodosLosEventos } from "@/service/apiEvento";
-import { C } from "vitest/dist/chunks/reporters.d.BFLkQcL6.js";
+import { obtenerMetricasDeAsistenciaGlobal } from "@/service/apiMetrica"; 
 import MetricasGrafico from "@/components/MetricasGrafico";
 import PanelCalendario from "@/components/PanelCalendario";
 import { toast } from "sonner";
@@ -52,6 +47,10 @@ export default function AdminDashboard() {
   const [tutores, setTutores] = useState<any[]>([]);
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [comisiones, setComisiones] = useState<Comision[]>([]);
+  
+  // Estado para el gráfico de línea con soporte para el título original en el Tooltip
+  const [lineData, setLineData] = useState<{ name: string; asistencia: number; tituloOriginal: string }[]>([]); 
+
   const comisionIdPorIndice = comisiones?.map((c) => c.id);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const rowIds = (() => {
@@ -95,14 +94,25 @@ export default function AdminDashboard() {
     obtenerTodosLosEventos()
       .then(({ data }) => setEventos(data))
       .catch(() => toast.error("Error al obtener eventos"));
+
+    // Llamada a la API de métricas globales de asistencia
+    obtenerMetricasDeAsistenciaGlobal()
+      .then(({ data }) => {
+        // CAMBIO AQUÍ: Usamos el índice del array (i) para forzar "enc. 1", "enc. 2", etc.
+        const datosFormateados = data.map((item: any, i: number) => ({
+          name: `enc. ${i + 1}`, 
+          asistencia: item.porcentajeAsistencia,
+          tituloOriginal: item.evento.titulo, // Lo guardamos para usarlo dentro del Tooltip
+        }));
+        setLineData(datosFormateados);
+      })
+      .catch(() => toast.error("Error al obtener métricas de evolución global"));
+      
   }, [refreshTrigger]);
 
   const asignarComision = async (estudianteId: number, comisionId: string) => {
     try {
-      const response = await asignarEstudianteAComision(
-        estudianteId,
-        comisionId,
-      );
+      await asignarEstudianteAComision(estudianteId, comisionId);
       setEstudiantesActivos((prev) =>
         prev.map((e) =>
           e.id === estudianteId ? { ...e, comision_id: comisionId } : e,
@@ -115,41 +125,17 @@ export default function AdminDashboard() {
   };
 
   const totalEstudiantes = estudiantesActivos.length;
-  const avgGlobal = Math.round(
-    comisiones.reduce((s, c) => s + getCommissionAvgAttendance(c.id), 0) /
-      comisiones.length,
-  );
+  const avgGlobal = comisiones.length > 0 
+    ? Math.round(
+        comisiones.reduce((s, c) => s + getCommissionAvgAttendance(c.id), 0) /
+        comisiones.length
+      )
+    : 0;
 
   const barData = comisiones.map((c) => ({
     name: "comision",
     asistencia: "No definido",
   }));
-
-  const lineData = Array.from({ length: 6 }, (_, i) => ({
-    name: `Enc. ${i + 1}`,
-    asistencia: Math.round(
-      comisiones.reduce(
-        (s, c) => s + (attendanceByCommission[c.id]?.[i]?.percentage || 0),
-        0,
-      ) / comisiones.length,
-    ),
-  }));
-
-  const localityData = Object.entries(
-    estudiantesActivos.reduce<Record<string, number>>((acc, s) => {
-      const comm = comisiones.find((c) => c.id === s.comisionId);
-      const loc = comm?.localidad || "Otro";
-      acc[loc] = (acc[loc] || 0) + 1;
-      return acc;
-    }, {}),
-  ).map(([name, value]) => ({ name, value }));
-
-  const PIE_COLORS = [
-    "hsl(350,82%,27%)",
-    "hsl(350,82%,45%)",
-    "hsl(350,82%,60%)",
-    "hsl(0,0%,80%)",
-  ];
 
   const comisionData = comisiones.map((c) => {
     const t = tutores.find((tt) => tt.id === (c.tutor?.id || ""));
@@ -161,7 +147,6 @@ export default function AdminDashboard() {
       horario: `${c.horarioInicio} - ${c.horarioFin}`,
       tutor: t ? `${t.apellido}, ${t.nombre}` : "No definido",
       aula: c.aula ? c.aula : "No definida",
-      // asistencia: `${getCommissionAvgAttendance(c.id)}%`,
     };
   });
 
@@ -169,15 +154,11 @@ export default function AdminDashboard() {
     apellido: t.apellido,
     nombre: t.nombre,
     mail: t.mail,
-    // horario: t.preferredSchedule,
-    // localidad: t.locality,
     comisiones: t.comisiones.length,
   }));
 
   const estudianteData = estudiantesActivos.map((e) => {
-    // const pres = s.attendance.filter(a => a === "present").length;
-    // const total = s.attendance.filter(a => a !== "none").length;
-    var com: Comision;
+    var com: Comision | undefined;
     if (e.comision?.id) {
       com = comisiones.find((c) => c.id === e.comision.id);
     }
@@ -310,7 +291,6 @@ export default function AdminDashboard() {
     <div className="flex flex-col xl:flex-row gap-6">
       {/* Left: Table */}
       <div className="flex-1 min-w-0">
-        {/* Tab pills */}
         <div className="flex gap-1 mb-4 bg-secondary rounded-lg p-1 w-fit">
           {tabs.map((tab) => (
             <button
@@ -331,21 +311,14 @@ export default function AdminDashboard() {
           data={config.data}
           view={view}
           onAdd={() => {
-            if (view === "estudiantes") {
-              navigate("/admin/agregar-estudiante");
-            }
-            if (view === "tutores") {
-              navigate("/admin/agregar-tutor");
-            }
-            if (view === "comisiones") {
-              navigate("/admin/agregar-comision");
-            }
+            if (view === "estudiantes") navigate("/admin/agregar-estudiante");
+            if (view === "tutores") navigate("/admin/agregar-tutor");
+            if (view === "comisiones") navigate("/admin/agregar-comision");
           }}
           addLabel={config.addLabel}
           onEdit={(row, index) => {
             const id = comisionIdPorIndice[index];
-            if (view === "comisiones" && id)
-              navigate(`/admin/editar-comision/${id}`);
+            if (view === "comisiones" && id) navigate(`/admin/editar-comision/${id}`);
             if (view === "tutores") {
               const tutorId = tutores[index].id;
               navigate(`/admin/editar-tutor/${tutorId}`);
@@ -366,7 +339,6 @@ export default function AdminDashboard() {
               refreshPeople();
           }}
         />
-        {/* Tabla de estudiantes dados de baja */}
         {view === "estudiantes" && (
           <div className="mt-8">
             <h2 className="text-base font-semibold text-foreground mb-3">
@@ -384,44 +356,21 @@ export default function AdminDashboard() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-[#2d2d2d] text-white">
-                      <th className="px-4 py-3 text-left font-medium">
-                        Apellido
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium">
-                        Nombre
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium">
-                        Motivo
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium">
-                        Detalle
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium">
-                        Fecha de baja
-                      </th>
+                      <th className="px-4 py-3 text-left font-medium">Apellido</th>
+                      <th className="px-4 py-3 text-left font-medium">Nombre</th>
+                      <th className="px-4 py-3 text-left font-medium">Motivo</th>
+                      <th className="px-4 py-3 text-left font-medium">Detalle</th>
+                      <th className="px-4 py-3 text-left font-medium">Fecha de baja</th>
                     </tr>
                   </thead>
                   <tbody>
                     {bajasData.map((row, i) => (
-                      <tr
-                        key={i}
-                        className={`border-t border-border ${i % 2 === 0 ? "bg-white" : "bg-[#fafafa]"}`}
-                      >
-                        <td className="px-4 py-3 text-foreground">
-                          {row.apellido}
-                        </td>
-                        <td className="px-4 py-3 text-foreground">
-                          {row.nombre}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {row.motivo}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">
-                          {row.detalle}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {row.fechaBaja}
-                        </td>
+                      <tr key={i} className={`border-t border-border ${i % 2 === 0 ? "bg-white" : "bg-[#fafafa]"}`}>
+                        <td className="px-4 py-3 text-foreground">{row.apellido}</td>
+                        <td className="px-4 py-3 text-foreground">{row.nombre}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{row.motivo}</td>
+                        <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">{row.detalle}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{row.fechaBaja}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -434,79 +383,46 @@ export default function AdminDashboard() {
 
       {/* Right: Metrics */}
       <div className="w-full xl:w-80 shrink-0 space-y-4">
-        <h2 className="text-base font-semibold text-foreground">
-          Métricas generales
-        </h2>
+        <h2 className="text-base font-semibold text-foreground">Métricas generales</h2>
 
-        {/* KPI cards */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-card rounded-lg shadow-card border border-border p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">
-              {totalEstudiantes}
-            </p>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              Total estudiantes
-            </p>
+            <p className="text-2xl font-bold text-foreground">{totalEstudiantes}</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Total estudiantes</p>
           </div>
           <div className="bg-card rounded-lg shadow-card border border-border p-4 text-center">
-            <p
-              className={`text-2xl font-bold ${avgGlobal >= 70 ? "text-green-600" : "text-destructive"}`}
-            >
-              {avgGlobal}%
-            </p>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              Asistencia promedio
-            </p>
+            <p className={`text-2xl font-bold ${avgGlobal >= 70 ? "text-green-600" : "text-destructive"}`}>{avgGlobal}%</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Asistencia promedio</p>
           </div>
         </div>
 
-        {/* Pie chart */}
-        <div className="bg-card rounded-lg shadow-card border border-border p-4">
-          <h3 className="text-xs font-semibold text-foreground mb-3">
-            Estudiantes totales dados de baja
-          </h3>
-          <MetricasGrafico />
-        </div>
-
-        <div className="">
-          <h3 className="text-xs font-semibold text-foreground mb-3">
-            Calendario global
-          </h3>
-
+        <div>
+          <h3 className="text-xs font-semibold text-foreground mb-3">Calendario global</h3>
           <PanelCalendario eventos={eventos} onEventAdded={triggerRefresh} />
         </div>
 
-        {/* Bar chart */}
         <div className="bg-card rounded-lg shadow-card border border-border p-4">
-          <h3 className="text-xs font-semibold text-foreground mb-3">
-            Asistencia por comisión
-          </h3>
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={barData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(0,0%,90%)" />
-              <XAxis dataKey="name" tick={{ fontSize: 9 }} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 9 }} />
-              <Tooltip />
-              <Bar
-                dataKey="asistencia"
-                fill="hsl(350,82%,27%)"
-                radius={[3, 3, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <h3 className="text-xs font-semibold text-foreground mb-3">Estudiantes totales dados de baja</h3>
+          <MetricasGrafico />
         </div>
 
-        {/* Line chart */}
+        {/* Line chart con nombres incrementales */}
         <div className="bg-card rounded-lg shadow-card border border-border p-4">
-          <h3 className="text-xs font-semibold text-foreground mb-3">
-            Evolución global
-          </h3>
+          <h3 className="text-xs font-semibold text-foreground mb-3">Evolución global</h3>
           <ResponsiveContainer width="100%" height={140}>
             <LineChart data={lineData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(0,0%,90%)" />
-              <XAxis dataKey="name" tick={{ fontSize: 9 }} />
+              <XAxis 
+                dataKey="name" 
+                tick={{ fontSize: 9 }} 
+              />
               <YAxis domain={[0, 100]} tick={{ fontSize: 9 }} />
-              <Tooltip />
+              <Tooltip 
+                formatter={(value: number, name: string, props: any) => [
+                  `${value}%`, 
+                  `Asistencia (${props.payload.tituloOriginal || ''})`
+                ]}
+              />
               <Line
                 type="monotone"
                 dataKey="asistencia"
@@ -517,6 +433,19 @@ export default function AdminDashboard() {
             </LineChart>
           </ResponsiveContainer>
         </div>
+
+        {/* <div className="bg-card rounded-lg shadow-card border border-border p-4">
+          <h3 className="text-xs font-semibold text-foreground mb-3">Asistencia por comisión</h3>
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={barData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(0,0%,90%)" />
+              <XAxis dataKey="name" tick={{ fontSize: 9 }} />
+              <YAxis domain={[0, 100]} tick={{ fontSize: 9 }} />
+              <Tooltip />
+              <Bar dataKey="asistencia" fill="hsl(350,82%,27%)" radius={[3, 3, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div> */}
       </div>
     </div>
   );
