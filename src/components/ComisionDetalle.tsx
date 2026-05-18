@@ -51,7 +51,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
   const [estudiantesBaja, setEstudiantesBaja] = useState<any[]>([]);
   const [tutor, setTutor] = useState<Tutor>(null);
   const esRolGestion = role === "tutor" || role === "admin";
-  const esTutor = role === "tutor";
+  const esEstudiante = role === "estudiante";
   const [modificoEventos, setModificoEventos] = useState(false);
   const [modificoAnuncios, setModificoAnuncios] = useState(false);
   const [anuncios, setAnuncios] = useState<Anuncio[]>([]); //Traer anuncios globales y para esta comisión
@@ -417,15 +417,11 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
 
           {/* Right: Announcements */}
           <div className="w-full lg:w-80 shrink-0 gap-4 flex flex-col">
-            {esTutor ? (
-              <PanelCalendarioRead eventos={eventos} />
-            ) : (
-              <PanelCalendario
-                eventos={eventos}
-                onEventAdded={() => setModificoEventos(!modificoEventos)}
-                idComision={comision.id}
-              />
-            )}
+            {esEstudiante ? <PanelCalendarioRead eventos={eventos} /> : <PanelCalendario eventos={eventos} onEventAdded={() => setModificoEventos(!modificoEventos)} idComision={comision.id}/>}
+            <AnnouncementPanel
+              announcements={commAnnouncements}
+              canCreate={esRolGestion}
+            />
             <PanelAnuncios
               anuncios={anuncios}
               puedePublicar={esRolGestion}
