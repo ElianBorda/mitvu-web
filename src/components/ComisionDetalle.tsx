@@ -47,7 +47,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
   const [estudiantesBaja, setEstudiantesBaja] = useState<any[]>([]);
   const [tutor, setTutor] = useState<Tutor>(null);
   const esRolGestion = role === "tutor" || role === "admin";
-  const esTutor = role === "tutor";
+  const esEstudiante = role === "estudiante";
   const [modificoEventos, setModificoEventos] = useState(false);
 
   const commAnnouncements = announcements.filter(
@@ -397,7 +397,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
 
           {/* Right: Announcements */}
           <div className="w-full lg:w-80 shrink-0 gap-4 flex flex-col">
-            {esTutor ? <PanelCalendarioRead eventos={eventos} /> : <PanelCalendario eventos={eventos} onEventAdded={() => setModificoEventos(!modificoEventos)} idComision={comision.id}/>}
+            {esEstudiante ? <PanelCalendarioRead eventos={eventos} /> : <PanelCalendario eventos={eventos} onEventAdded={() => setModificoEventos(!modificoEventos)} idComision={comision.id}/>}
             <AnnouncementPanel
               announcements={commAnnouncements}
               canCreate={esRolGestion}
