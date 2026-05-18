@@ -418,15 +418,11 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
           {/* Right: Announcements */}
           <div className="w-full lg:w-80 shrink-0 gap-4 flex flex-col">
             {esEstudiante ? <PanelCalendarioRead eventos={eventos} /> : <PanelCalendario eventos={eventos} onEventAdded={() => setModificoEventos(!modificoEventos)} idComision={comision.id}/>}
-            <AnnouncementPanel
-              announcements={commAnnouncements}
-              canCreate={esRolGestion}
-            />
             <PanelAnuncios
               anuncios={anuncios}
               puedePublicar={esRolGestion}
               comisionId={comision.id}
-              usuarioId={tutor ? tutor.id : null}
+              usuarioId={tutor && role === "tutor" ? tutor.id : null}
               actualizarAnuncios={() => setModificoAnuncios(!modificoAnuncios)}
             />
           </div>

@@ -38,7 +38,6 @@ export default function RolGestionComision() {
 
   // Si no es admin, no renderizamos el contenido (protección de ruta básica)
   if (role !== "admin" && role !== "tutor") return null;
-  console.log(role);
 
   if (loading) {
     return (

@@ -53,7 +53,6 @@ export default function AnunciosPanel({
       idComision: comisionId,
       creadoPorId: usuarioId,
     };
-    console.log("Creando anuncio con body:", anuncioBody);
     crearAnuncioGlobal(anuncioBody)
       .then(() => {
         toast.success("Anuncio agregado.");
