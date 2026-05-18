@@ -1,6 +1,6 @@
 import { EstudianteBody } from "@/types/estudianteType";
 import { FormularioBajaType } from "@/types/FormularioBajaType";
-import { Asistencia } from "@/types/asistenciaType";
+import { Asistencia } from "../types/asistenciaType";
 import axios from "axios";
 axios.defaults.baseURL = import.meta.env.VITE_API_URL;
 

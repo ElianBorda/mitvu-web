@@ -9,6 +9,9 @@ import { Evento } from "@/types/eventoType";
 import { obtenerTodosLosEventos } from "@/service/apiEvento";
 import { toast } from "sonner";
 import PanelCalendarioRead from "@/components/PanelCalendarioRead";
+import PanelAnuncios from "@/components/PanelAnuncios";
+import { Anuncio } from "@/types/anuncioType";
+import { obtenerAnunciosGlobales } from "@/service/apiAnuncio";
 
 export default function TutorDashboard() {
   const { id } = useParams<{ id: string }>();
@@ -17,8 +20,18 @@ export default function TutorDashboard() {
   const navigate = useNavigate();
 
   const [eventosDelTutor, setEventosDelTutor] = useState<Evento[]>([]); //Se consiguen los eventos del tutor (en un principio son eventos globables)
+  const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
 
   useEffect(() => {
+    const fetchAnunciosGlobales = async () => {
+      try {
+        const { data } = await obtenerAnunciosGlobales();
+        setAnuncios(data);
+      } catch (error) {
+        toast.error("Error al obtener anuncios globales");
+      }
+    };
+
     const fetchEventos = async () => {
       try {
         const response = await obtenerTodosLosEventos();
@@ -39,6 +52,7 @@ export default function TutorDashboard() {
     };
     if (id) fetchComisiones();
     fetchEventos();
+    fetchAnunciosGlobales();
   }, [id]);
 
   if (role === "admin" || role === "estudiante") return null;
@@ -62,8 +76,19 @@ export default function TutorDashboard() {
           ))}
         </div>
       </div>
-      <div className="w-full lg:w-80 shrink-0 pt-16">
-        <PanelCalendarioRead eventos={eventosDelTutor}/>
+      <div>
+        <div className="w-full lg:w-80 shrink-0 pt-16">
+          <PanelCalendarioRead eventos={eventosDelTutor} />
+        </div>
+        <div className="w-full lg:w-80 shrink-0 mt-6">
+          <PanelAnuncios
+            anuncios={anuncios}
+            puedePublicar={false}
+            comisionId={null}
+            usuarioId={id}
+            actualizarAnuncios={() => {}}
+          />
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Role } from "@/data/types";
-import { announcements } from "@/data/mockData";
 import {
   Building,
   MapPin,
@@ -13,7 +12,7 @@ import {
   Calendar1Icon,
   ClipboardList,
 } from "lucide-react";
-import AnnouncementPanel from "./AnnouncementPanel";
+import PanelAnuncios from "./PanelAnuncios";
 import MetricsPanel from "./MetricsPanel";
 import { Comision } from "@/types/comisionType";
 import {
@@ -25,11 +24,16 @@ import { Tutor } from "@/types/tutorType";
 import { isAxiosError } from "axios";
 import MetricasLargoComision from "./MetricasLargoComision";
 import PanelCalendario from "./PanelCalendario";
-import { obtenerEventosDeUnaComision, obtenerTodosLosEventos } from "@/service/apiEvento";
+import {
+  obtenerEventosDeUnaComision,
+  obtenerTodosLosEventos,
+} from "@/service/apiEvento";
 import { Evento } from "@/types/eventoType";
 import { toast } from "sonner";
 import PanelCalendarioRead from "./PanelCalendarioRead";
 import { useNavigate } from "react-router-dom";
+import { Anuncio } from "@/types/anuncioType";
+import { obtenerAnunciosGlobales } from "@/service/apiAnuncio";
 
 interface Props {
   comision: Comision;
@@ -49,12 +53,19 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
   const esRolGestion = role === "tutor" || role === "admin";
   const esTutor = role === "tutor";
   const [modificoEventos, setModificoEventos] = useState(false);
-
-  const commAnnouncements = announcements.filter(
-    (a) => a.commissionId === comision.id,
-  );
+  const [modificoAnuncios, setModificoAnuncios] = useState(false);
+  const [anuncios, setAnuncios] = useState<Anuncio[]>([]); //Traer anuncios globales y para esta comisión
 
   useEffect(() => {
+    const fetchAnunciosGlobales = async () => {
+      try {
+        const { data } = await obtenerAnunciosGlobales();
+        setAnuncios(data);
+      } catch (error) {
+        toast.error("Error al obtener anuncios globales");
+      }
+    };
+
     const fetchEventos = async () => {
       try {
         const { data } = await obtenerEventosDeUnaComision(comision.id);
@@ -79,6 +90,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
 
     fetchEventos();
     fetchTutor();
+    fetchAnunciosGlobales();
 
     const fetchEstudiantes = async () => {
       try {
@@ -104,7 +116,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
     if (esRolGestion) {
       fetchEstudiantesBaja();
     }
-  }, [comision.id, modificoEventos, esRolGestion]);
+  }, [comision.id, modificoEventos, esRolGestion, modificoAnuncios]);
 
   return (
     <div className="h-full">
@@ -270,11 +282,19 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                     </tr>
                   ) : (
                     estudiantes.map((e, i) => {
-                      const cantAsistenciasPresentes = e.asistencias?.filter((a: any) => a.tipoDeAsistencia === "PRESENTE" || a.tipoDeAsistencia === "AUSENCIA_JUSTIFICADA").length || 0;
+                      const cantAsistenciasPresentes =
+                        e.asistencias?.filter(
+                          (a: any) =>
+                            a.tipoDeAsistencia === "PRESENTE" ||
+                            a.tipoDeAsistencia === "AUSENCIA_JUSTIFICADA",
+                        ).length || 0;
                       const cantAsistencias = e.asistencias?.length || 0;
                       const pct =
                         cantAsistencias > 0
-                          ? Math.round((cantAsistenciasPresentes / cantAsistencias) * 100)
+                          ? Math.round(
+                              (cantAsistenciasPresentes / cantAsistencias) *
+                                100,
+                            )
                           : 0;
                       return (
                         <tr
@@ -397,10 +417,21 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
 
           {/* Right: Announcements */}
           <div className="w-full lg:w-80 shrink-0 gap-4 flex flex-col">
-            {esTutor ? <PanelCalendarioRead eventos={eventos} /> : <PanelCalendario eventos={eventos} onEventAdded={() => setModificoEventos(!modificoEventos)} idComision={comision.id}/>}
-            <AnnouncementPanel
-              announcements={commAnnouncements}
-              canCreate={esRolGestion}
+            {esTutor ? (
+              <PanelCalendarioRead eventos={eventos} />
+            ) : (
+              <PanelCalendario
+                eventos={eventos}
+                onEventAdded={() => setModificoEventos(!modificoEventos)}
+                idComision={comision.id}
+              />
+            )}
+            <PanelAnuncios
+              anuncios={anuncios}
+              puedePublicar={esRolGestion}
+              comisionId={comision.id}
+              usuarioId={tutor ? tutor.id : null}
+              actualizarAnuncios={() => setModificoAnuncios(!modificoAnuncios)}
             />
           </div>
         </div>

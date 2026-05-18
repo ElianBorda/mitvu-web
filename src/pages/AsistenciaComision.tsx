@@ -9,7 +9,7 @@ import { obtenerTodosLosEventos } from "@/service/apiEvento";
 import { getObtenerComision } from "@/service/apiComision";
 import { Evento } from "@/types/eventoType";
 import { Comision } from "@/types/comisionType";
-import { Asistencia } from "@/types/asistenciaType";
+import { Asistencia } from "../types/asistenciaType";
 import { toast } from "sonner";
 
 type EstadoAsistencia = "PRESENTE" | "AUSENTE" | "AUSENCIA_JUSTIFICADA" | null;
