@@ -28,12 +28,15 @@ import {
 import { obtenerTodosLosTutores } from "@/service/apiTutor";
 import { obtenerTodasLasComisiones } from "@/service/apiComision";
 import { obtenerTodosLosEventos } from "@/service/apiEvento";
-import { obtenerMetricasDeAsistenciaGlobal } from "@/service/apiMetrica"; 
+import { obtenerMetricasDeAsistenciaGlobal } from "@/service/apiMetrica";
 import MetricasGrafico from "@/components/MetricasGrafico";
 import PanelCalendario from "@/components/PanelCalendario";
 import { toast } from "sonner";
 import { Evento } from "@/types/eventoType";
 import { useLayoutContext } from "@/App";
+import PanelAnuncios from "@/components/PanelAnuncios";
+import { Anuncio } from "@/types/anuncioType";
+import { obtenerAnunciosGlobales } from "@/service/apiAnuncio";
 
 type AdminView = "comisiones" | "tutores" | "estudiantes";
 
@@ -41,15 +44,16 @@ export default function AdminDashboard() {
   const [view, setView] = useState<AdminView>("comisiones");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   const [estudiantesActivos, setEstudiantesActivos] = useState<any[]>([]);
   const [estudiantesBaja, setEstudiantesBaja] = useState<any[]>([]);
   const [tutores, setTutores] = useState<any[]>([]);
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [comisiones, setComisiones] = useState<Comision[]>([]);
-  
-  // Estado para el gráfico de línea con soporte para el título original en el Tooltip
-  const [lineData, setLineData] = useState<{ name: string; asistencia: number; tituloOriginal: string }[]>([]); 
+  const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
+  const [lineData, setLineData] = useState<
+    { name: string; asistencia: number; tituloOriginal: string }[]
+  >([]);
 
   const comisionIdPorIndice = comisiones?.map((c) => c.id);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -95,19 +99,22 @@ export default function AdminDashboard() {
       .then(({ data }) => setEventos(data))
       .catch(() => toast.error("Error al obtener eventos"));
 
-    // Llamada a la API de métricas globales de asistencia
     obtenerMetricasDeAsistenciaGlobal()
       .then(({ data }) => {
-        // CAMBIO AQUÍ: Usamos el índice del array (i) para forzar "enc. 1", "enc. 2", etc.
         const datosFormateados = data.map((item: any, i: number) => ({
-          name: `enc. ${i + 1}`, 
+          name: `enc. ${i + 1}`,
           asistencia: item.porcentajeAsistencia,
-          tituloOriginal: item.evento.titulo, // Lo guardamos para usarlo dentro del Tooltip
+          tituloOriginal: item.evento.titulo,
         }));
         setLineData(datosFormateados);
       })
-      .catch(() => toast.error("Error al obtener métricas de evolución global"));
-      
+      .catch(() =>
+        toast.error("Error al obtener métricas de evolución global"),
+      );
+
+    obtenerAnunciosGlobales()
+      .then(({ data }) => setAnuncios(data))
+      .catch(() => toast.error("Error al obtener anuncios globales"));
   }, [refreshTrigger]);
 
   const asignarComision = async (estudianteId: number, comisionId: string) => {
@@ -125,12 +132,13 @@ export default function AdminDashboard() {
   };
 
   const totalEstudiantes = estudiantesActivos.length;
-  const avgGlobal = comisiones.length > 0 
-    ? Math.round(
-        comisiones.reduce((s, c) => s + getCommissionAvgAttendance(c.id), 0) /
-        comisiones.length
-      )
-    : 0;
+  const avgGlobal =
+    comisiones.length > 0
+      ? Math.round(
+          comisiones.reduce((s, c) => s + getCommissionAvgAttendance(c.id), 0) /
+            comisiones.length,
+        )
+      : 0;
 
   const barData = comisiones.map((c) => ({
     name: "comision",
@@ -318,7 +326,8 @@ export default function AdminDashboard() {
           addLabel={config.addLabel}
           onEdit={(row, index) => {
             const id = comisionIdPorIndice[index];
-            if (view === "comisiones" && id) navigate(`/admin/editar-comision/${id}`);
+            if (view === "comisiones" && id)
+              navigate(`/admin/editar-comision/${id}`);
             if (view === "tutores") {
               const tutorId = tutores[index].id;
               navigate(`/admin/editar-tutor/${tutorId}`);
@@ -332,11 +341,11 @@ export default function AdminDashboard() {
           }}
           rowIds={rowIds}
           onDelete={(row, index) => {
-              const dataCon = [...config.data];
-              dataCon.splice(index, 1);
-              config.data = dataCon;
-              triggerRefresh();
-              refreshPeople();
+            const dataCon = [...config.data];
+            dataCon.splice(index, 1);
+            config.data = dataCon;
+            triggerRefresh();
+            refreshPeople();
           }}
         />
         {view === "estudiantes" && (
@@ -356,21 +365,44 @@ export default function AdminDashboard() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-[#2d2d2d] text-white">
-                      <th className="px-4 py-3 text-left font-medium">Apellido</th>
-                      <th className="px-4 py-3 text-left font-medium">Nombre</th>
-                      <th className="px-4 py-3 text-left font-medium">Motivo</th>
-                      <th className="px-4 py-3 text-left font-medium">Detalle</th>
-                      <th className="px-4 py-3 text-left font-medium">Fecha de baja</th>
+                      <th className="px-4 py-3 text-left font-medium">
+                        Apellido
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium">
+                        Nombre
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium">
+                        Motivo
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium">
+                        Detalle
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium">
+                        Fecha de baja
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {bajasData.map((row, i) => (
-                      <tr key={i} className={`border-t border-border ${i % 2 === 0 ? "bg-white" : "bg-[#fafafa]"}`}>
-                        <td className="px-4 py-3 text-foreground">{row.apellido}</td>
-                        <td className="px-4 py-3 text-foreground">{row.nombre}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{row.motivo}</td>
-                        <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">{row.detalle}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{row.fechaBaja}</td>
+                      <tr
+                        key={i}
+                        className={`border-t border-border ${i % 2 === 0 ? "bg-white" : "bg-[#fafafa]"}`}
+                      >
+                        <td className="px-4 py-3 text-foreground">
+                          {row.apellido}
+                        </td>
+                        <td className="px-4 py-3 text-foreground">
+                          {row.nombre}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {row.motivo}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">
+                          {row.detalle}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {row.fechaBaja}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -383,44 +415,69 @@ export default function AdminDashboard() {
 
       {/* Right: Metrics */}
       <div className="w-full xl:w-80 shrink-0 space-y-4">
-        <h2 className="text-base font-semibold text-foreground">Métricas generales</h2>
+        <h2 className="text-base font-semibold text-foreground">
+          Métricas generales
+        </h2>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-card rounded-lg shadow-card border border-border p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">{totalEstudiantes}</p>
-            <p className="text-[10px] text-muted-foreground mt-1">Total estudiantes</p>
+            <p className="text-2xl font-bold text-foreground">
+              {totalEstudiantes}
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Total estudiantes
+            </p>
           </div>
           <div className="bg-card rounded-lg shadow-card border border-border p-4 text-center">
-            <p className={`text-2xl font-bold ${avgGlobal >= 70 ? "text-green-600" : "text-destructive"}`}>{avgGlobal}%</p>
-            <p className="text-[10px] text-muted-foreground mt-1">Asistencia promedio</p>
+            <p
+              className={`text-2xl font-bold ${avgGlobal >= 70 ? "text-green-600" : "text-destructive"}`}
+            >
+              {avgGlobal}%
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Asistencia promedio
+            </p>
           </div>
         </div>
 
         <div>
-          <h3 className="text-xs font-semibold text-foreground mb-3">Calendario global</h3>
+          <h3 className="text-xs font-semibold text-foreground mb-3">
+            Calendario global
+          </h3>
           <PanelCalendario eventos={eventos} onEventAdded={triggerRefresh} />
         </div>
 
+        <div>
+          <PanelAnuncios
+            anuncios={anuncios}
+            puedePublicar={true}
+            comisionId={null}
+            usuarioId={null}
+            actualizarAnuncios={triggerRefresh}
+          />
+        </div>
+
         <div className="bg-card rounded-lg shadow-card border border-border p-4">
-          <h3 className="text-xs font-semibold text-foreground mb-3">Estudiantes totales dados de baja</h3>
+          <h3 className="text-xs font-semibold text-foreground mb-3">
+            Estudiantes totales dados de baja
+          </h3>
           <MetricasGrafico />
         </div>
 
         {/* Line chart con nombres incrementales */}
         <div className="bg-card rounded-lg shadow-card border border-border p-4">
-          <h3 className="text-xs font-semibold text-foreground mb-3">Evolución global</h3>
+          <h3 className="text-xs font-semibold text-foreground mb-3">
+            Evolución global
+          </h3>
           <ResponsiveContainer width="100%" height={140}>
             <LineChart data={lineData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(0,0%,90%)" />
-              <XAxis 
-                dataKey="name" 
-                tick={{ fontSize: 9 }} 
-              />
+              <XAxis dataKey="name" tick={{ fontSize: 9 }} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 9 }} />
-              <Tooltip 
+              <Tooltip
                 formatter={(value: number, name: string, props: any) => [
-                  `${value}%`, 
-                  `Asistencia (${props.payload.tituloOriginal || ''})`
+                  `${value}%`,
+                  `Asistencia (${props.payload.tituloOriginal || ""})`,
                 ]}
               />
               <Line
