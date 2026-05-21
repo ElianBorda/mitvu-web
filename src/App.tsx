@@ -15,6 +15,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Role } from "@/data/types";
 import { Tutor } from "@/types/tutorType";
 import { Estudiante } from "@/types/estudianteType";
+import { Notificacion } from "@/types/notificacionType";
 import { obtenerTodosLosTutores } from "@/service/apiTutor";
 import { obtenerTodosLosEstudiantes } from "@/service/apiEstudiante";
 
@@ -35,6 +36,7 @@ const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const AgregarEvento = lazy(() => import("./pages/AgregarEvento.tsx"));
 const AsistenciaComision = lazy(() => import("./pages/AsistenciaComision.tsx"));
 const queryClient = new QueryClient();
+
 
 const userNames: Record<Role, string> = {
   estudiante: "Lucía Martínez",
@@ -64,6 +66,7 @@ const RootLayout = () => {
 
   const [tutores, setTutores] = useState<Tutor[]>([]);
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
+  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]); // Se buscan las notificaciones del usuario seleccionado y se setean en la variable
 
   // 1. Convertimos la validación en un Estado de React
   const [studentUnenrolled, setStudentUnenrolled] = useState(
@@ -162,6 +165,7 @@ const RootLayout = () => {
             setRole("estudiante");
             navigate(`/estudiante/${id}`);
           }}
+          notificaciones={notificaciones}
         />
         <main className="flex-1 p-3 sm:p-6">
           <Suspense

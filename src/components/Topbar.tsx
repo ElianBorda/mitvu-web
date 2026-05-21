@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, Bell, Menu, ChevronDown } from "lucide-react";
 import { Role } from "@/data/types";
-import NotificationDropdown from "./NotificationDropdown";
+import NotificacionDropdown from "./NotificacionDropdown";
 import { Tutor } from "@/types/tutorType";
 import { Estudiante } from "@/types/estudianteType";
+import { Notificacion } from "@/types/notificacionType";
 
 interface TopbarProps {
   userName: string;
@@ -14,19 +15,20 @@ interface TopbarProps {
   onTutorSelect: (id: number) => void;
   estudiantes: any[];
   onEstudianteSelect: (id: number) => void;
+  notificaciones: Notificacion[];
 }
 
 const STATIC_OPTIONS = [
   { label: "Admin",      value: "admin"   as Role },
 ];
 
-export default function Topbar({ userName, role, onRoleChange, onMenuClick, tutores, onTutorSelect, estudiantes, onEstudianteSelect }: TopbarProps) {
+export default function Topbar({ userName, role, onRoleChange, onMenuClick, tutores, onTutorSelect, estudiantes, onEstudianteSelect, notificaciones }: TopbarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const initials = userName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
-  const unreadCount = 2;
+  const unreadCount = notificaciones.filter(n => !n.read).length;
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -133,7 +135,7 @@ export default function Topbar({ userName, role, onRoleChange, onMenuClick, tuto
           )}
         </button>
         {showNotifications && (
-          <NotificationDropdown onClose={() => setShowNotifications(false)} />
+          <NotificacionDropdown onClose={() => setShowNotifications(false)} />
         )}
       </div>
 
