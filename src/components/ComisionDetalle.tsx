@@ -9,11 +9,9 @@ import {
   Clock,
   User,
   Mail,
-  Calendar1Icon,
   ClipboardList,
 } from "lucide-react";
 import PanelAnuncios from "./PanelAnuncios";
-import MetricsPanel from "./MetricsPanel";
 import { Comision } from "@/types/comisionType";
 import {
   obtenerEstudiantesDeComision,
@@ -33,7 +31,7 @@ import { toast } from "sonner";
 import PanelCalendarioRead from "./PanelCalendarioRead";
 import { useNavigate } from "react-router-dom";
 import { Anuncio } from "@/types/anuncioType";
-import { obtenerAnunciosGlobales } from "@/service/apiAnuncio";
+import { obtenerAnunciosGlobales, obtenerAnunciosDeComision } from "@/service/apiAnuncio";
 
 interface Props {
   comision: Comision;
@@ -53,8 +51,9 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
   const esRolGestion = role === "tutor" || role === "admin";
   const esEstudiante = role === "estudiante";
   const [modificoEventos, setModificoEventos] = useState(false);
-  const [modificoAnuncios, setModificoAnuncios] = useState(false);
-  const [anuncios, setAnuncios] = useState<Anuncio[]>([]); //Traer anuncios globales y para esta comisión
+  const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
+  const triggerRefresh = () => setRefreshTrigger((prev) => prev + 1);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     const fetchAnunciosGlobales = async () => {
@@ -63,6 +62,15 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
         setAnuncios(data);
       } catch (error) {
         toast.error("Error al obtener anuncios globales");
+      }
+    };
+
+    const fetchAnunciosDeComision = async () => {
+      try {
+        const { data } = await obtenerAnunciosDeComision(comision.id);
+        setAnuncios((prev) => [...prev, ...data]);
+      } catch (error) {
+        toast.error("Error al obtener anuncios de la comisión");
       }
     };
 
@@ -91,7 +99,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
     fetchEventos();
     fetchTutor();
     fetchAnunciosGlobales();
-
+    fetchAnunciosDeComision();
     const fetchEstudiantes = async () => {
       try {
         const response = await obtenerEstudiantesDeComision(comision.id);
@@ -116,7 +124,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
     if (esRolGestion) {
       fetchEstudiantesBaja();
     }
-  }, [comision.id, modificoEventos, esRolGestion, modificoAnuncios]);
+  }, [comision.id, modificoEventos, esRolGestion, refreshTrigger]);
 
   return (
     <div className="h-full">
@@ -423,7 +431,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
               puedePublicar={esRolGestion}
               comisionId={comision.id}
               usuarioId={tutor && role === "tutor" ? tutor.id : null}
-              actualizarAnuncios={() => setModificoAnuncios(!modificoAnuncios)}
+              actualizarAnuncios={triggerRefresh}
             />
           </div>
         </div>
