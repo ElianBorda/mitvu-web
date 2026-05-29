@@ -4,12 +4,16 @@ import SlidePanel from "@/components/SlidePanel";
 import PanelCalendario from "@/components/PanelCalendario";
 import { useParams } from "react-router-dom";
 import ComisionDetalle from "@/components/ComisionDetalle";
+import { format } from "date-fns";
 import { Comision } from "@/types/comisionType";
 import { obtenerComisionesDelEstudiante } from "@/service/apiComision";
-import { estaDadoDeBaja } from "@/service/apiEstudiante";
+import { asignarTokenAEstudiante, estaDadoDeBaja } from "@/service/apiEstudiante";
 import { isAxiosError } from "axios";
 import { useLayoutContext } from "@/App";
 import { toast } from "sonner";
+import { escucharMensajesForeground, solicitarTokenFCM } from "@/firebase";
+import { Bell } from "lucide-react";
+import { guardarNotificacion, obtenerNotificacionesPorUsuario } from "@/service/apiNotificacion";
 
 export default function EstudianteDashboard({
   unenrolled = false,
@@ -17,7 +21,7 @@ export default function EstudianteDashboard({
   unenrolled?: boolean;
 }) {
   const { id } = useParams<{ id: string }>();
-  const { role, isCalendarOpen, setCalendarOpen } = useLayoutContext();
+  const { role, isCalendarOpen, setCalendarOpen, setNotificaciones } = useLayoutContext();
 
   const [comision, setComision] = useState<Comision | null>(null);
   const [dadoDeBaja, setDadoDeBaja] = useState(false);
@@ -25,6 +29,65 @@ export default function EstudianteDashboard({
   const [loading, setLoading] = useState(true);
 
   const eventosDelEstudiante = []; //Se consiguen los eventos del tutor (en un principio son eventos globables)
+
+ useEffect(() => {
+    const cargarHistorial = async () => {
+      if (!id) return;
+      try {
+        const response = await obtenerNotificacionesPorUsuario(id);
+        
+        const historialMapeado = response.data.map((n: any) => ({
+          id: n.id || Math.random().toString(),
+          titulo: n.titulo,
+          descripcion: n.cuerpo,
+          fecha: n.fecha,
+          read: n.leida,        
+        }));
+
+        setNotificaciones(historialMapeado.reverse());
+        
+      } catch (error) {
+        console.error("Error al cargar el historial de notificaciones:", error);
+      }
+    };
+
+    cargarHistorial();
+
+    const inicializarNotificaciones = async () => {
+      const token = await solicitarTokenFCM();
+      
+      if (token) {
+        console.log("Token listo para enviar al backend:", token);
+        if (role === "estudiante") {
+          asignarTokenAEstudiante(id, token)
+        }
+      }
+    };
+
+    inicializarNotificaciones();
+    
+    escucharMensajesForeground((payload) => {
+      const fechaParaBackend = format(new Date(), "dd-MM-yyyy HH:mm");
+
+      const nuevaNotificacion = {
+        id: payload.messageId || Date.now().toString(),
+        idUsuario: id,
+        titulo: payload.notification?.title || "Nueva Notificación",
+        descripcion: payload.notification?.body || "",
+        fecha: fechaParaBackend,
+        read: false,
+      };
+
+      setNotificaciones((prev) => [nuevaNotificacion, ...prev]);
+
+      toast(nuevaNotificacion.titulo, {
+        description: nuevaNotificacion.descripcion,
+        icon: <Bell className="text-primary" size={20} />,
+        className: "border-l-4 border-l-primary bg-card text-foreground shadow-lg",
+        duration: 6000, 
+      });
+    });
+  }, [id, role, setNotificaciones]);
 
   useEffect(() => {
     const fetchComision = async () => {

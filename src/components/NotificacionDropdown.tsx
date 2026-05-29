@@ -3,11 +3,11 @@ import { Notificacion } from "@/types/notificacionType";
 
 interface Props {
   onClose: () => void;
+  notificaciones: Notificacion[]; 
 }
 
-export default function NotificacionDropdown({ onClose }: Props) {
+export default function NotificacionDropdown({ onClose, notificaciones }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {

@@ -17,7 +17,7 @@ import { Tutor } from "@/types/tutorType";
 import { Estudiante } from "@/types/estudianteType";
 import { Notificacion } from "@/types/notificacionType";
 import { obtenerTodosLosTutores } from "@/service/apiTutor";
-import { obtenerTodosLosEstudiantes } from "@/service/apiEstudiante";
+import { asignarTokenAEstudiante, obtenerTodosLosEstudiantes } from "@/service/apiEstudiante";
 
 import AppSidebar from "@/components/AppSidebar";
 import Topbar from "@/components/Topbar";
@@ -49,6 +49,7 @@ export type LayoutContextType = {
   isCalendarOpen: boolean;
   setCalendarOpen: React.Dispatch<React.SetStateAction<boolean>>;
   refreshPeople: () => Promise<void>;
+  setNotificaciones: React.Dispatch<React.SetStateAction<Notificacion[]>>; // <-- AGREGAR ESTO
 };
 
 export function useLayoutContext() {
@@ -174,7 +175,13 @@ const RootLayout = () => {
             }
           >
             <Outlet
-              context={{ role, isCalendarOpen, setCalendarOpen, refreshPeople }}
+              context={{ 
+                role, 
+                isCalendarOpen, 
+                setCalendarOpen, 
+                refreshPeople, 
+                setNotificaciones 
+              }}
             />
           </Suspense>
         </main>
