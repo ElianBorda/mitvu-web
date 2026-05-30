@@ -7,7 +7,6 @@ export type ComisionBody = {
   aula: string;
   horarioInicio: string;
   horarioFin: string;
-  diaHabil: string;
 }
 
 export type Comision = {
@@ -20,7 +19,6 @@ export type Comision = {
   horarioInicio: string;
   horarioFin: string;
   turno: string;
-  diaHabil: string;
   tutor: Tutor;
   estudiantes: string[];
 }

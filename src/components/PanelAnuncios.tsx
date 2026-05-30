@@ -12,7 +12,7 @@ import {
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { toast } from "sonner";
-import { crearAnuncioGlobal } from "@/service/apiAnuncio";
+import { crearAnuncioEnComision, crearAnuncioGlobal } from "@/service/apiAnuncio";
 
 interface Props {
   anuncios: Anuncio[];
@@ -60,6 +60,7 @@ export default function AnunciosPanel({
         actualizarAnuncios();
       })
       .catch(() => toast.error("Error al guardar el evento."));
+    actualizarAnuncios();
   };
 
   useEffect(() => {
@@ -98,7 +99,8 @@ export default function AnunciosPanel({
                 onClick={handleOpenDialog}
                 className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
               >
-                <Plus size={14} /> Nuevo anuncio global  {/* Cambiar esto cuando se puedan crear anuncios para una comisión */}
+                <Plus size={14} /> Nuevo anuncio en comisión{" "}
+                {/* Cambiar esto cuando se puedan crear anuncios para una comisión */}
               </button>
             ) : (
               <button
@@ -145,8 +147,8 @@ export default function AnunciosPanel({
           <DialogHeader>
             <DialogTitle>
               {comisionId
-                ? "Nuevo anuncio global"
-                : "Nuevo anuncio global"} {/* Cambiar esto cuando se puedan crear anuncios para una comisión */}
+                ? "Nuevo anuncio en comisión"
+                : "Nuevo anuncio global"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
