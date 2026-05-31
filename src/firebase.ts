@@ -1,36 +1,27 @@
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
-// Reemplazá esto con los datos que te dio Firebase en el Paso 1
 const firebaseConfig = {
-  apiKey: "AIzaSyDMrG6_7QIdVh-0SoOYaWh9YJGfshdioDc",
-  authDomain: "mitvu-push.firebaseapp.com",
-  projectId: "mitvu-push",
-  storageBucket: "mitvu-push.firebasestorage.app",
-  messagingSenderId: "1024632929611",
-  appId: "1:1024632929611:web:82561b57d3b59cfe623cce"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Inicializamos Firebase
 const app = initializeApp(firebaseConfig);
-
-// Inicializamos Cloud Messaging y lo exportamos
 export const messaging = getMessaging(app);
 
-// Función para pedir permiso y obtener el Token
 export const solicitarTokenFCM = async (): Promise<string | null> => {
   try {
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
-      // Reemplazá TU_VAPID_KEY con la clave que sacaste del Paso 1
       const token = await getToken(messaging, { 
-          vapidKey: "BEWkSLQmKTVUlCE0oKwSQ-lsAEqEV3Sy9smXYIPE4a-fbKnm0oAat-9KBuyatYT4-jxrQJD-kdB-K7LzPnGVNac" 
+          vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY 
       });
       
       if (token) {
-        console.log("¡Token FCM obtenido!:", token);
-        // IMPORTANTE: Este token se lo vas a tener que mandar a tu backend (Spring Boot)
-        // para que sepa a qué dispositivo enviarle la notificación.
         return token;
       } else {
         console.log("No se pudo obtener el token.");
@@ -44,14 +35,10 @@ export const solicitarTokenFCM = async (): Promise<string | null> => {
   return null;
 };
 
-// Función para escuchar mensajes cuando la app está ABIERTA (Foreground)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const escucharMensajesForeground = (onMessageReceived: (payload: any) => void) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onMessage(messaging, (payload: any) => {
-    console.log("Mensaje recibido con la app abierta: ", payload);
-    console.log("Payload: ", payload)
-    // Ejecutamos la función que le enviamos desde EstudianteDashboard
-    // pasándole el payload para que React pueda usar los datos.
     onMessageReceived(payload); 
   });
 };
