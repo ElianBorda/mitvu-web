@@ -135,7 +135,10 @@ export default function Topbar({ userName, role, onRoleChange, onMenuClick, tuto
           )}
         </button>
         {showNotifications && (
-          <NotificacionDropdown onClose={() => setShowNotifications(false)} />
+          <NotificacionDropdown 
+             onClose={() => setShowNotifications(false)} 
+             notificaciones={notificaciones} 
+          />
         )}
       </div>
 
