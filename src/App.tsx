@@ -17,7 +17,10 @@ import { Tutor } from "@/types/tutorType";
 import { Estudiante } from "@/types/estudianteType";
 import { Notificacion } from "@/types/notificacionType";
 import { obtenerTodosLosTutores } from "@/service/apiTutor";
-import { asignarTokenAEstudiante, obtenerTodosLosEstudiantes } from "@/service/apiEstudiante";
+import {
+  asignarTokenAEstudiante,
+  obtenerTodosLosEstudiantes,
+} from "@/service/apiEstudiante";
 
 import AppSidebar from "@/components/AppSidebar";
 import Topbar from "@/components/Topbar";
@@ -37,7 +40,6 @@ const AgregarEvento = lazy(() => import("./pages/AgregarEvento.tsx"));
 const AsistenciaComision = lazy(() => import("./pages/AsistenciaComision.tsx"));
 const queryClient = new QueryClient();
 
-
 const userNames: Record<Role, string> = {
   estudiante: "Lucía Martínez",
   tutor: "María González",
@@ -49,7 +51,12 @@ export type LayoutContextType = {
   isCalendarOpen: boolean;
   setCalendarOpen: React.Dispatch<React.SetStateAction<boolean>>;
   refreshPeople: () => Promise<void>;
-  setNotificaciones: React.Dispatch<React.SetStateAction<Notificacion[]>>; // <-- AGREGAR ESTO
+  setNotificaciones: React.Dispatch<React.SetStateAction<Notificacion[]>>;
+
+  activeItem: string;
+  setActiveItem: (id: string) => void;
+  registerSidebarHandler: (id: string, handler: () => void) => void;
+  unregisterSidebarHandler: (id: string) => void;
 };
 
 export function useLayoutContext() {
@@ -61,7 +68,7 @@ const RootLayout = () => {
   const location = useLocation();
 
   const [role, setRole] = useState<Role>("admin");
-  const [activeItem, setActiveItem] = useState("home");
+  const [activeItem, setActiveItem] = useState<string | undefined>();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCalendarOpen, setCalendarOpen] = useState(false);
 
@@ -69,7 +76,6 @@ const RootLayout = () => {
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]); // Se buscan las notificaciones del usuario seleccionado y se setean en la variable
 
-  // 1. Convertimos la validación en un Estado de React
   const [studentUnenrolled, setStudentUnenrolled] = useState(
     () =>
       typeof window !== "undefined" &&
@@ -85,7 +91,6 @@ const RootLayout = () => {
       .catch(console.error);
   }, []);
 
-  // function to refresh tutores and estudiantes on demand
   const refreshPeople = async () => {
     try {
       const [tRes, eRes] = await Promise.all([
@@ -102,22 +107,44 @@ const RootLayout = () => {
   useEffect(() => {
     if (location.pathname.includes("/estudiante")) {
       setRole("estudiante");
+      setActiveItem("home");
     } else if (location.pathname.includes("/tutor")) {
       setRole("tutor");
+      setActiveItem("comisiones");
     } else if (
       location.pathname === "/" ||
       location.pathname.includes("/admin")
     ) {
-      // Solo resetear a admin en rutas explícitamente admin o en el index
       setRole("admin");
+      setActiveItem("comisiones");
     }
 
-    // 2. Cada vez que cambia la URL, verificamos el estado real del storage
     setStudentUnenrolled(localStorage.getItem("studentUnenrolled") === "true");
   }, [location.pathname]);
 
+  const [sidebarHandlers, setSidebarHandlers] = useState<
+    Record<string, () => void>
+  >({});
+
+  const registerSidebarHandler = (id: string, handler: () => void) => {
+    setSidebarHandlers((prev) => ({ ...prev, [id]: handler }));
+  };
+
+  const unregisterSidebarHandler = (id: string) => {
+    setSidebarHandlers((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
   const handleSidebarClick = (sidebarId: string) => {
     setActiveItem(sidebarId);
+
+    if (sidebarHandlers[sidebarId]) {
+      sidebarHandlers[sidebarId]();
+      return;
+    }
 
     if (sidebarId === "baja" && role === "estudiante") {
       const pathSegments = location.pathname.split("/");
@@ -127,8 +154,7 @@ const RootLayout = () => {
       else navigate("/estudiante/baja");
       return;
     }
-
-    if (sidebarId === "calendar") setCalendarOpen((prev) => !prev);
+    if (sidebarId === "calendario") setCalendarOpen((prev) => !prev);
     if (sidebarId === "redes") window.open("https://www.unq.edu.ar", "_blank");
   };
 
@@ -140,7 +166,6 @@ const RootLayout = () => {
         onItemClick={handleSidebarClick}
         mobileOpen={mobileMenuOpen}
         onMobileClose={() => setMobileMenuOpen(false)}
-        // 3. Pasamos el estado reactivo al Sidebar
         hideStudentUnenroll={studentUnenrolled}
       />
       <div className="flex-1 flex flex-col min-w-0">
@@ -159,8 +184,6 @@ const RootLayout = () => {
           onTutorSelect={(id) => navigate(`/tutor/${id}`)}
           estudiantes={estudiantes}
           onEstudianteSelect={(id) => {
-            // 4. FIX CLAVE: Al seleccionar un estudiante, borramos la baja anterior
-            // de pruebas pasadas para que el botón siempre aparezca.
             localStorage.removeItem("studentUnenrolled");
             setStudentUnenrolled(false);
             setRole("estudiante");
@@ -175,12 +198,15 @@ const RootLayout = () => {
             }
           >
             <Outlet
-              context={{ 
-                role, 
-                isCalendarOpen, 
-                setCalendarOpen, 
-                refreshPeople, 
-                setNotificaciones 
+              context={{
+                role,
+                isCalendarOpen,
+                setCalendarOpen,
+                refreshPeople,
+                setNotificaciones,
+                registerSidebarHandler,
+                unregisterSidebarHandler,
+                setActiveItem,
               }}
             />
           </Suspense>

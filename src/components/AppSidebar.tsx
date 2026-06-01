@@ -13,25 +13,22 @@ interface SidebarItem {
 const sidebarItems: Record<Role, SidebarItem[]> = {
   estudiante: [
     { icon: Home, label: "Inicio", id: "home" },
-    { icon: Calendar, label: "Calendario", id: "calendar" },
     { icon: LinkIcon, label: "Redes UNQ", id: "redes" },
-    { icon: Settings, label: "Configuración", id: "settings" },
+    { icon: Megaphone, label: "Anuncios globales", id: "anuncios" },
+    { icon: Settings, label: "Configuración", id: "configuracion" },
     { icon: LogOut, label: "Darse de baja", id: "baja", danger: true },
   ],
   tutor: [
-    { icon: Home, label: "Inicio", id: "home" },
-    { icon: Users, label: "Comisiones", id: "commissions" },
-    { icon: GraduationCap, label: "Estudiantes", id: "students" },
-    { icon: Calendar, label: "Calendario", id: "calendar" },
-    { icon: Settings, label: "Configuración", id: "settings" },
+    { icon: LayoutList, label: "Comisiones", id: "comisiones" },
+    { icon: Megaphone, label: "Anuncios globales", id: "anuncios" },
+    { icon: Settings, label: "Configuración", id: "configuracion" },
   ],
   admin: [
-    { icon: Home, label: "Inicio", id: "home" },
-    { icon: LayoutList, label: "Comisiones", id: "commissions" },
-    { icon: Users, label: "Tutores", id: "tutors" },
-    { icon: GraduationCap, label: "Estudiantes", id: "students" },
-    { icon: Megaphone, label: "Anuncios globales", id: "announcements" },
-    { icon: Settings, label: "Configuración", id: "settings" },
+    { icon: LayoutList, label: "Comisiones", id: "comisiones" },
+    { icon: Users, label: "Tutores", id: "tutores" },
+    { icon: GraduationCap, label: "Estudiantes", id: "estudiantes" },
+    { icon: Megaphone, label: "Anuncios globales", id: "anuncios" },
+    { icon: Settings, label: "Configuración", id: "configuracion" },
   ],
 };
 

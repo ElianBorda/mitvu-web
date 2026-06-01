@@ -67,12 +67,27 @@ export default function AdminDashboard() {
 
   const triggerRefresh = () => setRefreshTrigger((prev) => prev + 1);
 
+  const { registerSidebarHandler, unregisterSidebarHandler, setActiveItem } =
+    useLayoutContext();
+
+  useEffect(() => {
+    registerSidebarHandler("comisiones", () => setView("comisiones"));
+    registerSidebarHandler("estudiantes", () => setView("estudiantes"));
+    registerSidebarHandler("tutores", () => setView("tutores"));
+
+    return () => {
+      unregisterSidebarHandler("comisiones");
+      unregisterSidebarHandler("estudiantes");
+      unregisterSidebarHandler("tutores");
+    };
+  }, []);
+
   useEffect(() => {
     const viewParam = searchParams.get("view");
     if (viewParam === "estudiantes") {
       setView("estudiantes");
       setSearchParams({}, { replace: true });
-    } else if (viewParam === "commissions") {
+    } else if (viewParam === "comisiones") {
       setView("comisiones");
       setSearchParams({}, { replace: true });
     }
@@ -289,31 +304,11 @@ export default function AdminDashboard() {
   };
 
   const config = tableConfigs[view];
-  const tabs: { id: AdminView; label: string }[] = [
-    { id: "comisiones", label: "Comisiones" },
-    { id: "tutores", label: "Tutores" },
-    { id: "estudiantes", label: "Estudiantes" },
-  ];
 
   return (
     <div className="flex flex-col xl:flex-row gap-6">
       {/* Left: Table */}
       <div className="flex-1 min-w-0">
-        <div className="flex gap-1 mb-4 bg-secondary rounded-lg p-1 w-fit">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setView(tab.id)}
-              className={`px-3 sm:px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${
-                view === tab.id
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
         <DataTable
           columns={config.columns}
           data={config.data}
