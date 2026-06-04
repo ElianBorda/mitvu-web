@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getCommissionAvgAttendance } from "@/data/mockData";
 import DataTable from "@/components/DataTable";
@@ -37,6 +37,8 @@ import { useLayoutContext } from "@/App";
 import PanelAnuncios from "@/components/PanelAnuncios";
 import { Anuncio } from "@/types/anuncioType";
 import { obtenerAnunciosGlobales } from "@/service/apiAnuncio";
+import { useExportarTabla } from "@/hooks/useExportarTabla";
+import BotonExportar from "@/components/BotonExportar";
 
 type AdminView = "comisiones" | "tutores" | "estudiantes";
 
@@ -54,6 +56,73 @@ export default function AdminDashboard() {
   const [lineData, setLineData] = useState<
     { name: string; asistencia: number; tituloOriginal: string }[]
   >([]);
+  
+  const columnasExport = useMemo(() => {
+    if (view !== "estudiantes") return [];
+    return [
+      { key: "apellido", label: "Apellido" },
+      { key: "nombre", label: "Nombre" },
+      { key: "mail", label: "Mail" },
+      { key: "dni", label: "DNI" },
+      { key: "carrera", label: "Carrera" },
+      { key: "comision", label: "Comisión" },
+    ];
+  }, [view]);
+
+  const filasExport = useMemo(() => {
+    if (view !== "estudiantes") return [];
+    return estudiantesActivos.map((e) => ({
+      apellido: e.apellido,
+      nombre: e.nombre,
+      mail: e.mail,
+      dni: e.dni,
+      carrera: e.carrera,
+      comision: e.comision
+        ? `Comisión ${e.comision.numero} - ${e.comision.departamento} - ${e.comision.localidad}`
+        : "Sin comisión asignada",
+    }));
+  }, [view, estudiantesActivos]);
+
+  const { exportarCSV, exportarExcel, exportarPDF } = useExportarTabla(
+    columnasExport,
+    filasExport,
+    view,
+    null
+  );
+
+  const columnasExportBajas = useMemo(
+    () => [
+      { key: "apellido", label: "Apellido" },
+      { key: "nombre", label: "Nombre" },
+      { key: "motivo", label: "Motivo" },
+      { key: "detalle", label: "Detalle" },
+      { key: "fechaBaja", label: "Fecha de baja" },
+    ],
+    [],
+  );
+
+  const filasExportBajas = useMemo(
+    () =>
+      estudiantesBaja.map((e) => ({
+        apellido: e.apellido,
+        nombre: e.nombre,
+        motivo: e.baja?.motivo ?? "—",
+        detalle:
+          e.baja?.detalle === "" || e.baja?.detalle == null
+            ? "No especificado"
+            : e.baja.detalle,
+        fechaBaja: e.baja?.fechaBaja
+          ? new Date(e.baja.fechaBaja).toLocaleDateString("es-AR")
+          : "—",
+      })),
+    [estudiantesBaja],
+  );
+
+  const {
+    exportarCSV: exportarCSVBajas,
+    exportarExcel: exportarExcelBajas,
+    exportarPDF: exportarPDFBajas,
+  } = useExportarTabla(columnasExportBajas, filasExportBajas, "estudiantes-baja", null);
 
   const comisionIdPorIndice = comisiones?.map((c) => c.id);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -344,6 +413,15 @@ export default function AdminDashboard() {
           }}
         />
         {view === "estudiantes" && (
+          <div className="mt-4">
+            <BotonExportar
+              onCSV={exportarCSV}
+              onExcel={exportarExcel}
+              onPDF={exportarPDF}
+            />
+          </div>
+        )}
+        {view === "estudiantes" && (
           <div className="mt-8">
             <h2 className="text-base font-semibold text-foreground mb-3">
               Estudiantes dados de baja
@@ -356,52 +434,61 @@ export default function AdminDashboard() {
                 No hay estudiantes dados de baja.
               </div>
             ) : (
-              <div className="bg-card border border-border rounded-lg overflow-hidden shadow-card">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-[#2d2d2d] text-white">
-                      <th className="px-4 py-3 text-left font-medium">
-                        Apellido
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium">
-                        Nombre
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium">
-                        Motivo
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium">
-                        Detalle
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium">
-                        Fecha de baja
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bajasData.map((row, i) => (
-                      <tr
-                        key={i}
-                        className={`border-t border-border ${i % 2 === 0 ? "bg-white" : "bg-[#fafafa]"}`}
-                      >
-                        <td className="px-4 py-3 text-foreground">
-                          {row.apellido}
-                        </td>
-                        <td className="px-4 py-3 text-foreground">
-                          {row.nombre}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {row.motivo}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">
-                          {row.detalle}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {row.fechaBaja}
-                        </td>
+              <div>
+                <div className="bg-card border border-border rounded-lg overflow-hidden shadow-card">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-[#2d2d2d] text-white">
+                        <th className="px-4 py-3 text-left font-medium">
+                          Apellido
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium">
+                          Nombre
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium">
+                          Motivo
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium">
+                          Detalle
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium">
+                          Fecha de baja
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {bajasData.map((row, i) => (
+                        <tr
+                          key={i}
+                          className={`border-t border-border ${i % 2 === 0 ? "bg-white" : "bg-[#fafafa]"}`}
+                        >
+                          <td className="px-4 py-3 text-foreground">
+                            {row.apellido}
+                          </td>
+                          <td className="px-4 py-3 text-foreground">
+                            {row.nombre}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">
+                            {row.motivo}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">
+                            {row.detalle}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">
+                            {row.fechaBaja}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-4">
+                  <BotonExportar
+                    onCSV={exportarCSVBajas}
+                    onExcel={exportarExcelBajas}
+                    onPDF={exportarPDFBajas}
+                  />
+                </div>
               </div>
             )}
           </div>
