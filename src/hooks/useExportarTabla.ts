@@ -46,15 +46,29 @@ export function useExportarTabla(
         "comisiones_miVTU_" + new Date().toISOString().split("T")[0];
     else nombreArchivo = "tabla";
   } else {
-    nombreArchivo =
-      "estudiantes_comision_" +
-      comision.numero +
-      "_" +
-      comision.departamento +
-      "_" +
-      comision.localidad +
-      "_" +
-      new Date().toISOString().split("T")[0];
+    if (view === "estudiantes") {
+      nombreArchivo =
+        "estudiantes_comision_" +
+        comision.numero +
+        "_" +
+        comision.departamento +
+        "_" +
+        comision.localidad +
+        "_" +
+        new Date().toISOString().split("T")[0];
+    }
+    else if (view === "estudiantes-baja") {
+      nombreArchivo =
+        "estudiantes-baja_comision_" +
+        comision.numero +
+        "_" +
+        comision.departamento +
+        "_" +
+        comision.localidad +
+        "_" +
+        new Date().toISOString().split("T")[0];
+    }
+    else nombreArchivo = "tabla";
   }
   const exportarCSV = () => {
     const header = columnas.map((c) => c.label).join(",");
