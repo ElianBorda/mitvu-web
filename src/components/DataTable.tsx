@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Plus,
@@ -91,6 +91,10 @@ export default function DataTable({
         .includes(search.toLowerCase()),
     ),
   );
+
+  useEffect(() => {
+    setPage(0);
+  }, [view]);
 
   const totalPages = Math.ceil(filtered.length / perPage);
   const paged = filtered.slice(page * perPage, (page + 1) * perPage);

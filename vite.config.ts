@@ -11,6 +11,11 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [react()].filter(Boolean),
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: "./src/test/setup.ts",
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
