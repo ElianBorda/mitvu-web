@@ -38,6 +38,7 @@ const PaginaDarDeBaja = lazy(() => import("./pages/PaginaDarDeBaja.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const AgregarEvento = lazy(() => import("./pages/AgregarEvento.tsx"));
 const AsistenciaComision = lazy(() => import("./pages/AsistenciaComision.tsx"));
+const MetricasDashboard = lazy(() => import("./pages/MetricasDashboard.tsx"));
 const queryClient = new QueryClient();
 
 const userNames: Record<Role, string> = {
@@ -71,6 +72,7 @@ const RootLayout = () => {
   const [activeItem, setActiveItem] = useState<string | undefined>();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCalendarOpen, setCalendarOpen] = useState(false);
+  const [previousActiveItemTable, setPreviousActiveItemTable] = useState<string | null>(activeItem || null);
 
   const [tutores, setTutores] = useState<Tutor[]>([]);
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
@@ -111,16 +113,19 @@ const RootLayout = () => {
     } else if (location.pathname.includes("/tutor")) {
       setRole("tutor");
       setActiveItem("comisiones");
+    } else if (location.pathname.includes("/admin/metricas")) {
+      setRole("admin");
+      setActiveItem("metricas");
     } else if (
       location.pathname === "/" ||
       location.pathname.includes("/admin")
     ) {
       setRole("admin");
-      setActiveItem("comisiones");
+      setActiveItem(previousActiveItemTable || "comisiones");
     }
 
     setStudentUnenrolled(localStorage.getItem("studentUnenrolled") === "true");
-  }, [location.pathname]);
+  }, [location.pathname, previousActiveItemTable]);
 
   const [sidebarHandlers, setSidebarHandlers] = useState<
     Record<string, () => void>
@@ -140,9 +145,22 @@ const RootLayout = () => {
 
   const handleSidebarClick = (sidebarId: string) => {
     setActiveItem(sidebarId);
+    if (sidebarId !== "metricas") {
+      setPreviousActiveItemTable(sidebarId);
+    }
 
     if (sidebarHandlers[sidebarId]) {
       sidebarHandlers[sidebarId]();
+      return;
+    }
+
+    if (sidebarId === "metricas") {
+      navigate("/admin/metricas");
+      return;
+    }
+
+    if (sidebarId === "comisiones" || sidebarId === "estudiantes" || sidebarId === "tutores") {
+      navigate(`/?view=${sidebarId}`);
       return;
     }
 
@@ -236,6 +254,7 @@ const router = createBrowserRouter([
       { path: "*", element: <NotFound /> },
       { path: "admin/agregar-evento", element: <AgregarEvento /> },
       { path: "comision/:id/asistencia", element: <AsistenciaComision /> },
+      { path: "admin/metricas", element: <MetricasDashboard /> },
     ],
   },
 ]);
