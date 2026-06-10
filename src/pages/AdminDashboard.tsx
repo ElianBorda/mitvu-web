@@ -58,7 +58,23 @@ export default function AdminDashboard() {
   >([]);
   
   const columnasExport = useMemo(() => {
-    if (view !== "estudiantes") return [];
+    if (view == "tutores") 
+      return [
+      { key: "apellido", label: "Apellido" },
+      { key: "nombre", label: "Nombre" },
+      { key: "mail", label: "Mail" },
+      { key: "comisiones", label: "Comisiones" },
+    ];
+    else if (view == "comisiones")
+      return [
+        { key: "localidad", label: "Localidad" },
+        { key: "departamento", label: "Departamento" },
+        { key: "carrera", label: "Carrera" },
+        { key: "numero", label: "Numero" },
+        { key: "horario", label: "Horario" },
+        { key: "tutor", label: "Tutor/a" },
+        { key: "aula", label: "Aula" },
+      ];
     return [
       { key: "apellido", label: "Apellido" },
       { key: "nombre", label: "Nombre" },
@@ -70,13 +86,32 @@ export default function AdminDashboard() {
   }, [view]);
 
   const filasExport = useMemo(() => {
-    if (view !== "estudiantes") return [];
+    if (view == "tutores") 
+      return tutores.map((t) => ({
+        apellido: t.apellido,
+        nombre: t.nombre,
+        mail: t.mail,
+        comisiones: t.comisiones?.length || 0,
+      }));
+    else if (view == "comisiones")
+      return comisiones.map((c) => {
+        const t = tutores.find((tt) => tt.id === (c.tutor?.id || ""));
+        return {
+          localidad: c.localidad,
+          departamento: c.departamento,
+          carrera: c.carrera? c.carrera : "Sin carrera definida",
+          numero: c.numero,
+          horario: c.horarioInicio + " - " + c.horarioFin,
+          tutor: t ? `${t.nombre} ${t.apellido}` : "Sin tutor asignado",
+          aula: c.aula || "Sin aula asignada",
+        };
+      });
     return estudiantesActivos.map((e) => ({
       apellido: e.apellido,
       nombre: e.nombre,
       mail: e.mail,
       dni: e.dni,
-      carrera: e.carrera,
+      carrera: e.carrera? e.carrera : "Sin carrera definida",
       comision: e.comision
         ? `Comisión ${e.comision.numero} - ${e.comision.departamento} - ${e.comision.localidad}`
         : "Sin comisión asignada",
@@ -412,7 +447,6 @@ export default function AdminDashboard() {
             refreshPeople();
           }}
         />
-        {view === "estudiantes" && (
           <div className="mt-4">
             <BotonExportar
               onCSV={exportarCSV}
@@ -420,7 +454,6 @@ export default function AdminDashboard() {
               onPDF={exportarPDF}
             />
           </div>
-        )}
         {view === "estudiantes" && (
           <div className="mt-8">
             <h2 className="text-base font-semibold text-foreground mb-3">

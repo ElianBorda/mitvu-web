@@ -106,7 +106,7 @@ export function useExportarTabla(
       body: filas.map((f) => columnas.map((c) => String(f[c.key] ?? ""))),
       startY: 22,
       styles: { fontSize: 9 },
-      headStyles: { fillColor: [120, 20, 30] }, // color primary de tu app
+      headStyles: { fillColor: [120, 20, 30] },
     });
     doc.save(`${nombreArchivo}.pdf`);
   };
