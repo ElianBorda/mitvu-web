@@ -252,10 +252,22 @@ export default function AdminDashboard() {
 
   const totalEstudiantes = estudiantesActivos.length;
   const avgGlobal =
-    comisiones.length > 0
+    totalEstudiantes > 0
       ? Math.round(
-          comisiones.reduce((s, c) => s + getCommissionAvgAttendance(c.id), 0) /
-            comisiones.length,
+          (estudiantesActivos.reduce((total, estudiante) => {
+            const asistenciasPresentes = (estudiante.asistencias || []).filter(
+              (a: any) =>
+                a.tipoDeAsistencia === "PRESENTE" ||
+                a.tipoDeAsistencia === "AUSENCIA_JUSTIFICADA",
+            ).length;
+            const totalAsistencias = (estudiante.asistencias || []).length;
+            return (
+              total +
+              (totalAsistencias > 0 ? asistenciasPresentes / totalAsistencias : 0)
+            );
+          }, 0) /
+            totalEstudiantes) *
+            100,
         )
       : 0;
 
