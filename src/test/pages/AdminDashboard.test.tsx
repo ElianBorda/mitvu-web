@@ -106,17 +106,17 @@ describe("AdminDashboard — vista estudiantes", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("muestra los primeros 10 estudiantes cuando hay 11", async () => {
-  await setupMocks(11);
-  renderAdminDashboard("estudiantes"); 
+    await setupMocks(11);
+    renderAdminDashboard("estudiantes");
 
     // Esperar que carguen los datos
     await waitFor(() => {
-      expect(screen.getByText("Apellido0")).toBeInTheDocument();
-      expect(screen.getByText("Apellido9")).toBeInTheDocument();
+      expect(screen.getByTestId(`row-${0}-index`)).toBeInTheDocument();
+      expect(screen.getByTestId(`row-${9}-index`)).toBeInTheDocument();
     });
 
     // El estudiante 11 NO debe aparecer en la primera página
-    expect(screen.queryByText("Apellido10")).not.toBeInTheDocument();
+    expect(screen.queryByTestId(`row-${10}-index`)).not.toBeInTheDocument();
 
     // Debe mostrar el texto de paginación
     expect(screen.getByText(/mostrando 1–10 de 11/i)).toBeInTheDocument();
@@ -127,8 +127,8 @@ describe("AdminDashboard — vista estudiantes", () => {
     renderAdminDashboard("estudiantes");
 
     await waitFor(() => {
-      expect(screen.getByText("Apellido0")).toBeInTheDocument();
-      expect(screen.getByText("Apellido2")).toBeInTheDocument();
+      expect(screen.getByTestId(`row-${0}-index`)).toBeInTheDocument();
+      expect(screen.getByTestId(`row-${2}-index`)).toBeInTheDocument();
     });
 
     // No debe haber paginación

@@ -5,10 +5,13 @@ import { Comision } from "@/types/comisionType";
 export function useExportarMetricas(
   refMetricas: React.RefObject<HTMLDivElement>,
   comision: Comision | null,
+  nombrePersonalizado?: string,
 ) {
-  const nombreArchivo = comision
-    ? `metricas_comision_${comision.numero}_${comision.departamento}_${comision.localidad}_${new Date().toISOString().split("T")[0]}`
-    : `metricas_${new Date().toISOString().split("T")[0]}`;
+  const nombreArchivo =
+    nombrePersonalizado ??
+    (comision
+      ? `metricas_comision_${comision.numero}_${comision.departamento}_${comision.localidad}_${new Date().toISOString().split("T")[0]}`
+      : `metricas_${new Date().toISOString().split("T")[0]}`);
 
   const exportarPDF = async () => {
     if (!refMetricas.current) return;
@@ -35,9 +38,10 @@ export function useExportarMetricas(
     pdf.setFontSize(13);
     pdf.setTextColor(120, 20, 30);
     pdf.text(
-      comision
-        ? `Métricas — Comisión ${comision.numero} · ${comision.localidad} · Dep. ${comision.departamento}`
-        : "Métricas de comisión",
+      nombrePersonalizado ??
+        (comision
+          ? `Métricas — Comisión ${comision.numero} · ${comision.localidad} · Dep. ${comision.departamento}`
+          : "Métricas de comisión"),
       margin,
       margin,
     );
@@ -66,7 +70,17 @@ export function useExportarMetricas(
       while (yOffset < imgHeight) {
         if (yOffset > 0) {
           pdf.addPage();
-          pdf.addImage(imgData, "PNG", margin, margin, contentWidth, imgHeight, "", "FAST", 0);
+          pdf.addImage(
+            imgData,
+            "PNG",
+            margin,
+            margin,
+            contentWidth,
+            imgHeight,
+            "",
+            "FAST",
+            0,
+          );
         } else {
           pdf.addImage(imgData, "PNG", margin, startY, contentWidth, imgHeight);
         }

@@ -209,7 +209,7 @@ export default function AsistenciaComision() {
                   className={`${i % 2 === 0 ? "bg-card" : "bg-[hsl(350,50%,98%)]"} hover:bg-secondary/40 transition-colors`}
                 >
                   {/* Nombre del estudiante */}
-                  <td className="px-4 py-2.5 font-medium text-foreground sticky left-0 bg-inherit z-10 border-r border-border">
+                  <td data-testid={`estudiante-row-${e.id}`} className="px-4 py-2.5 font-medium text-foreground sticky left-0 bg-inherit z-10 border-r border-border">
                     {e.apellido}, {e.nombre}
                   </td>
 
@@ -228,6 +228,7 @@ export default function AsistenciaComision() {
                         className="px-2 py-2 text-center relative"
                       >
                         <button
+                          data-testid={`celda-asistencia-${e.id}`}
                           onClick={() => setCeldaAbierta(abierta ? null : key)}
                           className={`inline-flex items-center justify-center px-3 py-1 rounded-full border text-xs font-medium transition-all w-28
                             ${
@@ -250,6 +251,7 @@ export default function AsistenciaComision() {
                             <div className="absolute z-30 mt-1 left-1/2 -translate-x-1/2 bg-card border border-border rounded-xl shadow-lg py-1.5 min-w-[160px] flex flex-col gap-0.5">
                               {OPCIONES.map((op) => (
                                 <button
+                                  data-testid={`opcion-${op.value}-${e.id}`}
                                   key={op.value}
                                   onClick={() =>
                                     setEstado(

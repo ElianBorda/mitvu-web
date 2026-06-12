@@ -148,7 +148,7 @@ export default function DataTable({
                 key={i}
                 className={`group ${i % 2 === 0 ? "bg-card" : "bg-[hsl(350,50%,98%)]"} hover:bg-secondary/50 transition-colors`}
               >
-                <td className="px-4 py-2.5 text-muted-foreground">
+                <td data-testid={`row-${i}-index`} className="px-4 py-2.5 text-muted-foreground">
                   {page * perPage + i + 1}
                 </td>
                 {columns.map((col) => (

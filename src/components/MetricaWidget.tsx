@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   LineChart, Line, PieChart, Pie, Cell, Legend 
@@ -11,6 +11,8 @@ import {
 import { obtenerMetricasDinamicas } from "@/service/apiMetrica";
 import { obtenerTodasLasComisiones } from "@/service/apiComision";
 import { toast } from "sonner";
+import { useExportarMetricas } from "@/hooks/useExportarMetricas";
+import BotonExportarMetricas from "./BotonExportarMetricas";
 
 const CHART_COLORS = [
   "hsl(350,82%,27%)", "#16a34a", "#0ea5e9", "#ca8a04", 
@@ -58,6 +60,10 @@ export default function MetricaWidget({
   const [localidad, setLocalidad] = useState("");
   
   const [localidadesDisponibles, setLocalidadesDisponibles] = useState<string[]>([]);
+
+  const refWidget = useRef<HTMLDivElement>(null);
+  const nombreExport = `metrica_de_${tipoMetrica}_agrupada_por_${agruparPor}_calculada_como_${tipoCalculo}_${new Date().toISOString().split("T")[0]}`;
+  const { exportarPDF, exportarPNG } = useExportarMetricas(refWidget, null, nombreExport);
 
   const formatearFechaParaBackend = (fechaHtml: string) => {
     if (!fechaHtml) return undefined;
@@ -383,6 +389,9 @@ export default function MetricaWidget({
            Análisis Dinámico
         </h3>
         <div className="flex gap-2">
+          {!showSettings && (
+            <BotonExportarMetricas onPDF={exportarPDF} onPNG={exportarPNG} textoBoton="Exportar gráfico" />
+          )}
           <button onClick={() => setShowSettings(!showSettings)} className="p-1.5 text-muted-foreground hover:bg-secondary rounded-md transition-colors">
             <Settings2 size={16} />
           </button>
@@ -525,7 +534,7 @@ export default function MetricaWidget({
       ) : null}
 
       {/* Renderizado del Gráfico */}
-      <div className="flex-1 p-4 pb-8 min-h-0">
+      <div ref={refWidget} className="flex-1 p-4 pb-8 min-h-0">
         {renderChart()}
       </div>
     </div>

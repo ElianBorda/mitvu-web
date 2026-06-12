@@ -98,7 +98,7 @@ export default function MetricasLargoComision({
         <h2 className="text-lg font-semibold text-foreground">
           Métricas de presencialidad — Comisión {numeroComision}
         </h2>
-        <BotonExportarMetricas onPDF={exportarPDF} onPNG={exportarPNG} />
+        <BotonExportarMetricas onPDF={exportarPDF} onPNG={exportarPNG} textoBoton="Exportar métricas" />
       </div>
 
       {/* Gráfico de Barras Apiladas */}

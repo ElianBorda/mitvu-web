@@ -4,9 +4,10 @@ import { Download, ChevronDown } from "lucide-react";
 interface Props {
   onPDF: () => Promise<void>;
   onPNG: () => Promise<void>;
+  textoBoton?: string;
 }
 
-export default function BotonExportarMetricas({ onPDF, onPNG }: Props) {
+export default function BotonExportarMetricas({ onPDF, onPNG, textoBoton }: Props) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -38,7 +39,7 @@ export default function BotonExportarMetricas({ onPDF, onPNG }: Props) {
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-card text-sm font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50"
       >
         <Download size={14} />
-        {loading ? "Exportando..." : "Exportar métricas"}
+        {loading ? "Exportando..." : textoBoton}
         <ChevronDown
           size={13}
           className={`transition-transform ${open ? "rotate-180" : ""}`}
