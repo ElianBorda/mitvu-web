@@ -14,6 +14,7 @@ export enum Agrupacion {
   MOTIVO = "MOTIVO",
   FECHA = "FECHA",
   ANIO = "ANIO",
+  LOCALIDAD = "LOCALIDAD"
 }
 
 export enum TipoCalculo {
@@ -47,6 +48,7 @@ export type FiltroMetricaBody = {
   tipoDeAsistencia?: TipoDeAsistencia | null,
   motivoBaja?: MotivoBaja | null,
   tipoCalculo: TipoCalculo,
+  localidad?: string,
 }
 
 export type DataPoint = {
