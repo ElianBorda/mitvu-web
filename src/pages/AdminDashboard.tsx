@@ -579,7 +579,7 @@ export default function AdminDashboard() {
             anuncios={anuncios}
             puedePublicar={true}
             comisionId={null}
-            usuarioId={null}
+            usuarioId={"Administrador"}
             actualizarAnuncios={triggerRefresh}
           />
         </div>

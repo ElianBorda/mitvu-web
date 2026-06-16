@@ -537,7 +537,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
               anuncios={anuncios}
               puedePublicar={esRolGestion}
               comisionId={comision.id}
-              usuarioId={tutor && role === "tutor" ? tutor.id : null}
+              usuarioId={tutor && role === "tutor" ? tutor.id : "Administrador"}
               actualizarAnuncios={triggerRefresh}
             />
           </div>

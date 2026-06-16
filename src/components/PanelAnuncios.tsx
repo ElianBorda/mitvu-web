@@ -1,5 +1,5 @@
 import { Anuncio } from "@/types/anuncioType";
-import { Megaphone, Plus } from "lucide-react";
+import { Megaphone, Plus, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { obtenerTutor } from "@/service/apiTutor";
 import {
@@ -9,10 +9,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { toast } from "sonner";
-import { crearAnuncioEnComision, crearAnuncioGlobal } from "@/service/apiAnuncio";
+import {
+  crearAnuncioEnComision,
+  crearAnuncioGlobal,
+  actualizarAnuncio,
+  eliminarAnuncio,
+} from "@/service/apiAnuncio";
 
 interface Props {
   anuncios: Anuncio[];
@@ -31,13 +46,26 @@ export default function AnunciosPanel({
 }: Props) {
   const [nombres, setNombres] = useState<Record<string, string>>({});
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [anuncioEditando, setAnuncioEditando] = useState<Anuncio | null>(null);
+  const [anuncioAEliminar, setAnuncioAEliminar] = useState<Anuncio | null>(null);
 
   const [form, setForm] = useState({
     titulo: "",
     descripcion: "",
   });
 
+  const esEditable = (anuncio: Anuncio) =>
+    anuncio.creadoPorId === usuarioId || anuncio.creadoPorId === "Administrador" && usuarioId === "Administrador";
+
   const handleOpenDialog = () => {
+    setAnuncioEditando(null);
+    setForm({ titulo: "", descripcion: "" });
+    setDialogOpen(true);
+  };
+
+  const handleOpenEditDialog = (anuncio: Anuncio) => {
+    setAnuncioEditando(anuncio);
+    setForm({ titulo: anuncio.titulo, descripcion: anuncio.descripcion });
     setDialogOpen(true);
   };
 
@@ -47,20 +75,49 @@ export default function AnunciosPanel({
       return;
     }
 
-    const anuncioBody = {
-      titulo: form.titulo,
-      descripcion: form.descripcion,
-      idComision: comisionId,
-      creadoPorId: usuarioId,
-    };
-    crearAnuncioGlobal(anuncioBody)
+    if (anuncioEditando) {
+      // Modo edición
+      const anuncioBody = {
+        titulo: form.titulo,
+        descripcion: form.descripcion,
+        creadoPorId: anuncioEditando.creadoPorId,
+      };
+      actualizarAnuncio(anuncioEditando.id, anuncioBody)
+        .then(() => {
+          toast.success("Anuncio actualizado.");
+          setDialogOpen(false);
+          setAnuncioEditando(null);
+          actualizarAnuncios();
+        })
+        .catch(() => toast.error("Error al actualizar el anuncio."));
+    } else {
+      // Modo creación
+      const anuncioBody = {
+        titulo: form.titulo,
+        descripcion: form.descripcion,
+        idComision: comisionId,
+        creadoPorId: usuarioId,
+      };
+      crearAnuncioGlobal(anuncioBody)
+        .then(() => {
+          toast.success("Anuncio agregado.");
+          setDialogOpen(false);
+          actualizarAnuncios();
+        })
+        .catch(() => toast.error("Error al guardar el evento."));
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (!anuncioAEliminar) return;
+
+    eliminarAnuncio(anuncioAEliminar.id)
       .then(() => {
-        toast.success("Anuncio agregado.");
-        setDialogOpen(false);
+        toast.success("Anuncio eliminado correctamente.");
+        setAnuncioAEliminar(null);
         actualizarAnuncios();
       })
-      .catch(() => toast.error("Error al guardar el evento."));
-    actualizarAnuncios();
+      .catch(() => toast.error("Error al eliminar el anuncio."));
   };
 
   useEffect(() => {
@@ -100,7 +157,6 @@ export default function AnunciosPanel({
                 className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
               >
                 <Plus size={14} /> Nuevo anuncio en comisión{" "}
-                {/* Cambiar esto cuando se puedan crear anuncios para una comisión */}
               </button>
             ) : (
               <button
@@ -122,20 +178,41 @@ export default function AnunciosPanel({
           anuncios.map((a, i) => (
             <div
               key={a.id}
-              className={`py-3 ${i < anuncios.length - 1 ? "border-b border-border" : ""}`}
+              className={`group relative py-3 px-2 -mx-2 rounded-md transition-colors hover:bg-secondary/50 ${i < anuncios.length - 1 ? "border-b border-border" : ""}`}
             >
-              <h4 className="text-sm font-medium text-foreground">
-                {a.titulo}
-              </h4>
-              <p className="text-xs text-muted-foreground mt-1">
-                {a.descripcion}
-              </p>
-              <p className="text-[10px] text-muted-foreground mt-1.5">
-                {String(a.fechaDeCreacion).split("-").reverse().join("-")} ·{" "}
-                {a.creadoPorId === "Administrador"
-                  ? "Administrador"
-                  : (nombres[a.creadoPorId] ?? a.creadoPorId) + " - Tutor"}
-              </p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-medium text-foreground">
+                    {a.titulo}
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {a.descripcion}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-1.5">
+                    {String(a.fechaDeCreacion).split("-").reverse().join("-")} ·{" "}
+                    {a.creadoPorId === "Administrador"
+                      ? "Administrador"
+                      : (nombres[a.creadoPorId] ?? a.creadoPorId) + " - Tutor"}
+                  </p>
+                </div>
+
+                {esEditable(a) && (
+                  <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity shrink-0">
+                    <button
+                      onClick={() => handleOpenEditDialog(a)}
+                      className="p-1 rounded hover:bg-secondary"
+                    >
+                      <Pencil size={13} className="text-muted-foreground" />
+                    </button>
+                    <button
+                      onClick={() => setAnuncioAEliminar(a)}
+                      className="p-1 rounded hover:bg-secondary"
+                    >
+                      <Trash2 size={13} className="text-destructive" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ))
         )}
@@ -146,9 +223,11 @@ export default function AnunciosPanel({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {comisionId
-                ? "Nuevo anuncio en comisión"
-                : "Nuevo anuncio global"}
+              {anuncioEditando
+                ? "Editar anuncio"
+                : comisionId
+                  ? "Nuevo anuncio en comisión"
+                  : "Nuevo anuncio global"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
@@ -188,6 +267,33 @@ export default function AnunciosPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Confirmación de eliminación */}
+      <AlertDialog
+        open={anuncioAEliminar !== null}
+        onOpenChange={(open) => {
+          if (!open) setAnuncioAEliminar(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción eliminará el anuncio "{anuncioAEliminar?.titulo}". Esta
+              operación no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
