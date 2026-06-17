@@ -546,6 +546,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                     ? adminActualId
                     : null
               }
+              role={role}
               actualizarAnuncios={triggerRefresh}
             />
           </div>

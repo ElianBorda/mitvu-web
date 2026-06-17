@@ -85,6 +85,7 @@ export default function TutorDashboard() {
             puedePublicar={false}
             comisionId={null}
             usuarioId={id}
+            role={role}
             actualizarAnuncios={() => {}}
           />
         </div>

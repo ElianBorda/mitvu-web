@@ -581,6 +581,7 @@ export default function AdminDashboard() {
             puedePublicar={true}
             comisionId={null}
             usuarioId={adminActualId}
+            role={adminActualId ? "admin" : null}
             actualizarAnuncios={triggerRefresh}
           />
         </div>

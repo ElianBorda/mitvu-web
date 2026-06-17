@@ -35,6 +35,7 @@ interface Props {
   puedePublicar: boolean;
   comisionId: string;
   usuarioId: string;
+  role: string;
   actualizarAnuncios: () => void;
 }
 
@@ -43,6 +44,7 @@ export default function AnunciosPanel({
   puedePublicar,
   comisionId,
   usuarioId,
+  role,
   actualizarAnuncios,
 }: Props) {
   const [nombres, setNombres] = useState<Record<string, string>>({});
@@ -55,7 +57,8 @@ export default function AnunciosPanel({
     descripcion: "",
   });
 
-  const esEditable = (anuncio: Anuncio) => anuncio.creadoPorId === usuarioId;
+  const esEditable = (anuncio: Anuncio) =>
+  role === "admin" || anuncio.creadoPorId === usuarioId;
 
   const handleOpenDialog = () => {
     setAnuncioEditando(null);
