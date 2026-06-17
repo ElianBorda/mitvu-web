@@ -37,6 +37,8 @@ import {
 } from "@/service/apiAnuncio";
 import { useExportarTabla } from "@/hooks/useExportarTabla";
 import BotonExportar from "./BotonExportar";
+import { Administrador } from "@/types/adminstradorType";
+import { useLayoutContext } from "@/App";
 
 interface Props {
   comision: Comision;
@@ -53,8 +55,8 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [estudiantesBaja, setEstudiantesBaja] = useState<any[]>([]);
   const [tutor, setTutor] = useState<Tutor>(null);
+  const { adminActualId } = useLayoutContext();
   const esRolGestion = role === "tutor" || role === "admin";
-  const esEstudiante = role === "estudiante";
   const [modificoEventos, setModificoEventos] = useState(false);
   const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
   const triggerRefresh = () => setRefreshTrigger((prev) => prev + 1);
@@ -524,7 +526,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
 
           {/* Right: Announcements */}
           <div className="w-full lg:w-80 shrink-0 gap-4 flex flex-col">
-            {esEstudiante ? (
+            {!esRolGestion ? (
               <PanelCalendarioRead eventos={eventos} />
             ) : (
               <PanelCalendario
@@ -537,7 +539,13 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
               anuncios={anuncios}
               puedePublicar={esRolGestion}
               comisionId={comision.id}
-              usuarioId={tutor && role === "tutor" ? tutor.id : "Administrador"}
+              usuarioId={
+                tutor && role === "tutor"
+                  ? tutor.id
+                  : role === "admin"
+                    ? adminActualId
+                    : null
+              }
               actualizarAnuncios={triggerRefresh}
             />
           </div>

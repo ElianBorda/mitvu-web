@@ -3,6 +3,7 @@ export type Anuncio = {
   titulo: string;
   descripcion: string;
   fechaDeCreacion: string;
+  idComision: string | null;
   creadoPorId: string;
 }
 

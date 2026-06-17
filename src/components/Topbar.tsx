@@ -2,8 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { Search, Bell, Menu, ChevronDown } from "lucide-react";
 import { Role } from "@/data/types";
 import NotificacionDropdown from "./NotificacionDropdown";
-import { Tutor } from "@/types/tutorType";
-import { Estudiante } from "@/types/estudianteType";
 import { Notificacion } from "@/types/notificacionType";
 
 interface TopbarProps {
@@ -11,6 +9,8 @@ interface TopbarProps {
   role: Role;
   onRoleChange: (role: Role) => void;
   onMenuClick: () => void;
+  administradores: any[];
+  onAdminSelect: (id: number) => void;
   tutores: any[];
   onTutorSelect: (id: number) => void;
   estudiantes: any[];
@@ -18,11 +18,7 @@ interface TopbarProps {
   notificaciones: Notificacion[];
 }
 
-const STATIC_OPTIONS = [
-  { label: "Admin",      value: "admin"   as Role },
-];
-
-export default function Topbar({ userName, role, onRoleChange, onMenuClick, tutores, onTutorSelect, estudiantes, onEstudianteSelect, notificaciones }: TopbarProps) {
+export default function Topbar({ userName, role, onRoleChange, onMenuClick, administradores, onAdminSelect, tutores, onTutorSelect, estudiantes, onEstudianteSelect, notificaciones }: TopbarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -40,7 +36,6 @@ export default function Topbar({ userName, role, onRoleChange, onMenuClick, tuto
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Texto que muestra el botón según la selección actual
   const currentLabel = role === "estudiante" ? "Estudiante" : role === "admin" ? "Admin" : "Tutor";
 
   return (
@@ -59,8 +54,6 @@ export default function Topbar({ userName, role, onRoleChange, onMenuClick, tuto
         />
       </div>
 
-      <div className="flex-1 sm:hidden" />
-
       {/* Role switcher — dropdown custom */}
       <div className="relative" ref={menuRef}>
         <button
@@ -73,17 +66,23 @@ export default function Topbar({ userName, role, onRoleChange, onMenuClick, tuto
 
         {showRoleMenu && (
           <div className="absolute right-0 mt-1 w-48 rounded-lg bg-card border border-border shadow-lg py-1 z-50">
-            {/* Opciones estáticas */}
-            {STATIC_OPTIONS.map(opt => (
+            {/* Separador si hay tutores */}
+            {administradores.length > 0 && (
+              <div className="my-1 border-t border-border" />
+            )}
+
+            {/* Tutores dinámicos */}
+            {administradores.map(admin => (
               <button
-                key={opt.value}
-                onClick={() => { onRoleChange(opt.value); setShowRoleMenu(false); }}
-                className={`w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors
-                  ${role === opt.value ? "text-primary font-medium" : "text-foreground"}`}
+                key={admin.id}
+                onClick={() => { onAdminSelect(admin.id); setShowRoleMenu(false); }}
+                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors flex items-center justify-between"
               >
-                {opt.label}
+                <span>{admin.nombre}</span>
+                <span className="text-muted-foreground text-xs">- Administrador</span>
               </button>
             ))}
+            
 
             {/* Separador si hay tutores */}
             {tutores.length > 0 && (

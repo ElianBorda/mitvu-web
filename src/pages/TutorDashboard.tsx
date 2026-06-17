@@ -3,7 +3,6 @@ import ComisionCard from "@/components/ComisionCard";
 import { Comision } from "@/types/comisionType";
 import { obtenerComisionesDelTutor } from "@/service/apiComision";
 import { useNavigate, useParams } from "react-router-dom";
-import ComisionDetalle from "@/components/ComisionDetalle";
 import { useLayoutContext } from "@/App";
 import { Evento } from "@/types/eventoType";
 import { obtenerTodosLosEventos } from "@/service/apiEvento";

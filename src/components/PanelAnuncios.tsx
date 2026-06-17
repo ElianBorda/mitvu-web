@@ -28,6 +28,7 @@ import {
   actualizarAnuncio,
   eliminarAnuncio,
 } from "@/service/apiAnuncio";
+import { obtenerAdministrador } from "@/service/apiAdministrador";
 
 interface Props {
   anuncios: Anuncio[];
@@ -54,8 +55,7 @@ export default function AnunciosPanel({
     descripcion: "",
   });
 
-  const esEditable = (anuncio: Anuncio) =>
-    anuncio.creadoPorId === usuarioId || anuncio.creadoPorId === "Administrador" && usuarioId === "Administrador";
+  const esEditable = (anuncio: Anuncio) => anuncio.creadoPorId === usuarioId;
 
   const handleOpenDialog = () => {
     setAnuncioEditando(null);
@@ -76,7 +76,6 @@ export default function AnunciosPanel({
     }
 
     if (anuncioEditando) {
-      // Modo edición
       const anuncioBody = {
         titulo: form.titulo,
         descripcion: form.descripcion,
@@ -91,7 +90,6 @@ export default function AnunciosPanel({
         })
         .catch(() => toast.error("Error al actualizar el anuncio."));
     } else {
-      // Modo creación
       const anuncioBody = {
         titulo: form.titulo,
         descripcion: form.descripcion,
@@ -123,9 +121,9 @@ export default function AnunciosPanel({
   useEffect(() => {
     const idsToFetch = Array.from(
       new Set(
-        anuncios
+        anuncios 
           .map((a) => a.creadoPorId)
-          .filter((id) => id && id !== "Administrador" && !nombres[id]),
+          .filter((id) => id && !nombres[id]),
       ),
     );
 
@@ -134,10 +132,17 @@ export default function AnunciosPanel({
     idsToFetch.forEach(async (id) => {
       try {
         const res = await obtenerTutor(id);
-        const data = res.data;
-        setNombres((prev) => ({ ...prev, [id]: data.nombre ?? id }));
+        setNombres((prev) => ({ ...prev, [id]: res.data.nombre + " - Tutor" }));
       } catch {
-        setNombres((prev) => ({ ...prev, [id]: id }));
+        try {
+          const res = await obtenerAdministrador(id);
+          setNombres((prev) => ({
+            ...prev,
+            [id]: res.data.nombre + " - Administrador",
+          }));
+        } catch {
+          setNombres((prev) => ({ ...prev, [id]: id }));
+        }
       }
     });
   }, [anuncios]);
@@ -170,15 +175,15 @@ export default function AnunciosPanel({
         )}
       </div>
       <div className="space-y-0">
-        {anuncios?.length === 0 ? (
+        {anuncios .length === 0 ? (
           <p className="text-xs text-muted-foreground">
             Aún no hay nuevos anuncios publicados.
           </p>
         ) : (
-          anuncios.map((a, i) => (
+          anuncios .map((a, i) => (
             <div
               key={a.id}
-              className={`group relative py-3 px-2 -mx-2 rounded-md transition-colors hover:bg-secondary/50 ${i < anuncios.length - 1 ? "border-b border-border" : ""}`}
+              className={`group relative py-3 px-2 -mx-2 rounded-md transition-colors hover:bg-secondary/50 ${i < anuncios .length - 1 ? "border-b border-border" : ""}`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
@@ -190,9 +195,7 @@ export default function AnunciosPanel({
                   </p>
                   <p className="text-[10px] text-muted-foreground mt-1.5">
                     {String(a.fechaDeCreacion).split("-").reverse().join("-")} ·{" "}
-                    {a.creadoPorId === "Administrador"
-                      ? "Administrador"
-                      : (nombres[a.creadoPorId] ?? a.creadoPorId) + " - Tutor"}
+                    {nombres[a.creadoPorId] ?? a.creadoPorId}
                   </p>
                 </div>
 

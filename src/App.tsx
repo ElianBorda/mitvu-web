@@ -15,7 +15,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Role } from "@/data/types";
 import { Tutor } from "@/types/tutorType";
 import { Estudiante } from "@/types/estudianteType";
+import { Administrador } from "@/types/adminstradorType";
 import { Notificacion } from "@/types/notificacionType";
+import { obtenerTodosLosAdministradores } from "@/service/apiAdministrador";
 import { obtenerTodosLosTutores } from "@/service/apiTutor";
 import {
   asignarTokenAEstudiante,
@@ -58,6 +60,7 @@ export type LayoutContextType = {
   setActiveItem: (id: string) => void;
   registerSidebarHandler: (id: string, handler: () => void) => void;
   unregisterSidebarHandler: (id: string) => void;
+  adminActualId: string | null;
 };
 
 export function useLayoutContext() {
@@ -72,11 +75,15 @@ const RootLayout = () => {
   const [activeItem, setActiveItem] = useState<string | undefined>();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCalendarOpen, setCalendarOpen] = useState(false);
-  const [previousActiveItemTable, setPreviousActiveItemTable] = useState<string | null>(activeItem || null);
+  const [previousActiveItemTable, setPreviousActiveItemTable] = useState<
+    string | null
+  >(activeItem || null);
 
+  const [administradores, setAdministradores] = useState<Administrador[]>([]);
+  const [adminActualId, setAdminActualId] = useState<string | null>(null);
   const [tutores, setTutores] = useState<Tutor[]>([]);
   const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
-  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]); // Se buscan las notificaciones del usuario seleccionado y se setean en la variable
+  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
 
   const [studentUnenrolled, setStudentUnenrolled] = useState(
     () =>
@@ -85,6 +92,9 @@ const RootLayout = () => {
   );
 
   useEffect(() => {
+    obtenerTodosLosAdministradores()
+      .then((res) => setAdministradores(res.data))
+      .catch(console.error);
     obtenerTodosLosTutores()
       .then((res) => setTutores(res.data))
       .catch(console.error);
@@ -92,6 +102,12 @@ const RootLayout = () => {
       .then((res) => setEstudiantes(res.data))
       .catch(console.error);
   }, []);
+
+  useEffect(() => {
+    if (administradores.length > 0 && !adminActualId) {
+      setAdminActualId(String(administradores[0].id));
+    }
+  }, [administradores, adminActualId]);
 
   const refreshPeople = async () => {
     try {
@@ -159,7 +175,11 @@ const RootLayout = () => {
       return;
     }
 
-    if (sidebarId === "comisiones" || sidebarId === "estudiantes" || sidebarId === "tutores") {
+    if (
+      sidebarId === "comisiones" ||
+      sidebarId === "estudiantes" ||
+      sidebarId === "tutores"
+    ) {
       navigate(`/?view=${sidebarId}`);
       return;
     }
@@ -198,6 +218,11 @@ const RootLayout = () => {
             await refreshPeople();
             setMobileMenuOpen(true);
           }}
+          administradores={administradores}
+          onAdminSelect={(id) => {
+            setAdminActualId(String(id));
+            navigate(`/`);
+          }}
           tutores={tutores}
           onTutorSelect={(id) => navigate(`/tutor/${id}`)}
           estudiantes={estudiantes}
@@ -225,6 +250,7 @@ const RootLayout = () => {
                 registerSidebarHandler,
                 unregisterSidebarHandler,
                 setActiveItem,
+                adminActualId,
               }}
             />
           </Suspense>

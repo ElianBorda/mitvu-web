@@ -47,6 +47,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const { adminActualId } = useLayoutContext();
   const [estudiantesActivos, setEstudiantesActivos] = useState<any[]>([]);
   const [estudiantesBaja, setEstudiantesBaja] = useState<any[]>([]);
   const [tutores, setTutores] = useState<any[]>([]);
@@ -579,7 +580,7 @@ export default function AdminDashboard() {
             anuncios={anuncios}
             puedePublicar={true}
             comisionId={null}
-            usuarioId={"Administrador"}
+            usuarioId={adminActualId}
             actualizarAnuncios={triggerRefresh}
           />
         </div>
@@ -617,19 +618,6 @@ export default function AdminDashboard() {
             </LineChart>
           </ResponsiveContainer>
         </div>
-
-        {/* <div className="bg-card rounded-lg shadow-card border border-border p-4">
-          <h3 className="text-xs font-semibold text-foreground mb-3">Asistencia por comisión</h3>
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={barData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(0,0%,90%)" />
-              <XAxis dataKey="name" tick={{ fontSize: 9 }} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 9 }} />
-              <Tooltip />
-              <Bar dataKey="asistencia" fill="hsl(350,82%,27%)" radius={[3, 3, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div> */}
       </div>
     </div>
   );
