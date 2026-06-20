@@ -120,7 +120,7 @@ export default function FormularioEstudiante() {
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          {/* <div className="space-y-1.5">
             <Label htmlFor="comision">Comisión (Opcional)</Label>
             <Select
               value={form.comision_id}
@@ -144,7 +144,7 @@ export default function FormularioEstudiante() {
                 )}
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
 
           <div className="pt-4">
             <button
