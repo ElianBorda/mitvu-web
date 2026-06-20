@@ -41,6 +41,10 @@ const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const AgregarEvento = lazy(() => import("./pages/AgregarEvento.tsx"));
 const AsistenciaComision = lazy(() => import("./pages/AsistenciaComision.tsx"));
 const MetricasDashboard = lazy(() => import("./pages/MetricasDashboard.tsx"));
+const FormularioEstudiante = lazy(() => import("./pages/FormularioEstudiante.tsx"));
+const FormularioTutor = lazy(() => import("./pages/FormularioTutor.tsx"));
+const FormularioFeedbackEstudiante = lazy(() => import("./pages/FormularioFeedbackEstudiante.tsx"));
+const AdminFeedbackDashboard = lazy(() => import("./pages/AdminFeedbackDashboard.tsx"));
 const queryClient = new QueryClient();
 
 const userNames: Record<Role, string> = {
@@ -129,6 +133,9 @@ const RootLayout = () => {
     } else if (location.pathname.includes("/tutor")) {
       setRole("tutor");
       setActiveItem("comisiones");
+    } else if (location.pathname.includes("/admin/feedback")) {
+      setRole("admin");
+      setActiveItem("feedback");
     } else if (location.pathname.includes("/admin/metricas")) {
       setRole("admin");
       setActiveItem("metricas");
@@ -172,6 +179,11 @@ const RootLayout = () => {
 
     if (sidebarId === "metricas") {
       navigate("/admin/metricas");
+      return;
+    }
+
+    if (sidebarId === "feedback") {
+      navigate("/admin/feedback");
       return;
     }
 
@@ -262,6 +274,31 @@ const RootLayout = () => {
 
 const router = createBrowserRouter([
   {
+    path: "/completar-perfil/estudiante",
+    element: (
+      <Suspense fallback={<p className="p-4">Cargando...</p>}>
+        <FormularioEstudiante />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/completar-perfil/tutor",
+    element: (
+      <Suspense fallback={<p className="p-4">Cargando...</p>}>
+        <FormularioTutor />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/estudiante/feedback/:comisionId/:tutorId",
+    element: (
+      <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground text-sm">Cargando...</div>}>
+        <FormularioFeedbackEstudiante />
+      </Suspense>
+    ),
+  },
+  
+  {
     path: "/",
     element: <RootLayout />,
     errorElement: <NotFound />,
@@ -277,14 +314,14 @@ const router = createBrowserRouter([
       { path: "estudiante/:id", element: <EstudianteDashboard /> },
       { path: "estudiante/baja/:id", element: <PaginaDarDeBaja /> },
       { path: "estudiante/baja", element: <PaginaDarDeBaja /> },
-      { path: "*", element: <NotFound /> },
       { path: "admin/agregar-evento", element: <AgregarEvento /> },
       { path: "comision/:id/asistencia", element: <AsistenciaComision /> },
       { path: "admin/metricas", element: <MetricasDashboard /> },
+      { path: "admin/feedback", element: <AdminFeedbackDashboard /> }, // <-- NUEVA RUTA ADMIN
+      { path: "*", element: <NotFound /> },
     ],
   },
 ]);
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>

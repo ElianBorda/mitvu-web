@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { calendarEvents } from "@/data/mockData";
-import SlidePanel from "@/components/SlidePanel";
-import PanelCalendario from "@/components/PanelCalendario";
+import { MessageSquareHeart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import ComisionDetalle from "@/components/ComisionDetalle";
 import { format } from "date-fns";
@@ -22,6 +21,7 @@ export default function EstudianteDashboard({
 }) {
   const { id } = useParams<{ id: string }>();
   const { role, isCalendarOpen, setCalendarOpen, setNotificaciones } = useLayoutContext();
+  const navigate = useNavigate();
 
   const [comision, setComision] = useState<Comision | null>(null);
   const [dadoDeBaja, setDadoDeBaja] = useState(false);
@@ -173,8 +173,29 @@ export default function EstudianteDashboard({
   }
 
   return (
-    <div className="relative w-full max-w-7xl mx-auto">
+    <div className="relative w-full max-w-7xl mx-auto space-y-6">
       <ComisionDetalle comision={comision} role="estudiante" />
+      
+      {/* Botón de Feedback Anónimo (Solo si la comisión tiene un tutor asignado) */}
+      {comision?.tutor?.id && (
+        <div className="bg-card border border-border rounded-xl shadow-card p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <MessageSquareHeart className="text-primary" size={20} />
+              Evaluá tu experiencia
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Tu opinión nos ayuda a mejorar. Completá una breve encuesta anónima sobre tu comisión y tutor/a.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate(`/estudiante/feedback/${comision.id}/${comision.tutor?.id}`)}
+            className="shrink-0 px-6 py-2.5 bg-secondary text-foreground rounded-lg text-sm font-medium hover:bg-secondary/80 border border-border transition-colors"
+          >
+            Dar Feedback Anónimo
+          </button>
+        </div>
+      )}
     </div>
   );
 }
