@@ -41,6 +41,8 @@ const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const AgregarEvento = lazy(() => import("./pages/AgregarEvento.tsx"));
 const AsistenciaComision = lazy(() => import("./pages/AsistenciaComision.tsx"));
 const MetricasDashboard = lazy(() => import("./pages/MetricasDashboard.tsx"));
+const FormularioEstudiante = lazy(() => import("./pages/FormularioEstudiante.tsx"));
+const FormularioTutor = lazy(() => import("./pages/FormularioTutor.tsx"));
 const queryClient = new QueryClient();
 
 const userNames: Record<Role, string> = {
@@ -261,6 +263,22 @@ const RootLayout = () => {
 };
 
 const router = createBrowserRouter([
+  {
+    path: "/completar-perfil/estudiante",
+    element: (
+      <Suspense fallback={<p className="p-4">Cargando...</p>}>
+        <FormularioEstudiante />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/completar-perfil/tutor",
+    element: (
+      <Suspense fallback={<p className="p-4">Cargando...</p>}>
+        <FormularioTutor />
+      </Suspense>
+    ),
+  },
   {
     path: "/",
     element: <RootLayout />,
