@@ -40,6 +40,7 @@ interface Props {
   onDelete?: (row: Record<string, any>, index: number) => void;
   onRowClick?: (row: Record<string, any>, index: number) => void;
   rowIds?: string[];
+  onBulkAdd?: () => void;
 }
 
 export default function DataTable({
@@ -52,6 +53,7 @@ export default function DataTable({
   view,
   onRowClick,
   rowIds,
+  onBulkAdd,
 }: Props) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -120,14 +122,24 @@ export default function DataTable({
               className="w-full h-8 pl-8 pr-4 rounded-md bg-secondary text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
-          {onAdd && (
-            <button
-              onClick={onAdd}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
-            >
-              <Plus size={14} /> {addLabel}
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {onBulkAdd && (
+              <button
+                onClick={onBulkAdd}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-foreground text-background rounded-md text-sm font-medium hover:bg-foreground/90 transition-colors"
+              >
+                <Plus size={14} /> Carga masiva
+              </button>
+            )}
+            {onAdd && (
+              <button
+                onClick={onAdd}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
+              >
+                <Plus size={14} /> {addLabel}
+              </button>
+            )}
+          </div>
         </div>
         {/* Table */}
         <table className="w-full text-sm">
@@ -148,7 +160,10 @@ export default function DataTable({
                 key={i}
                 className={`group ${i % 2 === 0 ? "bg-card" : "bg-[hsl(350,50%,98%)]"} hover:bg-secondary/50 transition-colors`}
               >
-                <td data-testid={`row-${i}-index`} className="px-4 py-2.5 text-muted-foreground">
+                <td
+                  data-testid={`row-${i}-index`}
+                  className="px-4 py-2.5 text-muted-foreground"
+                >
                   {page * perPage + i + 1}
                 </td>
                 {columns.map((col) => (

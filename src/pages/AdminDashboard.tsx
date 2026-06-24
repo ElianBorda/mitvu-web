@@ -39,6 +39,7 @@ import { Anuncio } from "@/types/anuncioType";
 import { obtenerAnunciosGlobales } from "@/service/apiAnuncio";
 import { useExportarTabla } from "@/hooks/useExportarTabla";
 import BotonExportar from "@/components/BotonExportar";
+import CargaMasivaEstudiantes from "@/components/CargaMasivaEstudiantes";
 
 type AdminView = "comisiones" | "tutores" | "estudiantes";
 
@@ -57,15 +58,16 @@ export default function AdminDashboard() {
   const [lineData, setLineData] = useState<
     { name: string; asistencia: number; tituloOriginal: string }[]
   >([]);
-  
+  const [cargaMasivaOpen, setCargaMasivaOpen] = useState(false);
+
   const columnasExport = useMemo(() => {
-    if (view == "tutores") 
+    if (view == "tutores")
       return [
-      { key: "apellido", label: "Apellido" },
-      { key: "nombre", label: "Nombre" },
-      { key: "mail", label: "Mail" },
-      { key: "comisiones", label: "Comisiones" },
-    ];
+        { key: "apellido", label: "Apellido" },
+        { key: "nombre", label: "Nombre" },
+        { key: "mail", label: "Mail" },
+        { key: "comisiones", label: "Comisiones" },
+      ];
     else if (view == "comisiones")
       return [
         { key: "localidad", label: "Localidad" },
@@ -87,7 +89,7 @@ export default function AdminDashboard() {
   }, [view]);
 
   const filasExport = useMemo(() => {
-    if (view == "tutores") 
+    if (view == "tutores")
       return tutores.map((t) => ({
         apellido: t.apellido,
         nombre: t.nombre,
@@ -100,7 +102,7 @@ export default function AdminDashboard() {
         return {
           localidad: c.localidad,
           departamento: c.departamento,
-          carrera: c.carrera? c.carrera : "Sin carrera definida",
+          carrera: c.carrera ? c.carrera : "Sin carrera definida",
           numero: c.numero,
           horario: c.horarioInicio + " - " + c.horarioFin,
           tutor: t ? `${t.nombre} ${t.apellido}` : "Sin tutor asignado",
@@ -112,7 +114,7 @@ export default function AdminDashboard() {
       nombre: e.nombre,
       mail: e.mail,
       dni: e.dni,
-      carrera: e.carrera? e.carrera : "Sin carrera definida",
+      carrera: e.carrera ? e.carrera : "Sin carrera definida",
       comision: e.comision
         ? `Comisión ${e.comision.numero} - ${e.comision.departamento} - ${e.comision.localidad}`
         : "Sin comisión asignada",
@@ -123,7 +125,7 @@ export default function AdminDashboard() {
     columnasExport,
     filasExport,
     view,
-    null
+    null,
   );
 
   const columnasExportBajas = useMemo(
@@ -158,7 +160,12 @@ export default function AdminDashboard() {
     exportarCSV: exportarCSVBajas,
     exportarExcel: exportarExcelBajas,
     exportarPDF: exportarPDFBajas,
-  } = useExportarTabla(columnasExportBajas, filasExportBajas, "estudiantes-baja", null);
+  } = useExportarTabla(
+    columnasExportBajas,
+    filasExportBajas,
+    "estudiantes-baja",
+    null,
+  );
 
   const comisionIdPorIndice = comisiones?.map((c) => c.id);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -264,7 +271,9 @@ export default function AdminDashboard() {
             const totalAsistencias = (estudiante.asistencias || []).length;
             return (
               total +
-              (totalAsistencias > 0 ? asistenciasPresentes / totalAsistencias : 0)
+              (totalAsistencias > 0
+                ? asistenciasPresentes / totalAsistencias
+                : 0)
             );
           }, 0) /
             totalEstudiantes) *
@@ -459,14 +468,15 @@ export default function AdminDashboard() {
             triggerRefresh();
             refreshPeople();
           }}
+          onBulkAdd={view === "estudiantes" ? () => setCargaMasivaOpen(true) : undefined}
         />
-          <div className="mt-4">
-            <BotonExportar
-              onCSV={exportarCSV}
-              onExcel={exportarExcel}
-              onPDF={exportarPDF}
-            />
-          </div>
+        <div className="mt-4">
+          <BotonExportar
+            onCSV={exportarCSV}
+            onExcel={exportarExcel}
+            onPDF={exportarPDF}
+          />
+        </div>
         {view === "estudiantes" && (
           <div className="mt-8">
             <h2 className="text-base font-semibold text-foreground mb-3">
@@ -620,6 +630,11 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </div>
       </div>
+      <CargaMasivaEstudiantes
+        open={cargaMasivaOpen}
+        onClose={() => setCargaMasivaOpen(false)}
+        onSuccess={triggerRefresh}
+      />
     </div>
   );
 }
