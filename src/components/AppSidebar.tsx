@@ -2,8 +2,8 @@ import { useState } from "react";
 import { 
   Home, Users, GraduationCap, Calendar, Settings, LayoutList, 
   Megaphone, LogOut, Link as LinkIcon, ChevronLeft, ChevronRight, X, 
-  BarChart2, MessageSquare // <-- Importamos el nuevo icono
-} from "lucide-react";
+  BarChart2, MessageSquare, FileCheck
+} from "lucide-react"
 import { Role } from "@/data/types";
 import logo from "@/assets/mi-tvu-logo.png";
 
@@ -32,7 +32,8 @@ const sidebarItems: Record<Role, SidebarItem[]> = {
     { icon: Users, label: "Tutores", id: "tutores" },
     { icon: GraduationCap, label: "Estudiantes", id: "estudiantes" },
     { icon: BarChart2, label: "Métricas", id: "metricas" },
-    { icon: MessageSquare, label: "Feedback", id: "feedback" }, // <-- AGREGADO
+    { icon: MessageSquare, label: "Feedback", id: "feedback" },
+    { icon: FileCheck, label: "Solicitudes", id: "solicitudes" },
     { icon: Megaphone, label: "Anuncios globales", id: "anuncios" },
     { icon: Settings, label: "Configuración", id: "configuracion" },
   ],
