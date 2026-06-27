@@ -45,6 +45,7 @@ const FormularioEstudiante = lazy(() => import("./pages/FormularioEstudiante.tsx
 const FormularioTutor = lazy(() => import("./pages/FormularioTutor.tsx"));
 const FormularioFeedbackEstudiante = lazy(() => import("./pages/FormularioFeedbackEstudiante.tsx"));
 const AdminFeedbackDashboard = lazy(() => import("./pages/AdminFeedbackDashboard.tsx"));
+const AdminSolicitudesDashboard = lazy(() => import("./pages/AdminSolicitudesDashboard.tsx"));
 const queryClient = new QueryClient();
 
 const userNames: Record<Role, string> = {
@@ -139,6 +140,9 @@ const RootLayout = () => {
     } else if (location.pathname.includes("/admin/metricas")) {
       setRole("admin");
       setActiveItem("metricas");
+    } else if (location.pathname.includes("/admin/solicitudes")) {
+      setRole("admin");
+      setActiveItem("solicitudes");
     } else if (
       location.pathname === "/" ||
       location.pathname.includes("/admin")
@@ -184,6 +188,11 @@ const RootLayout = () => {
 
     if (sidebarId === "feedback") {
       navigate("/admin/feedback");
+      return;
+    }
+
+    if (sidebarId === "solicitudes") {
+      navigate("/admin/solicitudes");
       return;
     }
 
@@ -317,7 +326,8 @@ const router = createBrowserRouter([
       { path: "admin/agregar-evento", element: <AgregarEvento /> },
       { path: "comision/:id/asistencia", element: <AsistenciaComision /> },
       { path: "admin/metricas", element: <MetricasDashboard /> },
-      { path: "admin/feedback", element: <AdminFeedbackDashboard /> }, // <-- NUEVA RUTA ADMIN
+      { path: "admin/feedback", element: <AdminFeedbackDashboard /> },
+      { path: "admin/solicitudes", element: <AdminSolicitudesDashboard /> },
       { path: "*", element: <NotFound /> },
     ],
   },
