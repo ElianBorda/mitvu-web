@@ -138,8 +138,8 @@ export default function AdminSolicitudesDashboard() {
 
       {/* MODAL DETALLE DE LA SOLICITUD */}
       {selectedSolicitud && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card border border-border w-full max-w-xl rounded-2xl shadow-2xl flex flex-col animate-in zoom-in-95">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95">
             
             <div className="p-6 border-b border-border bg-secondary/30 rounded-t-2xl">
               <h2 className="text-xl font-bold text-foreground">{selectedSolicitud.nombre} {selectedSolicitud.apellido}</h2>
