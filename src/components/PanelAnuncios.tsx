@@ -105,7 +105,7 @@ export default function AnunciosPanel({
           setDialogOpen(false);
           actualizarAnuncios();
         })
-        .catch(() => toast.error("Error al guardar el evento."));
+        .catch((error) => { toast.error("Error al guardar el anuncio."); console.log(error) } );
     }
   };
 

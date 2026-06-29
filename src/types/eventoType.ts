@@ -9,4 +9,5 @@ export type Evento = {
     titulo: string,
     descripcion: string,
     fecha: string,
+    idComision: string,
 }

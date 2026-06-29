@@ -527,7 +527,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
           {/* Right: Announcements */}
           <div className="w-full lg:w-80 shrink-0 gap-4 flex flex-col">
             {!esRolGestion ? (
-              <PanelCalendarioRead eventos={eventos} />
+              <PanelCalendarioRead eventos={eventos} idComision={comision.id} />
             ) : (
               <PanelCalendario
                 eventos={eventos}

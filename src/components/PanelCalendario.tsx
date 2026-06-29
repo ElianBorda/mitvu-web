@@ -23,7 +23,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { postCrearEvento, putModificarEvento, deleteEvento, postCrearEventoParaComision } from "@/service/apiEvento";
+import {
+  postCrearEvento,
+  putModificarEvento,
+  deleteEvento,
+  postCrearEventoParaComision,
+} from "@/service/apiEvento";
 import { Pencil, Trash2 } from "lucide-react";
 
 interface Props {
@@ -32,13 +37,21 @@ interface Props {
   onEventAdded?: () => void;
 }
 
-export default function PanelCalendario({ eventos, onEventAdded, idComision }: Props) {
-  const [fechaSeleccionada, setFechaSeleccionada] = useState<Date | undefined>(new Date());
-  
+export default function PanelCalendario({
+  eventos,
+  onEventAdded,
+  idComision,
+}: Props) {
+  const [fechaSeleccionada, setFechaSeleccionada] = useState<Date | undefined>(
+    new Date(),
+  );
+
   // Estados para modales y edición
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [eventoAEliminarId, setEventoAEliminarId] = useState<string | null>(null);
+  const [eventoAEliminarId, setEventoAEliminarId] = useState<string | null>(
+    null,
+  );
   const [eventoEditandoId, setEventoEditandoId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
@@ -50,9 +63,11 @@ export default function PanelCalendario({ eventos, onEventAdded, idComision }: P
   const parseFechaBackend = (fechaStr: string) => {
     return parse(fechaStr, "dd-MM-yyyy", new Date());
   };
-  
+
   const eventosSeleccionados = fechaSeleccionada
-    ? eventos.filter((e) => isSameDay(parseFechaBackend(e.fecha), fechaSeleccionada))
+    ? eventos.filter((e) =>
+        isSameDay(parseFechaBackend(e.fecha), fechaSeleccionada),
+      )
     : [];
 
   const handleOpenDialog = () => {
@@ -113,7 +128,7 @@ export default function PanelCalendario({ eventos, onEventAdded, idComision }: P
       titulo: form.titulo,
       descripcion: form.descripcion,
       fecha: fechaParaBackend,
-      idComision: idComision || "", 
+      idComision: idComision || "",
     };
 
     if (eventoEditandoId) {
@@ -154,14 +169,33 @@ export default function PanelCalendario({ eventos, onEventAdded, idComision }: P
         components={{
           DayContent: (props) => {
             const date = props.date;
-            const hayEventos = eventos.some((e) => isSameDay(parseFechaBackend(e.fecha), date));
-            const seleccionado = fechaSeleccionada && isSameDay(date, fechaSeleccionada);
+            const hayEventos = eventos.some((e) =>
+              isSameDay(parseFechaBackend(e.fecha), date),
+            );
+            const hayEventosComision = eventos.some(
+              (e) =>
+                isSameDay(parseFechaBackend(e.fecha), date) &&
+                Boolean(e.idComision),
+            );
+            const seleccionado =
+              fechaSeleccionada && isSameDay(date, fechaSeleccionada);
 
             return (
               <div className="relative w-full h-full flex items-center justify-center">
                 <span>{date.getDate()}</span>
-                {hayEventos && !seleccionado && (
-                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                {hayEventos && (
+                  <span
+                    className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${
+                      hayEventosComision ? "bg-green-500" : "bg-primary"
+                    }`}
+                  />
+                )}
+                {hayEventos && seleccionado && (
+                  <span
+                    className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${
+                      hayEventosComision ? "bg-green-500" : "bg-white"
+                    }`}
+                  />
                 )}
               </div>
             );
@@ -175,10 +209,19 @@ export default function PanelCalendario({ eventos, onEventAdded, idComision }: P
             {format(fechaSeleccionada, "d 'de' MMMM", { locale: es })}
           </p>
           {eventosSeleccionados.map((e, i) => (
-            <div key={i} className="bg-secondary rounded-md px-3 py-2 flex items-center justify-between group">
+            <div
+              key={i}
+              className={`${
+                e.idComision ? "bg-green-200" : "bg-red-100"
+              } rounded-md px-3 py-2 flex items-center justify-between group`}
+            >
               <div className="flex-1 min-w-0 pr-2">
-                <p className="text-xs font-medium text-foreground truncate">{e.titulo}</p>
-                <p className="text-[10px] text-muted-foreground truncate">{e.descripcion}</p>
+                <p className="text-xs font-medium text-foreground truncate">
+                  {e.titulo}
+                </p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  {e.descripcion}
+                </p>
               </div>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
@@ -199,6 +242,21 @@ export default function PanelCalendario({ eventos, onEventAdded, idComision }: P
         </div>
       )}
 
+      {idComision && (
+        <div className="mt-4 pt-4 border-t border-border">
+          <ul className="space-y-1 text-xs text-muted-foreground">
+            <li className="flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
+              <span>Eventos de la comisión</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-primary" />
+              <span>Eventos globales</span>
+            </li>
+          </ul>
+        </div>
+      )}
+
       <button
         onClick={handleOpenDialog}
         className="mt-4 w-full py-2 text-sm font-medium text-primary border border-primary rounded-lg hover:bg-primary/5 transition-colors"
@@ -210,25 +268,52 @@ export default function PanelCalendario({ eventos, onEventAdded, idComision }: P
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{eventoEditandoId ? "Modificar evento" : "Agregar evento"}</DialogTitle>
+            <DialogTitle>
+              {eventoEditandoId ? "Modificar evento" : "Agregar evento"}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
               <Label htmlFor="ev-date">Fecha</Label>
-              <Input id="ev-date" type="date" value={form.fecha} onChange={(e) => setForm({ ...form, fecha: e.target.value })} />
+              <Input
+                id="ev-date"
+                type="date"
+                value={form.fecha}
+                onChange={(e) => setForm({ ...form, fecha: e.target.value })}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ev-title">Título del evento</Label>
-              <Input id="ev-title" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} />
+              <Input
+                id="ev-title"
+                value={form.titulo}
+                onChange={(e) => setForm({ ...form, titulo: e.target.value })}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ev-desc">Descripción</Label>
-              <Input id="ev-desc" value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} />
+              <Input
+                id="ev-desc"
+                value={form.descripcion}
+                onChange={(e) =>
+                  setForm({ ...form, descripcion: e.target.value })
+                }
+              />
             </div>
           </div>
           <DialogFooter>
-            <button onClick={() => setDialogOpen(false)} className="px-4 py-2 text-sm border rounded-md">Cancelar</button>
-            <button onClick={handleSave} className="px-4 py-2 text-sm bg-primary text-white rounded-md">Guardar</button>
+            <button
+              onClick={() => setDialogOpen(false)}
+              className="px-4 py-2 text-sm border rounded-md"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-4 py-2 text-sm bg-primary text-white rounded-md"
+            >
+              Guardar
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -237,13 +322,18 @@ export default function PanelCalendario({ eventos, onEventAdded, idComision }: P
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Estás seguro de eliminar este evento?</AlertDialogTitle>
+            <AlertDialogTitle>
+              ¿Estás seguro de eliminar este evento?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. El evento desaparecerá permanentemente del calendario global.
+              Esta acción no se puede deshacer. El evento desaparecerá
+              permanentemente del calendario global.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setEventoAEliminarId(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setEventoAEliminarId(null)}>
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"

@@ -10,9 +10,9 @@ interface Props {
   idComision?: string;
 }
 
-export default function PanelCalendarioRead({ eventos }: Props) {
+export default function PanelCalendarioRead({ eventos, idComision }: Props) {
   const [fechaSeleccionada, setFechaSeleccionada] = useState<Date | undefined>(
-    new Date()
+    new Date(),
   );
 
   // Función para convertir la fecha del backend a un objeto Date válido
@@ -21,7 +21,9 @@ export default function PanelCalendarioRead({ eventos }: Props) {
   };
 
   const eventosSeleccionados = fechaSeleccionada
-    ? eventos.filter((e) => isSameDay(parseFechaBackend(e.fecha), fechaSeleccionada))
+    ? eventos.filter((e) =>
+        isSameDay(parseFechaBackend(e.fecha), fechaSeleccionada),
+      )
     : [];
 
   return (
@@ -37,7 +39,12 @@ export default function PanelCalendarioRead({ eventos }: Props) {
             const date = props.date;
             // Usamos parseFechaBackend antes de comparar
             const hayEventos = eventos.some((e) =>
-              isSameDay(parseFechaBackend(e.fecha), date)
+              isSameDay(parseFechaBackend(e.fecha), date),
+            );
+            const hayEventosComision = eventos.some(
+              (e) =>
+                isSameDay(parseFechaBackend(e.fecha), date) &&
+                Boolean(e.idComision),
             );
             const seleccionado =
               fechaSeleccionada && isSameDay(date, fechaSeleccionada);
@@ -45,15 +52,40 @@ export default function PanelCalendarioRead({ eventos }: Props) {
             return (
               <div className="relative w-full h-full flex items-center justify-center">
                 <span>{date.getDate()}</span>
-                {/* Indicador de evento (puntito azul/primario) */}
-                {hayEventos && !seleccionado && (
-                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                {hayEventos && (
+                  <span
+                    className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${
+                      hayEventosComision ? "bg-green-500" : "bg-primary"
+                    }`}
+                  />
+                )}
+                {hayEventos && seleccionado && (
+                  <span
+                    className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${
+                      hayEventosComision ? "bg-green-500" : "bg-white"
+                    }`}
+                  />
                 )}
               </div>
             );
           },
         }}
       />
+
+      {idComision && (
+        <div className="mt-4 pt-4 border-t border-border">
+          <ul className="space-y-1 text-xs text-muted-foreground">
+            <li className="flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
+              <span>Eventos de la comisión</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-primary" />
+              <span>Eventos globales</span>
+            </li>
+          </ul>
+        </div>
+      )}
 
       {/* Lista de eventos del día seleccionado */}
       {eventosSeleccionados.length > 0 && fechaSeleccionada && (
@@ -62,7 +94,12 @@ export default function PanelCalendarioRead({ eventos }: Props) {
             {format(fechaSeleccionada, "d 'de' MMMM", { locale: es })}
           </p>
           {eventosSeleccionados.map((e, i) => (
-            <div key={i} className="bg-secondary rounded-md px-3 py-2">
+            <div
+              key={i}
+              className={`${
+                e.idComision ? "bg-green-200" : "bg-red-100"
+              } rounded-md px-3 py-2`}
+            >
               <p className="text-xs font-medium text-foreground">{e.titulo}</p>
               <p className="text-[10px] text-muted-foreground">
                 {e.descripcion}

@@ -77,7 +77,7 @@ export default function TutorDashboard() {
       </div>
       <div>
         <div className="w-full lg:w-80 shrink-0 pt-16">
-          <PanelCalendarioRead eventos={eventosDelTutor} />
+          <PanelCalendarioRead eventos={eventosDelTutor}/>
         </div>
         <div className="w-full lg:w-80 shrink-0 mt-6">
           <PanelAnuncios
