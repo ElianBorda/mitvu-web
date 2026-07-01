@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Search, Bell, Menu, ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { Search, Bell, Menu } from "lucide-react";
 import { Role } from "@/data/types";
 import NotificacionDropdown from "./NotificacionDropdown";
 import { Notificacion } from "@/types/notificacionType";
@@ -7,36 +7,18 @@ import { Notificacion } from "@/types/notificacionType";
 interface TopbarProps {
   userName: string;
   role: Role;
-  onRoleChange: (role: Role) => void;
   onMenuClick: () => void;
-  administradores: any[];
-  onAdminSelect: (id: number) => void;
-  tutores: any[];
-  onTutorSelect: (id: number) => void;
-  estudiantes: any[];
-  onEstudianteSelect: (id: number) => void;
   notificaciones: Notificacion[];
 }
 
-export default function Topbar({ userName, role, onRoleChange, onMenuClick, administradores, onAdminSelect, tutores, onTutorSelect, estudiantes, onEstudianteSelect, notificaciones }: TopbarProps) {
+export default function Topbar({ userName, role, onMenuClick, notificaciones }: TopbarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showRoleMenu, setShowRoleMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
 
-  const initials = userName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  // Calcula iniciales seguras (por si el userName llega vacío por un microsegundo)
+  const initials = userName ? userName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2) : "U";
   const unreadCount = notificaciones.filter(n => !n.read).length;
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setShowRoleMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const currentLabel = role === "estudiante" ? "Estudiante" : role === "admin" ? "Admin" : "Tutor";
+  const currentLabel = role === "admin" ? "Administrador" : role === "tutor" ? "Tutor" : "Estudiante";
 
   return (
     <header className="h-14 bg-card border-b border-border flex items-center px-3 sm:px-6 gap-2 sm:gap-4 sticky top-0 z-30">
@@ -54,70 +36,11 @@ export default function Topbar({ userName, role, onRoleChange, onMenuClick, admi
         />
       </div>
 
-      {/* Role switcher — dropdown custom */}
-      <div className="relative" ref={menuRef}>
-        <button
-          onClick={() => setShowRoleMenu(prev => !prev)}
-          className="h-9 px-2 sm:px-3 rounded-lg bg-secondary text-xs sm:text-sm text-foreground flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-        >
-          <span>{currentLabel}</span>
-          <ChevronDown size={14} className={`transition-transform ${showRoleMenu ? "rotate-180" : ""}`} />
-        </button>
-
-        {showRoleMenu && (
-          <div className="absolute right-0 mt-1 w-48 rounded-lg bg-card border border-border shadow-lg py-1 z-50">
-            {/* Separador si hay tutores */}
-            {administradores.length > 0 && (
-              <div className="my-1 border-t border-border" />
-            )}
-
-            {/* Tutores dinámicos */}
-            {administradores.map(admin => (
-              <button
-                key={admin.id}
-                onClick={() => { onAdminSelect(admin.id); setShowRoleMenu(false); }}
-                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors flex items-center justify-between"
-              >
-                <span>{admin.nombre}</span>
-                <span className="text-muted-foreground text-xs">- Administrador</span>
-              </button>
-            ))}
-            
-
-            {/* Separador si hay tutores */}
-            {tutores.length > 0 && (
-              <div className="my-1 border-t border-border" />
-            )}
-
-            {/* Tutores dinámicos */}
-            {tutores.map(tutor => (
-              <button
-                key={tutor.id}
-                onClick={() => { onTutorSelect(tutor.id); setShowRoleMenu(false); }}
-                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors flex items-center justify-between"
-              >
-                <span>{tutor.nombre}</span>
-                <span className="text-muted-foreground text-xs">- Tutor</span>
-              </button>
-            ))}
-
-            {/* Estudiantes dinámicos */}
-            {estudiantes.length > 0 && (
-              <div className="my-1 border-t border-border" />
-            )}
-            {estudiantes.map(estudiante => (
-              <button
-                key={estudiante.id}
-                onClick={() => { onEstudianteSelect(estudiante.id); setShowRoleMenu(false); }}
-                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors flex items-center justify-between"
-                >
-                  <span>{estudiante.nombre}</span>
-                  <span className="text-muted-foreground text-xs">- Estudiante</span>
-                </button>
-              ))}
-
-          </div>
-        )}
+      {/* Etiqueta de Rol actual (Badge visual) */}
+      <div className="hidden sm:flex items-center">
+        <span className="px-2.5 py-1 rounded-md bg-secondary text-xs font-medium text-muted-foreground tracking-wide uppercase">
+          {currentLabel}
+        </span>
       </div>
 
       {/* Notifications */}
