@@ -18,13 +18,11 @@ const sidebarItems: Record<Role, SidebarItem[]> = {
   estudiante: [
     { icon: Home, label: "Inicio", id: "home" },
     { icon: LinkIcon, label: "Redes UNQ", id: "redes" },
-    { icon: Megaphone, label: "Anuncios globales", id: "anuncios" },
     { icon: Settings, label: "Configuración", id: "configuracion" },
     { icon: UserX, label: "Darse de baja", id: "baja", danger: true }, // Cambiado a UserX
   ],
   tutor: [
     { icon: LayoutList, label: "Comisiones", id: "comisiones" },
-    { icon: Megaphone, label: "Anuncios globales", id: "anuncios" },
     { icon: Settings, label: "Configuración", id: "configuracion" },
   ],
   admin: [
@@ -34,7 +32,6 @@ const sidebarItems: Record<Role, SidebarItem[]> = {
     { icon: BarChart2, label: "Métricas", id: "metricas" },
     { icon: MessageSquare, label: "Feedback", id: "feedback" },
     { icon: FileCheck, label: "Solicitudes", id: "solicitudes" },
-    { icon: Megaphone, label: "Anuncios globales", id: "anuncios" },
     { icon: Settings, label: "Configuración", id: "configuracion" },
   ],
 };

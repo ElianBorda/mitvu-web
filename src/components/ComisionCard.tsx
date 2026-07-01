@@ -5,6 +5,7 @@ import {
 } from "@/data/mockData";
 import { MapPin, Clock, Users, Building, Calendar1Icon } from "lucide-react";
 import { Comision } from "@/types/comisionType";
+import { Estudiante } from "@/types/estudianteType";
 
 interface Props {
   comision: Comision;
@@ -12,8 +13,29 @@ interface Props {
 }
 
 export default function ComisionCard({ comision, onClick }: Props) {
-  const avg = getCommissionAvgAttendance(comision.id);
-  const cantEstudiantes = comision.estudiantes.length;
+  const estudiantesComision = (comision.estudiantes as any[]) || [];
+  const avg = 
+    estudiantesComision.length > 0
+      ? Math.round(
+          (estudiantesComision.reduce((total, estudiante) => {
+            const asistenciasPresentes = (estudiante.asistencias || []).filter(
+              (a: any) =>
+                a.tipoDeAsistencia === "PRESENTE" ||
+                a.tipoDeAsistencia === "AUSENCIA_JUSTIFICADA",
+            ).length;
+            const totalAsistencias = (estudiante.asistencias || []).length;
+            return (
+              total +
+              (totalAsistencias > 0
+                ? asistenciasPresentes / totalAsistencias
+                : 0)
+            );
+          }, 0) /
+            estudiantesComision.length) *
+            100,
+        )
+      : 0;
+  const cantEstudiantes = estudiantesComision.length;
   const aula = comision.aula;
 
   return (
@@ -63,7 +85,9 @@ export default function ComisionCard({ comision, onClick }: Props) {
         </div>
         <div className="h-2 bg-secondary rounded-full overflow-hidden">
           <div
-            className="h-full bg-primary rounded-full transition-all duration-500"
+            className={`h-full rounded-full transition-all duration-500 ${
+              avg > 75 ? "bg-green-500" : avg > 50 ? "bg-yellow-500" : "bg-red-500"
+            }`}
             style={{ width: `${avg}%` }}
           />
         </div>
