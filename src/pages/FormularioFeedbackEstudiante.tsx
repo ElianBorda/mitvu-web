@@ -103,7 +103,7 @@ export default function FormularioFeedbackEstudiante() {
             Ayudanos a mejorar. Tus respuestas son 100% confidenciales y solo serán vistas por la administración.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-8" autoComplete="off">
             <div className="space-y-5 bg-secondary/30 p-5 rounded-lg border border-border/50">
               <h2 className="text-base font-semibold text-primary">Sobre tu Tutor/a</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -119,7 +119,7 @@ export default function FormularioFeedbackEstudiante() {
               
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-foreground">Utilidad de los encuentros *</label>
-                <select required className="p-2.5 rounded-md border border-border bg-background text-sm" value={form.utilidadEncuentros} onChange={e => handleChange('utilidadEncuentros', e.target.value)}>
+                <select required autoComplete="off" className="p-2.5 rounded-md border border-border bg-background text-sm" value={form.utilidadEncuentros} onChange={e => handleChange('utilidadEncuentros', e.target.value)}>
                   <option value="" disabled>Seleccioná una opción...</option>
                   <option value={UtilidadEncuentro.MUCHO}>Fueron de mucha utilidad</option>
                   <option value={UtilidadEncuentro.BASTANTE}>Fueron bastante útiles</option>
@@ -130,7 +130,7 @@ export default function FormularioFeedbackEstudiante() {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-foreground">Frecuencia y asistencia *</label>
-                <select required className="p-2.5 rounded-md border border-border bg-background text-sm" value={form.frecuenciaYAsistencia} onChange={e => handleChange('frecuenciaYAsistencia', e.target.value)}>
+                <select required autoComplete="off" className="p-2.5 rounded-md border border-border bg-background text-sm" value={form.frecuenciaYAsistencia} onChange={e => handleChange('frecuenciaYAsistencia', e.target.value)}>
                   <option value="" disabled>Seleccioná una opción...</option>
                   {/* AQUÍ ESTÁ EL CAMBIO CLAVE A LAS NUEVAS CONSTANTES */}
                   <option value={FrecuenciaEncuentro.FUERON_SUFICIENTES}>La cantidad de encuentros fue la adecuada</option>
@@ -141,7 +141,7 @@ export default function FormularioFeedbackEstudiante() {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-foreground">¿Se respetaron días y horarios pactados? *</label>
-                <select required className="p-2.5 rounded-md border border-border bg-background text-sm" value={form.organizacion} onChange={e => handleChange('organizacion', e.target.value)}>
+                <select required autoComplete="off" className="p-2.5 rounded-md border border-border bg-background text-sm" value={form.organizacion} onChange={e => handleChange('organizacion', e.target.value)}>
                   <option value="" disabled>Seleccioná una opción...</option>
                   <option value={RespuestaCerrada.SI}>Sí, siempre</option>
                   <option value={RespuestaCerrada.A_VECES}>A veces</option>
@@ -158,10 +158,10 @@ export default function FormularioFeedbackEstudiante() {
                 <label className="text-sm font-medium text-foreground">¿Recomendarías este espacio de tutoría? *</label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                    <input type="radio" checked={form.recomiendaEspacio} onChange={() => handleChange('recomiendaEspacio', true)} className="accent-primary" /> Sí
+                    <input type="radio" autoComplete="off" checked={form.recomiendaEspacio} onChange={() => handleChange('recomiendaEspacio', true)} className="accent-primary" /> Sí
                   </label>
                   <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                    <input type="radio" checked={!form.recomiendaEspacio} onChange={() => handleChange('recomiendaEspacio', false)} className="accent-primary" /> No
+                    <input type="radio" autoComplete="off" checked={!form.recomiendaEspacio} onChange={() => handleChange('recomiendaEspacio', false)} className="accent-primary" /> No
                   </label>
                 </div>
               </div>
@@ -171,15 +171,15 @@ export default function FormularioFeedbackEstudiante() {
               <h2 className="text-base font-semibold text-primary">Comentarios (Opcional)</h2>
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-foreground">Aspectos positivos</label>
-                <textarea rows={2} maxLength={1000} placeholder="¿Qué fue lo mejor de las tutorías?" className="p-2.5 rounded-md border border-border bg-background text-sm resize-none" value={form.aspectosPositivos || ""} onChange={e => handleChange('aspectosPositivos', e.target.value)} />
+                <textarea rows={2} maxLength={1000} autoComplete="off" placeholder="¿Qué fue lo mejor de las tutorías?" className="p-2.5 rounded-md border border-border bg-background text-sm resize-none" value={form.aspectosPositivos || ""} onChange={e => handleChange('aspectosPositivos', e.target.value)} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-foreground">Oportunidades de mejora</label>
-                <textarea rows={2} maxLength={1000} placeholder="¿Qué cosas cambiarías?" className="p-2.5 rounded-md border border-border bg-background text-sm resize-none" value={form.oportunidadesMejora || ""} onChange={e => handleChange('oportunidadesMejora', e.target.value)} />
+                <textarea rows={2} maxLength={1000} autoComplete="off" placeholder="¿Qué cosas cambiarías?" className="p-2.5 rounded-md border border-border bg-background text-sm resize-none" value={form.oportunidadesMejora || ""} onChange={e => handleChange('oportunidadesMejora', e.target.value)} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-foreground">Comentarios adicionales</label>
-                <textarea rows={3} maxLength={1500} placeholder="Algún comentario extra..." className="p-2.5 rounded-md border border-border bg-background text-sm resize-none" value={form.comentariosAdicionales || ""} onChange={e => handleChange('comentariosAdicionales', e.target.value)} />
+                <textarea rows={3} maxLength={1500} autoComplete="off" placeholder="Algún comentario extra..." className="p-2.5 rounded-md border border-border bg-background text-sm resize-none" value={form.comentariosAdicionales || ""} onChange={e => handleChange('comentariosAdicionales', e.target.value)} />
               </div>
             </div>
 

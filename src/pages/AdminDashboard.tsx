@@ -132,6 +132,7 @@ export default function AdminDashboard() {
     () => [
       { key: "apellido", label: "Apellido" },
       { key: "nombre", label: "Nombre" },
+      { key: "mail", label: "Mail" },
       { key: "motivo", label: "Motivo" },
       { key: "detalle", label: "Detalle" },
       { key: "fechaBaja", label: "Fecha de baja" },
@@ -374,6 +375,7 @@ export default function AdminDashboard() {
   const bajasData = estudiantesBaja.map((e) => ({
     apellido: e.apellido,
     nombre: e.nombre,
+    mail: e.mail,
     motivo: e.baja?.motivo ?? "—",
     detalle:
       e.baja?.detalle === "" || e.baja?.detalle == null
@@ -502,6 +504,9 @@ export default function AdminDashboard() {
                           Nombre
                         </th>
                         <th className="px-4 py-3 text-left font-medium">
+                          Mail
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium">
                           Motivo
                         </th>
                         <th className="px-4 py-3 text-left font-medium">
@@ -523,6 +528,9 @@ export default function AdminDashboard() {
                           </td>
                           <td className="px-4 py-3 text-foreground">
                             {row.nombre}
+                          </td>
+                          <td className="px-4 py-3 text-foreground">
+                            {row.mail}
                           </td>
                           <td className="px-4 py-3 text-muted-foreground">
                             {row.motivo}

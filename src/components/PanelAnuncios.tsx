@@ -242,6 +242,7 @@ export default function AnunciosPanel({
               <Input
                 id="ev-title"
                 type="text"
+                autoComplete="off"
                 value={form.titulo}
                 onChange={(e) => setForm({ ...form, titulo: e.target.value })}
               />
@@ -250,6 +251,7 @@ export default function AnunciosPanel({
               <Label htmlFor="ev-desc">Descripción</Label>
               <Input
                 id="ev-desc"
+                autoComplete="off"
                 value={form.descripcion}
                 onChange={(e) =>
                   setForm({ ...form, descripcion: e.target.value })

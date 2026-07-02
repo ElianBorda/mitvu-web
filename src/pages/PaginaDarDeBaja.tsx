@@ -73,7 +73,7 @@ const PaginaDarDeBaja = () => {
           <p className="text-sm text-muted-foreground mb-8">
             Lamentamos que quieras dejar el taller. Contanos el motivo para poder mejorar.
           </p>
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
             <div className="space-y-2">
               <Label htmlFor="reason">Motivo *</Label>
               <Select value={reason} onValueChange={setReason}>
@@ -96,6 +96,7 @@ const PaginaDarDeBaja = () => {
               <Textarea
                 id="detail"
                 placeholder="Contanos un poco más..."
+                autoComplete="off"
                 value={detail}
                 onChange={e => setDetail(e.target.value)}
                 rows={5}

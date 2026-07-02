@@ -146,13 +146,14 @@ export default function AgregarTutor() {
               : "Completá los datos del nuevo tutor para darlo de alta en el sistema."}
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="apellido">Apellido *</Label>
                 <Input
                   id="apellido"
                   placeholder="Ej: González"
+                  autoComplete="off"
                   value={form.apellido}
                   onChange={(e) => handleChange("apellido", e.target.value)}
                 />
@@ -162,6 +163,7 @@ export default function AgregarTutor() {
                 <Input
                   id="nombre"
                   placeholder="Ej: Carlos"
+                  autoComplete="off"
                   value={form.nombre}
                   onChange={(e) => handleChange("nombre", e.target.value)}
                 />
@@ -173,6 +175,7 @@ export default function AgregarTutor() {
               <Input
                 id="mail"
                 placeholder="Ej: carlos.gonzalez@example.com"
+                autoComplete="off"
                 value={form.mail}
                 onChange={(e) => handleChange("mail", e.target.value)}
               />
@@ -183,6 +186,7 @@ export default function AgregarTutor() {
               <Input
                 id="dni"
                 placeholder="Ej: 30456789"
+                autoComplete="off"
                 value={form.dni}
                 onChange={(e) => handleChange("dni", e.target.value)}
               />

@@ -102,6 +102,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
   const columnasExportBajas = [
     { key: "apellido", label: "Apellido" },
     { key: "nombre", label: "Nombre" },
+    { key: "mail", label: "Mail" },
     { key: "motivo", label: "Motivo" },
     { key: "detalle", label: "Detalle" },
     { key: "fechaBaja", label: "Fecha de baja" },
@@ -110,6 +111,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
   const filasExportBajas = estudiantesBaja.map((e) => ({
     apellido: e.apellido,
     nombre: e.nombre,
+    mail: e.mail,
     motivo: e.baja?.motivo ?? "—",
     detalle:
       e.baja?.detalle === "" || e.baja?.detalle == null
@@ -466,6 +468,9 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                               Nombre
                             </th>
                             <th className="px-4 py-2.5 text-left font-medium">
+                              Mail
+                            </th>
+                            <th className="px-4 py-2.5 text-left font-medium">
                               Motivo
                             </th>
                             <th className="px-4 py-2.5 text-left font-medium">
@@ -487,6 +492,9 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                               </td>
                               <td className="px-4 py-2.5 text-foreground">
                                 {e.nombre}
+                              </td>
+                              <td className="px-4 py-2.5 text-foreground">
+                                {e.mail}
                               </td>
                               <td className="px-4 py-2.5 text-muted-foreground">
                                 {e.baja?.motivo ?? "—"}

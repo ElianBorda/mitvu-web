@@ -117,6 +117,7 @@ export default function Login() {
                   placeholder="Tu número de documento"
                   value={dni}
                   onChange={(e) => setDni(e.target.value)}
+                  autoComplete="off"
                   disabled={isLoading}
                 />
               </div>
@@ -128,6 +129,7 @@ export default function Login() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="off"
                   disabled={isLoading}
                 />
               </div>
@@ -145,6 +147,7 @@ export default function Login() {
                   placeholder="Mínimo 6 caracteres"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
+                  autoComplete="off"
                   disabled={isLoading}
                 />
               </div>

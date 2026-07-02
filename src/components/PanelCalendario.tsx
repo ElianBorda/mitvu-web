@@ -279,6 +279,7 @@ export default function PanelCalendario({
                 id="ev-date"
                 type="date"
                 value={form.fecha}
+                autoComplete="off"
                 onChange={(e) => setForm({ ...form, fecha: e.target.value })}
               />
             </div>
@@ -287,6 +288,7 @@ export default function PanelCalendario({
               <Input
                 id="ev-title"
                 value={form.titulo}
+                autoComplete="off"
                 onChange={(e) => setForm({ ...form, titulo: e.target.value })}
               />
             </div>
@@ -295,6 +297,7 @@ export default function PanelCalendario({
               <Input
                 id="ev-desc"
                 value={form.descripcion}
+                autoComplete="off"
                 onChange={(e) =>
                   setForm({ ...form, descripcion: e.target.value })
                 }

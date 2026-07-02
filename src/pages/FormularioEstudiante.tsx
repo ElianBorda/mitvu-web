@@ -23,6 +23,7 @@ export default function FormularioEstudiante() {
   
   const [form, setForm] = useState<EstudianteBody>({
     apellido: "",
+    dni: "",
     nombre: "",
     mail: "",
     carrera: "",
@@ -72,7 +73,7 @@ export default function FormularioEstudiante() {
           Ingresá tus datos personales para acceder a la plataforma.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="apellido">Apellido *</Label>
@@ -82,6 +83,7 @@ export default function FormularioEstudiante() {
                 value={form.apellido}
                 onChange={(e) => handleChange("apellido", e.target.value)}
                 disabled={loading}
+                autoComplete="off"
               />
             </div>
             <div className="space-y-1.5">
@@ -92,6 +94,7 @@ export default function FormularioEstudiante() {
                 value={form.nombre}
                 onChange={(e) => handleChange("nombre", e.target.value)}
                 disabled={loading}
+                autoComplete="off"
               />
             </div>
           </div>
@@ -106,6 +109,7 @@ export default function FormularioEstudiante() {
                 value={form.mail}
                 onChange={(e) => handleChange("mail", e.target.value)}
                 disabled={loading}
+                autoComplete="off"
               />
             </div>
             <div className="space-y-1.5">
@@ -116,6 +120,7 @@ export default function FormularioEstudiante() {
                 value={form.carrera}
                 onChange={(e) => handleChange("carrera", e.target.value)}
                 disabled={loading}
+                autoComplete="off"
               />
             </div>
           </div>
