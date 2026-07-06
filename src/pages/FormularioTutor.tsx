@@ -73,34 +73,34 @@ export default function FormularioTutor() {
           Completá el siguiente formulario con tus datos académicos y experiencia. Tu solicitud será evaluada por un administrador.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="space-y-1.5">
               <Label htmlFor="nombre">Nombre *</Label>
-              <Input id="nombre" placeholder="Ej: Carlos" value={form.nombre} onChange={(e) => handleChange("nombre", e.target.value)} disabled={loading} />
+              <Input id="nombre" placeholder="Ej: Carlos" value={form.nombre} onChange={(e) => handleChange("nombre", e.target.value)} disabled={loading} autoComplete="off" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="apellido">Apellido *</Label>
-              <Input id="apellido" placeholder="Ej: González" value={form.apellido} onChange={(e) => handleChange("apellido", e.target.value)} disabled={loading} />
+              <Input id="apellido" placeholder="Ej: González" value={form.apellido} onChange={(e) => handleChange("apellido", e.target.value)} disabled={loading} autoComplete="off" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="dni">DNI *</Label>
-              <Input id="dni" placeholder="Ej: 30456789" value={form.dni} onChange={(e) => handleChange("dni", e.target.value)} disabled={loading} />
+              <Input id="dni" placeholder="Ej: 30456789" value={form.dni} onChange={(e) => handleChange("dni", e.target.value)} disabled={loading} autoComplete="off" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="correo">Correo electrónico *</Label>
-              <Input id="correo" type="email" placeholder="Ej: carlos@example.com" value={form.correo} onChange={(e) => handleChange("correo", e.target.value)} disabled={loading} />
+              <Input id="correo" type="email" placeholder="Ej: carlos@example.com" value={form.correo} onChange={(e) => handleChange("correo", e.target.value)} disabled={loading} autoComplete="off" />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="carrera">Carrera que cursó o está cursando *</Label>
-              <Input id="carrera" placeholder="Ej: Lic. en Informática" value={form.carrera} onChange={(e) => handleChange("carrera", e.target.value)} disabled={loading} />
+              <Input id="carrera" placeholder="Ej: Lic. en Informática" value={form.carrera} onChange={(e) => handleChange("carrera", e.target.value)} disabled={loading} autoComplete="off" />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 bg-secondary/30 p-5 rounded-lg border border-border/50">
             <div className="flex flex-col gap-1.5">
               <Label>Estado Académico *</Label>
-              <select required className="p-2.5 rounded-md border border-border bg-background text-sm" value={form.estadoAcademico} onChange={e => handleChange('estadoAcademico', e.target.value)}>
+              <select required className="p-2.5 rounded-md border border-border bg-background text-sm" value={form.estadoAcademico} onChange={e => handleChange('estadoAcademico', e.target.value)} autoComplete="off">
                 <option value="" disabled>Seleccioná tu estado...</option>
                 <option value={EstadoAcademico.ESTUDIANTE_AVANZADO}>Estudiante Avanzado</option>
                 <option value={EstadoAcademico.EGRESADO}>Egresado</option>
@@ -109,7 +109,7 @@ export default function FormularioTutor() {
 
             <div className="flex flex-col gap-1.5">
               <Label>Estado Diplomatura TVU *</Label>
-              <select required className="p-2.5 rounded-md border border-border bg-background text-sm" value={form.estadoDiplomatura} onChange={e => handleChange('estadoDiplomatura', e.target.value)}>
+              <select required className="p-2.5 rounded-md border border-border bg-background text-sm" value={form.estadoDiplomatura} onChange={e => handleChange('estadoDiplomatura', e.target.value)} autoComplete="off">
                 <option value="" disabled>Seleccioná una opción...</option>
                 <option value={EstadoDiplomatura.REALIZADA}>Realizada (Completa)</option>
                 <option value={EstadoDiplomatura.CURSANDO}>Cursando actualmente</option>
@@ -119,7 +119,7 @@ export default function FormularioTutor() {
 
             <div className="flex flex-col gap-1.5">
               <Label>¿Tiene experiencia como egresado? *</Label>
-              <select required className="p-2.5 rounded-md border border-border bg-background text-sm" value={form.experienciaComoEgresado ? "SI" : "NO"} onChange={e => handleChange('experienciaComoEgresado', e.target.value === "SI")}>
+              <select required className="p-2.5 rounded-md border border-border bg-background text-sm" value={form.experienciaComoEgresado ? "SI" : "NO"} onChange={e => handleChange('experienciaComoEgresado', e.target.value === "SI")} autoComplete="off">
                 <option value="NO">No</option>
                 <option value="SI">Sí</option>
               </select>
@@ -127,7 +127,7 @@ export default function FormularioTutor() {
 
             <div className="flex flex-col gap-1.5">
               <Label>¿Fue tutor anteriormente? *</Label>
-              <select required className="p-2.5 rounded-md border border-border bg-background text-sm" value={form.fueTutorAnteriormente ? "SI" : "NO"} onChange={e => handleChange('fueTutorAnteriormente', e.target.value === "SI")}>
+              <select required className="p-2.5 rounded-md border border-border bg-background text-sm" value={form.fueTutorAnteriormente ? "SI" : "NO"} onChange={e => handleChange('fueTutorAnteriormente', e.target.value === "SI")} autoComplete="off">
                 <option value="NO">No</option>
                 <option value="SI">Sí</option>
               </select>
