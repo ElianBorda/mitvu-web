@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Role } from "@/data/types";
-import { announcements } from "@/data/mockData";
 import {
   Building,
   MapPin,
@@ -10,10 +9,9 @@ import {
   Clock,
   User,
   Mail,
-  Calendar1Icon,
+  ClipboardList,
 } from "lucide-react";
-import AnnouncementPanel from "./AnnouncementPanel";
-import MetricsPanel from "./MetricsPanel";
+import PanelAnuncios from "./PanelAnuncios";
 import { Comision } from "@/types/comisionType";
 import {
   obtenerEstudiantesDeComision,
@@ -23,6 +21,24 @@ import { obtenerTutorDeLaComision } from "@/service/apiTutor";
 import { Tutor } from "@/types/tutorType";
 import { isAxiosError } from "axios";
 import MetricasLargoComision from "./MetricasLargoComision";
+import PanelCalendario from "./PanelCalendario";
+import {
+  obtenerEventosDeUnaComision,
+  obtenerTodosLosEventos,
+} from "@/service/apiEvento";
+import { Evento } from "@/types/eventoType";
+import { toast } from "sonner";
+import PanelCalendarioRead from "./PanelCalendarioRead";
+import { useNavigate } from "react-router-dom";
+import { Anuncio } from "@/types/anuncioType";
+import {
+  obtenerAnunciosGlobales,
+  obtenerAnunciosDeComision,
+} from "@/service/apiAnuncio";
+import { useExportarTabla } from "@/hooks/useExportarTabla";
+import BotonExportar from "./BotonExportar";
+import { Administrador } from "@/types/adminstradorType";
+import { useLayoutContext } from "@/App";
 
 interface Props {
   comision: Comision;
@@ -34,27 +50,134 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
   const [activeTab, setActiveTab] = useState<"participants" | "metrics">(
     "participants",
   );
+  const navigate = useNavigate();
   const [estudiantes, setEstudiantes] = useState<any[]>([]);
+  const [eventos, setEventos] = useState<Evento[]>([]);
   const [estudiantesBaja, setEstudiantesBaja] = useState<any[]>([]);
   const [tutor, setTutor] = useState<Tutor>(null);
-  const commAnnouncements = announcements.filter(
-    (a) => a.commissionId === comision.id,
+  const { adminActualId } = useLayoutContext();
+  const esRolGestion = role === "tutor" || role === "admin";
+  const [modificoEventos, setModificoEventos] = useState(false);
+  const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
+  const triggerRefresh = () => setRefreshTrigger((prev) => prev + 1);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const filasExport = estudiantes.map((e) => {
+    const cantAsistenciasPresentes =
+      e.asistencias?.filter(
+        (a: any) =>
+          a.tipoDeAsistencia === "PRESENTE" ||
+          a.tipoDeAsistencia === "AUSENCIA_JUSTIFICADA",
+      ).length || 0;
+    const cantAsistencias = e.asistencias?.length || 0;
+    const pct =
+      cantAsistencias > 0
+        ? Math.round((cantAsistenciasPresentes / cantAsistencias) * 100)
+        : 0;
+
+    return {
+      apellido: e.apellido,
+      nombre: e.nombre,
+      dni: e.dni,
+      carrera: e.carrera,
+      asistencia: `${pct}%`,
+    };
+  });
+
+  const columnasExport = [
+    { key: "apellido", label: "Apellido" },
+    { key: "nombre", label: "Nombre" },
+    { key: "dni", label: "DNI" },
+    { key: "carrera", label: "Carrera" },
+    { key: "asistencia", label: "Asistencia" },
+  ];
+
+  const { exportarCSV, exportarExcel, exportarPDF } = useExportarTabla(
+    columnasExport,
+    filasExport,
+    "estudiantes",
+    comision.id,
   );
-  const showMetricsTab = role === "tutor" || role === "admin";
+
+  const columnasExportBajas = [
+    { key: "apellido", label: "Apellido" },
+    { key: "nombre", label: "Nombre" },
+    { key: "mail", label: "Mail" },
+    { key: "motivo", label: "Motivo" },
+    { key: "detalle", label: "Detalle" },
+    { key: "fechaBaja", label: "Fecha de baja" },
+  ];
+
+  const filasExportBajas = estudiantesBaja.map((e) => ({
+    apellido: e.apellido,
+    nombre: e.nombre,
+    mail: e.mail,
+    motivo: e.baja?.motivo ?? "—",
+    detalle:
+      e.baja?.detalle === "" || e.baja?.detalle == null
+        ? "No especificado"
+        : e.baja.detalle,
+    fechaBaja: e.baja?.fechaBaja
+      ? new Date(e.baja.fechaBaja).toLocaleDateString("es-AR")
+      : "—",
+  }));
+
+  const {
+    exportarCSV: exportarCSVBajas,
+    exportarExcel: exportarExcelBajas,
+    exportarPDF: exportarPDFBajas,
+  } = useExportarTabla(
+    columnasExportBajas,
+    filasExportBajas,
+    "estudiantes-baja",
+    comision.id,
+  );
 
   useEffect(() => {
+    const fetchAnunciosGlobales = async () => {
+      try {
+        const { data } = await obtenerAnunciosGlobales();
+        setAnuncios(data);
+      } catch (error) {
+        toast.error("Error al obtener anuncios globales");
+      }
+    };
+
+    const fetchAnunciosDeComision = async () => {
+      try {
+        const { data } = await obtenerAnunciosDeComision(comision.id);
+        setAnuncios((prev) => [...prev, ...data]);
+      } catch (error) {
+        toast.error("Error al obtener anuncios de la comisión");
+      }
+    };
+
+    const fetchEventos = async () => {
+      try {
+        const { data } = await obtenerEventosDeUnaComision(comision.id);
+        setEventos(data);
+      } catch (error) {
+        toast.error("Error al obtener eventos");
+      }
+    };
+
     const fetchTutor = async () => {
       try {
-        const response = await obtenerTutorDeLaComision(comision.id);
-        setTutor(response.data);
+        const { data } = await obtenerTutorDeLaComision(comision.id);
+        setTutor(data);
       } catch (error) {
         if (isAxiosError(error) && error.response?.status === 400) {
+          setTutor(null);
         } else {
-          console.error("Error fetching comision:", error);
+          toast.error("Error al obtener tutor");
         }
       }
     };
 
+    fetchEventos();
+    fetchTutor();
+    fetchAnunciosGlobales();
+    fetchAnunciosDeComision();
     const fetchEstudiantes = async () => {
       try {
         const response = await obtenerEstudiantesDeComision(comision.id);
@@ -75,12 +198,11 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
       }
     };
 
-    fetchTutor();
     fetchEstudiantes();
-    if (role === "tutor" || role === "admin") {
+    if (esRolGestion) {
       fetchEstudiantesBaja();
     }
-  }, [comision.id]);
+  }, [comision.id, modificoEventos, esRolGestion, refreshTrigger]);
 
   return (
     <div className="h-full">
@@ -108,7 +230,7 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
           >
             Participantes
           </button>
-          {showMetricsTab && (
+          {esRolGestion && (
             <button
               onClick={() => setActiveTab("metrics")}
               className={`px-3 sm:px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${activeTab === "metrics" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
@@ -171,11 +293,6 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                   label="Horario"
                   value={`${comision.horarioInicio} a ${comision.horarioFin}`}
                 />
-                <InfoRow
-                  icon={Calendar1Icon}
-                  label="Día hábil"
-                  value={comision.diaHabil}
-                />
                 <InfoRow icon={Clock} label="Turno" value={comision.turno} />
               </div>
               <div className="flex items-center text-sm text-muted-foreground gap-6 mt-4">
@@ -196,98 +313,137 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
               </div>
             </div>
 
+            {/* Commission actions — solo tutor/admin */}
+            {esRolGestion && (
+              <div className="flex items-center p-2 mb-6">
+                <h3 className="text-sm font-semibold text-foreground shrink-0">
+                  Acciones de la comisión:
+                </h3>
+                <button
+                  onClick={() =>
+                    navigate(`/comision/${comision.id}/asistencia`)
+                  }
+                  className="flex items-center ml-4 gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                >
+                  <ClipboardList size={16} />
+                  Tomar asistencia
+                </button>
+              </div>
+            )}
+
             {/* Participants table */}
-            <div className="bg-card rounded-lg shadow-card border border-border overflow-x-auto">
-              <table className="w-full text-sm min-w-[600px]">
-                <thead>
-                  <tr className="bg-primary text-primary-foreground">
-                    <th className="px-4 py-2.5 text-left font-medium">Nº</th>
-                    <th className="px-4 py-2.5 text-left font-medium">
-                      Apellido
-                    </th>
-                    <th className="px-4 py-2.5 text-left font-medium">
-                      Nombre
-                    </th>
-                    {role === "tutor" || role === "admin" ? (
-                      <th className="px-4 py-2.5 text-left font-medium">DNI</th>
-                    ) : null}
-                    <th className="px-4 py-2.5 text-left font-medium">
-                      Carrera
-                    </th>
-                    {role === "tutor" || role === "admin" ? (
+            <div>
+              <div className="bg-card rounded-lg shadow-card border border-border overflow-x-auto">
+                <table className="w-full text-sm min-w-[600px]">
+                  <thead>
+                    <tr className="bg-primary text-primary-foreground">
+                      <th className="px-4 py-2.5 text-left font-medium">Nº</th>
                       <th className="px-4 py-2.5 text-left font-medium">
-                        Asistencia
+                        Apellido
                       </th>
-                    ) : null}
-                  </tr>
-                </thead>
-                <tbody>
-                  {estudiantes.length === 0 ? (
-                    <tr className="bg-card">
-                      <td
-                        colSpan={role === "tutor" || role === "admin" ? 5 : 4}
-                        className="px-4 py-2.5 text-center text-muted-foreground"
-                      >
-                        No hay estudiantes en esta comisión.
-                      </td>
+                      <th className="px-4 py-2.5 text-left font-medium">
+                        Nombre
+                      </th>
+                      {esRolGestion ? (
+                        <th className="px-4 py-2.5 text-left font-medium">
+                          DNI
+                        </th>
+                      ) : null}
+                      <th className="px-4 py-2.5 text-left font-medium">
+                        Carrera
+                      </th>
+                      {esRolGestion ? (
+                        <th className="px-4 py-2.5 text-left font-medium">
+                          Asistencia
+                        </th>
+                      ) : null}
                     </tr>
-                  ) : (
-                    estudiantes.map((e, i) => {
-                      const presentCount = 0; // s.attendance.filter(a => a === "present").length;
-                      const totalCount = 0; // s.attendance.filter(a => a !== "none").length;
-                      const pct =
-                        totalCount > 0
-                          ? Math.round((presentCount / totalCount) * 100)
-                          : 0;
-                      return (
-                        <tr
-                          key={e.id}
-                          className={
-                            i % 2 === 0 ? "bg-card" : "bg-[hsl(350,50%,98%)]"
-                          }
+                  </thead>
+                  <tbody>
+                    {estudiantes.length === 0 ? (
+                      <tr className="bg-card">
+                        <td
+                          colSpan={esRolGestion ? 5 : 4}
+                          className="px-4 py-2.5 text-center text-muted-foreground"
                         >
-                          <td className="px-4 py-2.5 text-muted-foreground">
-                            {i + 1}
-                          </td>
-                          <td className="px-4 py-2.5 font-medium text-foreground">
-                            {e.apellido}
-                          </td>
-                          <td className="px-4 py-2.5 text-foreground">
-                            {e.nombre}
-                          </td>
-                          {role === "tutor" || role === "admin" ? (
+                          No hay estudiantes en esta comisión.
+                        </td>
+                      </tr>
+                    ) : (
+                      estudiantes.map((e, i) => {
+                        const cantAsistenciasPresentes =
+                          e.asistencias?.filter(
+                            (a: any) =>
+                              a.tipoDeAsistencia === "PRESENTE" ||
+                              a.tipoDeAsistencia === "AUSENCIA_JUSTIFICADA",
+                          ).length || 0;
+                        const cantAsistencias = e.asistencias?.length || 0;
+                        const pct =
+                          cantAsistencias > 0
+                            ? Math.round(
+                                (cantAsistenciasPresentes / cantAsistencias) *
+                                  100,
+                              )
+                            : 0;
+                        return (
+                          <tr
+                            key={e.id}
+                            className={
+                              i % 2 === 0 ? "bg-card" : "bg-[hsl(350,50%,98%)]"
+                            }
+                          >
                             <td className="px-4 py-2.5 text-muted-foreground">
-                              {e.dni}
+                              {i + 1}
                             </td>
-                          ) : null}
-                          <td className="px-4 py-2.5 text-muted-foreground">
-                            {e.carrera}
-                          </td>
-                          {role === "tutor" || role === "admin" ? (
-                            <td className="px-4 py-2.5">
-                              <span
-                                className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                                  pct >= 75
-                                    ? "bg-green-100 text-green-700"
-                                    : pct >= 50
-                                      ? "bg-yellow-100 text-yellow-700"
-                                      : "bg-red-100 text-red-700"
-                                }`}
-                              >
-                                {pct}%
-                              </span>
+                            <td className="px-4 py-2.5 font-medium text-foreground">
+                              {e.apellido}
                             </td>
-                          ) : null}
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+                            <td className="px-4 py-2.5 text-foreground">
+                              {e.nombre}
+                            </td>
+                            {esRolGestion ? (
+                              <td className="px-4 py-2.5 text-muted-foreground">
+                                {e.dni}
+                              </td>
+                            ) : null}
+                            <td className="px-4 py-2.5 text-muted-foreground">
+                              {e.carrera}
+                            </td>
+                            {esRolGestion ? (
+                              <td className="px-4 py-2.5">
+                                <span
+                                  className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                                    pct >= 75
+                                      ? "bg-green-100 text-green-700"
+                                      : pct >= 50
+                                        ? "bg-yellow-100 text-yellow-700"
+                                        : "bg-red-100 text-red-700"
+                                  }`}
+                                >
+                                  {pct}%
+                                </span>
+                              </td>
+                            ) : null}
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {esRolGestion && estudiantes.length > 0 ? (
+                <div className="mt-4">
+                  <BotonExportar
+                    onCSV={exportarCSV}
+                    onExcel={exportarExcel}
+                    onPDF={exportarPDF}
+                  />
+                </div>
+              ) : null}
             </div>
 
             {/* Tabla de estudiantes dados de baja — solo tutor/admin */}
-            {(role === "tutor" || role === "admin") && (
+            {esRolGestion && (
               <div className="mt-6">
                 <h3 className="text-sm font-semibold text-foreground mb-3">
                   Estudiantes dados de baja
@@ -300,58 +456,76 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
                     No hay estudiantes dados de baja en esta comisión.
                   </div>
                 ) : (
-                  <div className="bg-card rounded-lg shadow-card border border-border overflow-x-auto">
-                    <table className="w-full text-sm min-w-[500px]">
-                      <thead>
-                        <tr className="bg-[#2d2d2d] text-white">
-                          <th className="px-4 py-2.5 text-left font-medium">
-                            Apellido
-                          </th>
-                          <th className="px-4 py-2.5 text-left font-medium">
-                            Nombre
-                          </th>
-                          <th className="px-4 py-2.5 text-left font-medium">
-                            Motivo
-                          </th>
-                          <th className="px-4 py-2.5 text-left font-medium">
-                            Detalle
-                          </th>
-                          <th className="px-4 py-2.5 text-left font-medium">
-                            Fecha de baja
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {estudiantesBaja.map((e, i) => (
-                          <tr
-                            key={e.id}
-                            className={`border-t border-border ${i % 2 === 0 ? "bg-card" : "bg-[#fafafa]"}`}
-                          >
-                            <td className="px-4 py-2.5 font-medium text-foreground">
-                              {e.apellido}
-                            </td>
-                            <td className="px-4 py-2.5 text-foreground">
-                              {e.nombre}
-                            </td>
-                            <td className="px-4 py-2.5 text-muted-foreground">
-                              {e.baja?.motivo ?? "—"}
-                            </td>
-                            <td className="px-4 py-2.5 text-muted-foreground max-w-xs truncate">
-                              {e.baja?.detalle === "" || e.baja?.detalle == null
-                                ? "No especificado"
-                                : e.baja.detalle}
-                            </td>
-                            <td className="px-4 py-2.5 text-muted-foreground">
-                              {e.baja?.fechaBaja
-                                ? new Date(e.baja.fechaBaja).toLocaleDateString(
-                                    "es-AR",
-                                  )
-                                : "—"}
-                            </td>
+                  <div>
+                    <div className="bg-card rounded-lg shadow-card border border-border overflow-x-auto">
+                      <table className="w-full text-sm min-w-[500px]">
+                        <thead>
+                          <tr className="bg-[#2d2d2d] text-white">
+                            <th className="px-4 py-2.5 text-left font-medium">
+                              Apellido
+                            </th>
+                            <th className="px-4 py-2.5 text-left font-medium">
+                              Nombre
+                            </th>
+                            <th className="px-4 py-2.5 text-left font-medium">
+                              Mail
+                            </th>
+                            <th className="px-4 py-2.5 text-left font-medium">
+                              Motivo
+                            </th>
+                            <th className="px-4 py-2.5 text-left font-medium">
+                              Detalle
+                            </th>
+                            <th className="px-4 py-2.5 text-left font-medium">
+                              Fecha de baja
+                            </th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {estudiantesBaja.map((e, i) => (
+                            <tr
+                              key={e.id}
+                              className={`border-t border-border ${i % 2 === 0 ? "bg-card" : "bg-[#fafafa]"}`}
+                            >
+                              <td className="px-4 py-2.5 font-medium text-foreground">
+                                {e.apellido}
+                              </td>
+                              <td className="px-4 py-2.5 text-foreground">
+                                {e.nombre}
+                              </td>
+                              <td className="px-4 py-2.5 text-foreground">
+                                {e.mail}
+                              </td>
+                              <td className="px-4 py-2.5 text-muted-foreground">
+                                {e.baja?.motivo ?? "—"}
+                              </td>
+                              <td className="px-4 py-2.5 text-muted-foreground max-w-xs truncate">
+                                {e.baja?.detalle === "" ||
+                                e.baja?.detalle == null
+                                  ? "No especificado"
+                                  : e.baja.detalle}
+                              </td>
+                              <td className="px-4 py-2.5 text-muted-foreground">
+                                {e.baja?.fechaBaja
+                                  ? new Date(
+                                      e.baja.fechaBaja,
+                                    ).toLocaleDateString("es-AR")
+                                  : "—"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {estudiantesBaja.length > 0 && (
+                      <div className="mt-4">
+                        <BotonExportar
+                          onCSV={exportarCSVBajas}
+                          onExcel={exportarExcelBajas}
+                          onPDF={exportarPDFBajas}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -359,18 +533,37 @@ export default function ComisionDetalle({ comision, role, onBack }: Props) {
           </div>
 
           {/* Right: Announcements */}
-          <div className="w-full lg:w-80 shrink-0">
-            <AnnouncementPanel
-              announcements={commAnnouncements}
-              canCreate={role === "tutor" || role === "admin"}
+          <div className="w-full lg:w-80 shrink-0 gap-4 flex flex-col">
+            {!esRolGestion ? (
+              <PanelCalendarioRead eventos={eventos} idComision={comision.id} />
+            ) : (
+              <PanelCalendario
+                eventos={eventos}
+                onEventAdded={() => setModificoEventos(!modificoEventos)}
+                idComision={comision.id}
+              />
+            )}
+            <PanelAnuncios
+              anuncios={anuncios}
+              puedePublicar={esRolGestion}
+              comisionId={comision.id}
+              usuarioId={
+                tutor && role === "tutor"
+                  ? tutor.id
+                  : role === "admin"
+                    ? adminActualId
+                    : null
+              }
+              role={role}
+              actualizarAnuncios={triggerRefresh}
             />
           </div>
         </div>
       ) : (
-        <MetricasLargoComision 
-          comisionId={comision.id} 
+        <MetricasLargoComision
+          comisionId={comision.id}
           numeroComision={comision.numero}
-          />
+        />
       )}
     </div>
   );

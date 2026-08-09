@@ -32,7 +32,6 @@ export default function AgregarComision() {
   const [horarioInicioMS, setHorarioInicioMS] = useState("");
   const [horarioFinHS, setHorarioFinHS] = useState("");
   const [horarioFinMS, setHorarioFinMS] = useState("");
-  const [diaHabil, setDiaHabil] = useState("");
 
   useEffect(() => {
     if (!isEdit) return;
@@ -46,7 +45,6 @@ export default function AgregarComision() {
         setHorarioInicioMS(data.horarioInicio.split(":")[1]);
         setHorarioFinHS(data.horarioFin.split(":")[0]);
         setHorarioFinMS(data.horarioFin.split(":")[1]);
-        setDiaHabil(data.diaHabil ?? "");
       })
       .catch(() => {
         toast.error("La comisión no existe.");
@@ -61,8 +59,7 @@ export default function AgregarComision() {
     !horarioInicioHS ||
     !horarioInicioMS ||
     !horarioFinHS ||
-    !horarioFinMS ||
-    !diaHabil;
+    !horarioFinMS;
 
   const esHoraValida = (hora: string) => {
     const soloNumerosRegex = /^\d+$/;
@@ -103,7 +100,6 @@ export default function AgregarComision() {
       aula,
       horarioInicio,
       horarioFin,
-      diaHabil,
     };
 
     if (isEdit) {
@@ -147,7 +143,7 @@ export default function AgregarComision() {
               ? "Actualizá los datos de la comisión seleccionada."
               : "Completá los datos de la nueva comisión para darla de alta en el sistema."}
           </p>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="localidad">Localidad *</Label>
@@ -156,6 +152,7 @@ export default function AgregarComision() {
                   placeholder="Localidad"
                   value={localidad}
                   onChange={(e) => setLocalidad(e.target.value)}
+                  autoComplete="off"
                 />
               </div>
               <div className="space-y-1.5">
@@ -165,26 +162,11 @@ export default function AgregarComision() {
                   placeholder="Departamento"
                   value={departamento}
                   onChange={(e) => setDepartamento(e.target.value)}
+                  autoComplete="off"
                 />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label>Día hábil *</Label>
-                <Select value={diaHabil} onValueChange={setDiaHabil}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar día hábil" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="LUNES">LUNES</SelectItem>
-                    <SelectItem value="MARTES">MARTES</SelectItem>
-                    <SelectItem value="MIERCOLES">MIERCOLES</SelectItem>
-                    <SelectItem value="JUEVES">JUEVES</SelectItem>
-                    <SelectItem value="VIERNES">VIERNES</SelectItem>
-                    <SelectItem value="SABADO">SABADO</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="space-y-1.5">
                 <Label htmlFor="aula">Aula</Label>
                 <Input
@@ -192,6 +174,7 @@ export default function AgregarComision() {
                   placeholder="Aula"
                   value={aula}
                   onChange={(e) => setAula(e.target.value)}
+                  autoComplete="off"
                 />
               </div>
             </div>
@@ -202,6 +185,7 @@ export default function AgregarComision() {
                 placeholder="Carrera"
                 value={carrera}
                 onChange={(e) => setCarrera(e.target.value)}
+                autoComplete="off"
               />
             </div>
             <div className="space-y-1.5">
@@ -215,6 +199,7 @@ export default function AgregarComision() {
                     setHorarioInicioHS(validarHora(e.target.value))
                   }
                   maxLength={2}
+                  autoComplete="off"
                 />
                 <span className="text-muted-foreground font-medium">:</span>
                 <Input
@@ -225,6 +210,7 @@ export default function AgregarComision() {
                     setHorarioInicioMS(validarMinutos(e.target.value))
                   }
                   maxLength={2}
+                  autoComplete="off"
                 />
               </div>
             </div>
@@ -237,6 +223,7 @@ export default function AgregarComision() {
                   value={horarioFinHS}
                   onChange={(e) => setHorarioFinHS(validarHora(e.target.value))}
                   maxLength={2}
+                  autoComplete="off"
                 />
                 <span className="text-muted-foreground font-medium">:</span>
                 <Input
@@ -247,6 +234,7 @@ export default function AgregarComision() {
                     setHorarioFinMS(validarMinutos(e.target.value))
                   }
                   maxLength={2}
+                  autoComplete="off"
                 />
               </div>
             </div>

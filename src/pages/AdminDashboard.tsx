@@ -1,9 +1,7 @@
-import { useState, useEffect } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  attendanceByCommission,
-  getCommissionAvgAttendance,
-} from "@/data/mockData";
+import { getCommissionAvgAttendance } from "@/data/mockData";
 import DataTable from "@/components/DataTable";
 import {
   BarChart,
@@ -15,9 +13,6 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
 import {
   Popover,
@@ -32,8 +27,19 @@ import {
 } from "@/service/apiEstudiante";
 import { obtenerTodosLosTutores } from "@/service/apiTutor";
 import { obtenerTodasLasComisiones } from "@/service/apiComision";
-import { C } from "vitest/dist/chunks/reporters.d.BFLkQcL6.js";
+import { obtenerTodosLosEventos } from "@/service/apiEvento";
+import { obtenerMetricasDeAsistenciaGlobal } from "@/service/apiMetrica";
 import MetricasGrafico from "@/components/MetricasGrafico";
+import PanelCalendario from "@/components/PanelCalendario";
+import { toast } from "sonner";
+import { Evento } from "@/types/eventoType";
+import { useLayoutContext } from "@/App";
+import PanelAnuncios from "@/components/PanelAnuncios";
+import { Anuncio } from "@/types/anuncioType";
+import { obtenerAnunciosGlobales } from "@/service/apiAnuncio";
+import { useExportarTabla } from "@/hooks/useExportarTabla";
+import BotonExportar from "@/components/BotonExportar";
+import CargaMasivaEstudiantes from "@/components/CargaMasivaEstudiantes";
 
 type AdminView = "comisiones" | "tutores" | "estudiantes";
 
@@ -42,68 +48,206 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const { adminActualId } = useLayoutContext();
   const [estudiantesActivos, setEstudiantesActivos] = useState<any[]>([]);
   const [estudiantesBaja, setEstudiantesBaja] = useState<any[]>([]);
   const [tutores, setTutores] = useState<any[]>([]);
+  const [eventos, setEventos] = useState<Evento[]>([]);
   const [comisiones, setComisiones] = useState<Comision[]>([]);
+  const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
+  const [lineData, setLineData] = useState<
+    { name: string; asistencia: number; tituloOriginal: string }[]
+  >([]);
+  const [cargaMasivaOpen, setCargaMasivaOpen] = useState(false);
+
+  const columnasExport = useMemo(() => {
+    if (view == "tutores")
+      return [
+        { key: "apellido", label: "Apellido" },
+        { key: "nombre", label: "Nombre" },
+        { key: "mail", label: "Mail" },
+        { key: "comisiones", label: "Comisiones" },
+      ];
+    else if (view == "comisiones")
+      return [
+        { key: "localidad", label: "Localidad" },
+        { key: "departamento", label: "Departamento" },
+        { key: "carrera", label: "Carrera" },
+        { key: "numero", label: "Numero" },
+        { key: "horario", label: "Horario" },
+        { key: "tutor", label: "Tutor/a" },
+        { key: "aula", label: "Aula" },
+      ];
+    return [
+      { key: "apellido", label: "Apellido" },
+      { key: "nombre", label: "Nombre" },
+      { key: "mail", label: "Mail" },
+      { key: "dni", label: "DNI" },
+      { key: "carrera", label: "Carrera" },
+      { key: "comision", label: "Comisión" },
+    ];
+  }, [view]);
+
+  const filasExport = useMemo(() => {
+    if (view == "tutores")
+      return tutores.map((t) => ({
+        apellido: t.apellido,
+        nombre: t.nombre,
+        mail: t.mail,
+        comisiones: t.comisiones?.length || 0,
+      }));
+    else if (view == "comisiones")
+      return comisiones.map((c) => {
+        const t = tutores.find((tt) => tt.id === (c.tutor?.id || ""));
+        return {
+          localidad: c.localidad,
+          departamento: c.departamento,
+          carrera: c.carrera ? c.carrera : "Sin carrera definida",
+          numero: c.numero,
+          horario: c.horarioInicio + " - " + c.horarioFin,
+          tutor: t ? `${t.nombre} ${t.apellido}` : "Sin tutor asignado",
+          aula: c.aula || "Sin aula asignada",
+        };
+      });
+    return estudiantesActivos.map((e) => ({
+      apellido: e.apellido,
+      nombre: e.nombre,
+      mail: e.mail,
+      dni: e.dni,
+      carrera: e.carrera ? e.carrera : "Sin carrera definida",
+      comision: e.comision
+        ? `Comisión ${e.comision.numero} - ${e.comision.departamento} - ${e.comision.localidad}`
+        : "Sin comisión asignada",
+    }));
+  }, [view, estudiantesActivos]);
+
+  const { exportarCSV, exportarExcel, exportarPDF } = useExportarTabla(
+    columnasExport,
+    filasExport,
+    view,
+    null,
+  );
+
+  const columnasExportBajas = useMemo(
+    () => [
+      { key: "apellido", label: "Apellido" },
+      { key: "nombre", label: "Nombre" },
+      { key: "mail", label: "Mail" },
+      { key: "motivo", label: "Motivo" },
+      { key: "detalle", label: "Detalle" },
+      { key: "fechaBaja", label: "Fecha de baja" },
+    ],
+    [],
+  );
+
+  const filasExportBajas = useMemo(
+    () =>
+      estudiantesBaja.map((e) => ({
+        apellido: e.apellido,
+        nombre: e.nombre,
+        motivo: e.baja?.motivo ?? "—",
+        detalle:
+          e.baja?.detalle === "" || e.baja?.detalle == null
+            ? "No especificado"
+            : e.baja.detalle,
+        fechaBaja: e.baja?.fechaBaja
+          ? new Date(e.baja.fechaBaja).toLocaleDateString("es-AR")
+          : "—",
+      })),
+    [estudiantesBaja],
+  );
+
+  const {
+    exportarCSV: exportarCSVBajas,
+    exportarExcel: exportarExcelBajas,
+    exportarPDF: exportarPDFBajas,
+  } = useExportarTabla(
+    columnasExportBajas,
+    filasExportBajas,
+    "estudiantes-baja",
+    null,
+  );
+
   const comisionIdPorIndice = comisiones?.map((c) => c.id);
-  const [clickDelete, setClickDelete] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const rowIds = (() => {
+    if (view === "comisiones") return comisiones.map((c) => c.id);
+    if (view === "tutores") return tutores.map((t) => t.id);
+    if (view === "estudiantes") return estudiantesActivos.map((e) => e.id);
+    return [];
+  })();
+  const { refreshPeople } = useLayoutContext();
 
   const triggerRefresh = () => setRefreshTrigger((prev) => prev + 1);
+
+  const { registerSidebarHandler, unregisterSidebarHandler, setActiveItem } =
+    useLayoutContext();
+
+  useEffect(() => {
+    registerSidebarHandler("comisiones", () => setView("comisiones"));
+    registerSidebarHandler("estudiantes", () => setView("estudiantes"));
+    registerSidebarHandler("tutores", () => setView("tutores"));
+
+    return () => {
+      unregisterSidebarHandler("comisiones");
+      unregisterSidebarHandler("estudiantes");
+      unregisterSidebarHandler("tutores");
+    };
+  }, []);
 
   useEffect(() => {
     const viewParam = searchParams.get("view");
     if (viewParam === "estudiantes") {
       setView("estudiantes");
       setSearchParams({}, { replace: true });
-    } else if (viewParam === "commissions") {
+    } else if (viewParam === "comisiones") {
       setView("comisiones");
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, setSearchParams]);
 
-  const fetchEstudiantes = async () => {
-    try {
-      const responseActivos = await obtenerTodosLosEstudiantesActivos();
-      const responseBaja = await obtenerTodosLosEstudiantesDeBaja();
-      setEstudiantesActivos(responseActivos.data);
-      setEstudiantesBaja(responseBaja.data);
-    } catch (error) {
-      console.error("Error al obtener estudiantes:", error);
-    }
-  };
-
-  const fetchTutores = async () => {
-    try {
-      const response = await obtenerTodosLosTutores();
-      setTutores(response.data);
-    } catch (error) {
-      console.error("Error al obtener tutores:", error);
-    }
-  };
-
-  const fetchComisiones = async () => {
-    try {
-      const response = await obtenerTodasLasComisiones();
-      setComisiones(response.data);
-    } catch (error) {
-      console.error("Error al obtener comisiones:", error);
-    }
-  };
-
   useEffect(() => {
-    fetchComisiones();
-    fetchEstudiantes();
-    fetchTutores();
-  }, [clickDelete, refreshTrigger]);
+    obtenerTodosLosEstudiantesActivos()
+      .then(({ data }) => setEstudiantesActivos(data))
+      .catch(() => toast.error("Error al obtener estudiantes activos"));
+
+    obtenerTodosLosEstudiantesDeBaja()
+      .then(({ data }) => setEstudiantesBaja(data))
+      .catch(() => toast.error("Error al obtener estudiantes de baja"));
+
+    obtenerTodosLosTutores()
+      .then(({ data }) => setTutores(data))
+      .catch(() => toast.error("Error al obtener tutores"));
+
+    obtenerTodasLasComisiones()
+      .then(({ data }) => setComisiones(data))
+      .catch(() => toast.error("Error al obtener comisiones"));
+
+    obtenerTodosLosEventos()
+      .then(({ data }) => setEventos(data))
+      .catch(() => toast.error("Error al obtener eventos"));
+
+    obtenerMetricasDeAsistenciaGlobal()
+      .then(({ data }) => {
+        const datosFormateados = data.map((item: any, i: number) => ({
+          name: `enc. ${i + 1}`,
+          asistencia: item.porcentajeAsistencia,
+          tituloOriginal: item.evento.titulo,
+        }));
+        setLineData(datosFormateados);
+      })
+      .catch(() =>
+        toast.error("Error al obtener métricas de evolución global"),
+      );
+
+    obtenerAnunciosGlobales()
+      .then(({ data }) => setAnuncios(data))
+      .catch(() => toast.error("Error al obtener anuncios globales"));
+  }, [refreshTrigger]);
 
   const asignarComision = async (estudianteId: number, comisionId: string) => {
     try {
-      const response = await asignarEstudianteAComision(
-        estudianteId,
-        comisionId,
-      );
+      await asignarEstudianteAComision(estudianteId, comisionId);
       setEstudiantesActivos((prev) =>
         prev.map((e) =>
           e.id === estudianteId ? { ...e, comision_id: comisionId } : e,
@@ -116,41 +260,32 @@ export default function AdminDashboard() {
   };
 
   const totalEstudiantes = estudiantesActivos.length;
-  const avgGlobal = Math.round(
-    comisiones.reduce((s, c) => s + getCommissionAvgAttendance(c.id), 0) /
-      comisiones.length,
-  );
+  const avgGlobal =
+    totalEstudiantes > 0
+      ? Math.round(
+          (estudiantesActivos.reduce((total, estudiante) => {
+            const asistenciasPresentes = (estudiante.asistencias || []).filter(
+              (a: any) =>
+                a.tipoDeAsistencia === "PRESENTE" ||
+                a.tipoDeAsistencia === "AUSENCIA_JUSTIFICADA",
+            ).length;
+            const totalAsistencias = (estudiante.asistencias || []).length;
+            return (
+              total +
+              (totalAsistencias > 0
+                ? asistenciasPresentes / totalAsistencias
+                : 0)
+            );
+          }, 0) /
+            totalEstudiantes) *
+            100,
+        )
+      : 0;
 
   const barData = comisiones.map((c) => ({
     name: "comision",
     asistencia: "No definido",
   }));
-
-  const lineData = Array.from({ length: 6 }, (_, i) => ({
-    name: `Enc. ${i + 1}`,
-    asistencia: Math.round(
-      comisiones.reduce(
-        (s, c) => s + (attendanceByCommission[c.id]?.[i]?.percentage || 0),
-        0,
-      ) / comisiones.length,
-    ),
-  }));
-
-  const localityData = Object.entries(
-    estudiantesActivos.reduce<Record<string, number>>((acc, s) => {
-      const comm = comisiones.find((c) => c.id === s.comisionId);
-      const loc = comm?.localidad || "Otro";
-      acc[loc] = (acc[loc] || 0) + 1;
-      return acc;
-    }, {}),
-  ).map(([name, value]) => ({ name, value }));
-
-  const PIE_COLORS = [
-    "hsl(350,82%,27%)",
-    "hsl(350,82%,45%)",
-    "hsl(350,82%,60%)",
-    "hsl(0,0%,80%)",
-  ];
 
   const comisionData = comisiones.map((c) => {
     const t = tutores.find((tt) => tt.id === (c.tutor?.id || ""));
@@ -159,11 +294,9 @@ export default function AdminDashboard() {
       departamento: c.departamento,
       carrera: c.carrera ? c.carrera : "No definida",
       numero: c.numero,
-      diaHabil: c.diaHabil,
       horario: `${c.horarioInicio} - ${c.horarioFin}`,
       tutor: t ? `${t.apellido}, ${t.nombre}` : "No definido",
       aula: c.aula ? c.aula : "No definida",
-      // asistencia: `${getCommissionAvgAttendance(c.id)}%`,
     };
   });
 
@@ -171,15 +304,11 @@ export default function AdminDashboard() {
     apellido: t.apellido,
     nombre: t.nombre,
     mail: t.mail,
-    // horario: t.preferredSchedule,
-    // localidad: t.locality,
     comisiones: t.comisiones.length,
   }));
 
   const estudianteData = estudiantesActivos.map((e) => {
-    // const pres = s.attendance.filter(a => a === "present").length;
-    // const total = s.attendance.filter(a => a !== "none").length;
-    var com: Comision;
+    var com: Comision | undefined;
     if (e.comision?.id) {
       com = comisiones.find((c) => c.id === e.comision.id);
     }
@@ -246,8 +375,12 @@ export default function AdminDashboard() {
   const bajasData = estudiantesBaja.map((e) => ({
     apellido: e.apellido,
     nombre: e.nombre,
+    mail: e.mail,
     motivo: e.baja?.motivo ?? "—",
-    detalle: e.baja?.detalle === "" || e.baja?.detalle == null ? "No especificado" : e.baja.detalle,
+    detalle:
+      e.baja?.detalle === "" || e.baja?.detalle == null
+        ? "No especificado"
+        : e.baja.detalle,
     fechaBaja: e.baja?.fechaBaja
       ? new Date(e.baja.fechaBaja).toLocaleDateString("es-AR")
       : "—",
@@ -267,7 +400,6 @@ export default function AdminDashboard() {
         { key: "departamento", label: "Departamento" },
         { key: "carrera", label: "Carrera" },
         { key: "numero", label: "Numero" },
-        { key: "diaHabil", label: "Día hábil" },
         { key: "horario", label: "Horario" },
         { key: "tutor", label: "Tutor/a" },
         { key: "aula", label: "Aula" },
@@ -300,68 +432,53 @@ export default function AdminDashboard() {
   };
 
   const config = tableConfigs[view];
-  const tabs: { id: AdminView; label: string }[] = [
-    { id: "comisiones", label: "Comisiones" },
-    { id: "tutores", label: "Tutores" },
-    { id: "estudiantes", label: "Estudiantes" },
-  ];
 
   return (
     <div className="flex flex-col xl:flex-row gap-6">
       {/* Left: Table */}
       <div className="flex-1 min-w-0">
-        {/* Tab pills */}
-        <div className="flex gap-1 mb-4 bg-secondary rounded-lg p-1 w-fit">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setView(tab.id)}
-              className={`px-3 sm:px-4 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${
-                view === tab.id
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
         <DataTable
           columns={config.columns}
           data={config.data}
           view={view}
           onAdd={() => {
-            if (view === "estudiantes") {
-              navigate("/admin/agregar-estudiante");
-            }
-            if (view === "tutores") {
-              navigate("/admin/agregar-tutor");
-            }
-            if (view === "comisiones") {
-              navigate("/admin/agregar-comision");
-            }
+            if (view === "estudiantes") navigate("/admin/agregar-estudiante");
+            if (view === "tutores") navigate("/admin/agregar-tutor");
+            if (view === "comisiones") navigate("/admin/agregar-comision");
           }}
           addLabel={config.addLabel}
           onEdit={(row, index) => {
             const id = comisionIdPorIndice[index];
             if (view === "comisiones" && id)
               navigate(`/admin/editar-comision/${id}`);
+            if (view === "tutores") {
+              const tutorId = tutores[index].id;
+              navigate(`/admin/editar-tutor/${tutorId}`);
+            }
           }}
           onRowClick={(row, index) => {
             if (view === "comisiones") {
               const id = comisionIdPorIndice[index];
-              navigate(`/admin/comision/${id}`);
+              navigate(`/comision/${id}`);
             }
           }}
-          rowIds={comisionIdPorIndice}
+          rowIds={rowIds}
           onDelete={(row, index) => {
             const dataCon = [...config.data];
             dataCon.splice(index, 1);
             config.data = dataCon;
-            setClickDelete(!clickDelete);
+            triggerRefresh();
+            refreshPeople();
           }}
+          onBulkAdd={view === "estudiantes" ? () => setCargaMasivaOpen(true) : undefined}
         />
-        {/* Tabla de estudiantes dados de baja */}
+        <div className="mt-4">
+          <BotonExportar
+            onCSV={exportarCSV}
+            onExcel={exportarExcel}
+            onPDF={exportarPDF}
+          />
+        </div>
         {view === "estudiantes" && (
           <div className="mt-8">
             <h2 className="text-base font-semibold text-foreground mb-3">
@@ -375,52 +492,67 @@ export default function AdminDashboard() {
                 No hay estudiantes dados de baja.
               </div>
             ) : (
-              <div className="bg-card border border-border rounded-lg overflow-hidden shadow-card">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-[#2d2d2d] text-white">
-                      <th className="px-4 py-3 text-left font-medium">
-                        Apellido
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium">
-                        Nombre
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium">
-                        Motivo
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium">
-                        Detalle
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium">
-                        Fecha de baja
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bajasData.map((row, i) => (
-                      <tr
-                        key={i}
-                        className={`border-t border-border ${i % 2 === 0 ? "bg-white" : "bg-[#fafafa]"}`}
-                      >
-                        <td className="px-4 py-3 text-foreground">
-                          {row.apellido}
-                        </td>
-                        <td className="px-4 py-3 text-foreground">
-                          {row.nombre}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {row.motivo}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">
-                          {row.detalle}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {row.fechaBaja}
-                        </td>
+              <div>
+                <div className="bg-card border border-border rounded-lg overflow-hidden shadow-card">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-[#2d2d2d] text-white">
+                        <th className="px-4 py-3 text-left font-medium">
+                          Apellido
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium">
+                          Nombre
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium">
+                          Mail
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium">
+                          Motivo
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium">
+                          Detalle
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium">
+                          Fecha de baja
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {bajasData.map((row, i) => (
+                        <tr
+                          key={i}
+                          className={`border-t border-border ${i % 2 === 0 ? "bg-white" : "bg-[#fafafa]"}`}
+                        >
+                          <td className="px-4 py-3 text-foreground">
+                            {row.apellido}
+                          </td>
+                          <td className="px-4 py-3 text-foreground">
+                            {row.nombre}
+                          </td>
+                          <td className="px-4 py-3 text-foreground">
+                            {row.mail}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">
+                            {row.motivo}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">
+                            {row.detalle}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">
+                            {row.fechaBaja}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-4">
+                  <BotonExportar
+                    onCSV={exportarCSVBajas}
+                    onExcel={exportarExcelBajas}
+                    onPDF={exportarPDFBajas}
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -433,7 +565,6 @@ export default function AdminDashboard() {
           Métricas generales
         </h2>
 
-        {/* KPI cards */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-card rounded-lg shadow-card border border-border p-4 text-center">
             <p className="text-2xl font-bold text-foreground">
@@ -455,35 +586,32 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Pie chart */}
+        <div>
+          <h3 className="text-xs font-semibold text-foreground mb-3">
+            Calendario global
+          </h3>
+          <PanelCalendario eventos={eventos} onEventAdded={triggerRefresh} />
+        </div>
+
+        <div>
+          <PanelAnuncios
+            anuncios={anuncios}
+            puedePublicar={true}
+            comisionId={null}
+            usuarioId={adminActualId}
+            role={adminActualId ? "admin" : null}
+            actualizarAnuncios={triggerRefresh}
+          />
+        </div>
+
         <div className="bg-card rounded-lg shadow-card border border-border p-4">
           <h3 className="text-xs font-semibold text-foreground mb-3">
-            Estudiantes totales dados de baja.
+            Estudiantes totales dados de baja
           </h3>
           <MetricasGrafico />
         </div>
 
-        {/* Bar chart */}
-        <div className="bg-card rounded-lg shadow-card border border-border p-4">
-          <h3 className="text-xs font-semibold text-foreground mb-3">
-            Asistencia por comisión
-          </h3>
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={barData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(0,0%,90%)" />
-              <XAxis dataKey="name" tick={{ fontSize: 9 }} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 9 }} />
-              <Tooltip />
-              <Bar
-                dataKey="asistencia"
-                fill="hsl(350,82%,27%)"
-                radius={[3, 3, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Line chart */}
+        {/* Line chart con nombres incrementales */}
         <div className="bg-card rounded-lg shadow-card border border-border p-4">
           <h3 className="text-xs font-semibold text-foreground mb-3">
             Evolución global
@@ -493,7 +621,12 @@ export default function AdminDashboard() {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(0,0%,90%)" />
               <XAxis dataKey="name" tick={{ fontSize: 9 }} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 9 }} />
-              <Tooltip />
+              <Tooltip
+                formatter={(value: number, name: string, props: any) => [
+                  `${value}%`,
+                  `Asistencia (${props.payload.tituloOriginal || ""})`,
+                ]}
+              />
               <Line
                 type="monotone"
                 dataKey="asistencia"
@@ -504,8 +637,12 @@ export default function AdminDashboard() {
             </LineChart>
           </ResponsiveContainer>
         </div>
-
       </div>
+      <CargaMasivaEstudiantes
+        open={cargaMasivaOpen}
+        onClose={() => setCargaMasivaOpen(false)}
+        onSuccess={triggerRefresh}
+      />
     </div>
   );
 }

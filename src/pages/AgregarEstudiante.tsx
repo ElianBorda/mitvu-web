@@ -14,6 +14,7 @@ import {
 import { Comision } from "@/types/comisionType";
 import { obtenerTodasLasComisiones } from "@/service/apiComision";
 import { crearEstudiante } from "@/service/apiEstudiante";
+import { useLayoutContext } from "@/App";
 
 export default function AgregarEstudiante() {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ export default function AgregarEstudiante() {
     comision_id: "",
   });
   const [comisiones, setComisiones] = useState<Comision[]>([]);
+  const { refreshPeople } = useLayoutContext();
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -47,7 +49,8 @@ export default function AgregarEstudiante() {
       toast.success(
         `Estudiante ${form.apellido}, ${form.nombre} creado exitosamente.`,
       );
-      navigate("/?view=students");
+      navigate("/");
+      refreshPeople();
     } catch (error) {
       toast.error("Error al crear el estudiante.");
       throw new Error("Error al crear el estudiante");
@@ -88,12 +91,13 @@ export default function AgregarEstudiante() {
             sistema.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="apellido">Apellido *</Label>
                 <Input
                   id="apellido"
+                  autoComplete="off"
                   placeholder="Ej: Martínez"
                   value={form.apellido}
                   onChange={(e) => handleChange("apellido", e.target.value)}
@@ -103,6 +107,7 @@ export default function AgregarEstudiante() {
                 <Label htmlFor="nombre">Nombre *</Label>
                 <Input
                   id="nombre"
+                  autoComplete="off"
                   placeholder="Ej: Lucía"
                   value={form.nombre}
                   onChange={(e) => handleChange("nombre", e.target.value)}
@@ -115,6 +120,7 @@ export default function AgregarEstudiante() {
                 <Label htmlFor="dni">DNI *</Label>
                 <Input
                   id="dni"
+                  autoComplete="off"
                   placeholder="Ej: 42356789"
                   value={form.dni}
                   onChange={(e) => handleChange("dni", e.target.value)}
@@ -125,6 +131,7 @@ export default function AgregarEstudiante() {
                 <Label htmlFor="mail">Correo electrónico *</Label>
                 <Input
                   id="mail"
+                  autoComplete="off"
                   placeholder="Ej: carlos.gonzalez@example.com"
                   value={form.mail}
                   onChange={(e) => handleChange("mail", e.target.value)}
@@ -136,6 +143,7 @@ export default function AgregarEstudiante() {
               <Label htmlFor="carrera">Carrera *</Label>
               <Input
                 id="carrera"
+                autoComplete="off"
                 placeholder="Ej: Lic. en Informática"
                 value={form.carrera}
                 onChange={(e) => handleChange("carrera", e.target.value)}

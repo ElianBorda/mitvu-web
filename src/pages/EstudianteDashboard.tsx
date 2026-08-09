@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
-import { calendarEvents } from "@/data/mockData";
-import SlidePanel from "@/components/SlidePanel";
-import CalendarPanel from "@/components/CalendarPanel";
+import { MessageSquareHeart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import ComisionDetalle from "@/components/ComisionDetalle";
+import { format } from "date-fns";
 import { Comision } from "@/types/comisionType";
 import { obtenerComisionesDelEstudiante } from "@/service/apiComision";
-import { estaDadoDeBaja } from "@/service/apiEstudiante";
+import { asignarTokenAEstudiante, estaDadoDeBaja } from "@/service/apiEstudiante";
 import { isAxiosError } from "axios";
 import { useLayoutContext } from "@/App";
 import { toast } from "sonner";
+import { escucharMensajesForeground, solicitarTokenFCM } from "@/firebase";
+import { Bell } from "lucide-react";
+import { guardarNotificacion, obtenerNotificacionesPorUsuario } from "@/service/apiNotificacion";
 
 export default function EstudianteDashboard({
   unenrolled = false,
@@ -17,15 +20,74 @@ export default function EstudianteDashboard({
   unenrolled?: boolean;
 }) {
   const { id } = useParams<{ id: string }>();
-  const { role, isCalendarOpen, setCalendarOpen } = useLayoutContext();
+  const { role, isCalendarOpen, setCalendarOpen, setNotificaciones } = useLayoutContext();
+  const navigate = useNavigate();
 
   const [comision, setComision] = useState<Comision | null>(null);
   const [dadoDeBaja, setDadoDeBaja] = useState(false);
   const [hasNoComision, setHasNoComision] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // reemplazar con API a futuro
-  const studentEvents = calendarEvents.filter((e) => e.commissionId === "c1");
+  const eventosDelEstudiante = []; //Se consiguen los eventos del tutor (en un principio son eventos globables)
+
+ useEffect(() => {
+    const cargarHistorial = async () => {
+      if (!id) return;
+      try {
+        const response = await obtenerNotificacionesPorUsuario(id);
+        
+        const historialMapeado = response.data.map((n: any) => ({
+          id: n.id || Math.random().toString(),
+          titulo: n.titulo,
+          descripcion: n.cuerpo,
+          fecha: n.fecha,
+          read: n.leida,        
+        }));
+
+        setNotificaciones(historialMapeado.reverse());
+        
+      } catch (error) {
+        console.error("Error al cargar el historial de notificaciones:", error);
+      }
+    };
+
+    cargarHistorial();
+
+    const inicializarNotificaciones = async () => {
+      const token = await solicitarTokenFCM();
+      
+      if (token) {
+        console.log("Token listo para enviar al backend:", token);
+        if (role === "estudiante") {
+          asignarTokenAEstudiante(id, token)
+        }
+      }
+    };
+
+    inicializarNotificaciones();
+    
+    escucharMensajesForeground((payload) => {
+      const fechaParaBackend = format(new Date(), "dd-MM-yyyy HH:mm");
+
+      const nuevaNotificacion = {
+        id: payload.messageId || Date.now().toString(),
+        idUsuario: id,
+        titulo: payload.notification?.title || "Nueva Notificación",
+        descripcion: payload.notification?.body || "",
+        fecha: fechaParaBackend,
+        read: false,
+      };
+
+      setNotificaciones((prev) => [nuevaNotificacion, ...prev]);
+
+      toast(nuevaNotificacion.titulo, {
+        description: nuevaNotificacion.descripcion,
+        icon: <Bell className="text-primary" size={20} />,
+        className: "border-l-4 border-l-primary bg-card text-foreground shadow-lg",
+        duration: 6000, 
+      });
+    });
+  }, [id, role, setNotificaciones]);
 
   useEffect(() => {
     const fetchComision = async () => {
@@ -111,15 +173,29 @@ export default function EstudianteDashboard({
   }
 
   return (
-    <div className="relative w-full max-w-7xl mx-auto">
+    <div className="relative w-full max-w-7xl mx-auto space-y-6">
       <ComisionDetalle comision={comision} role="estudiante" />
-      <SlidePanel
-        open={isCalendarOpen}
-        onClose={() => setCalendarOpen(false)}
-        title="Calendario académico"
-      >
-        <CalendarPanel events={studentEvents} />
-      </SlidePanel>
+      
+      {/* Botón de Feedback Anónimo (Solo si la comisión tiene un tutor asignado) */}
+      {comision?.tutor?.id && (
+        <div className="bg-card border border-border rounded-xl shadow-card p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <MessageSquareHeart className="text-primary" size={20} />
+              Evaluá tu experiencia
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Tu opinión nos ayuda a mejorar. Completá una breve encuesta anónima sobre tu comisión y tutor/a.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate(`/estudiante/feedback/${comision.id}/${comision.tutor?.id}`)}
+            className="shrink-0 px-6 py-2.5 bg-secondary text-foreground rounded-lg text-sm font-medium hover:bg-secondary/80 border border-border transition-colors"
+          >
+            Dar Feedback Anónimo
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { EstudianteBody } from "@/types/estudianteType";
 import { FormularioBajaType } from "@/types/FormularioBajaType";
+import { Asistencia } from "../types/asistenciaType";
 import axios from "axios";
 axios.defaults.baseURL = import.meta.env.VITE_API_URL;
 
@@ -12,3 +13,7 @@ export const obtenerEstudiantesDadosDeBajaDeUnaComision = (id: string) => axios.
 export const asignarEstudianteAComision = (estudianteId: number, comisionId: string) => axios.put(`/api/estudiantes/${estudianteId}/asignarComision/${comisionId}`);
 export const darDeBajaEstudianteDeComision = (estudianteId: string, formularioBaja: FormularioBajaType) => axios.put(`/api/estudiantes/${estudianteId}/baja`, formularioBaja);
 export const estaDadoDeBaja = (id: string) => axios.get(`/api/estudiantes/${id}/dadoDeBaja`);
+export const deleteEstudiante = (id: string) => axios.delete(`/api/estudiantes/${id}`);
+export const pasarAsistenciaDeEstudiante = (estudianteId: string, asistencia: Asistencia) => axios.put(`/api/estudiantes/${estudianteId}/pasarAsistencia`, asistencia);
+export const asignarTokenAEstudiante = (estudianteId: string, token: string) => axios.put(`/api/estudiantes/${estudianteId}/fcmToken`, { token });
+export const darDeAltaEstudiantes = (estudiantes: EstudianteBody[]) => axios.post(`/api/estudiantes/varios`, estudiantes);

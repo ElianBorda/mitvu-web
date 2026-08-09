@@ -46,15 +46,19 @@ const PaginaDarDeBaja = () => {
       setConfirmOpen(false);
       toast.success("Te diste de baja del taller.");
       navigate("/estudiante/" + id);
-    }).catch(() => {
-      toast.error("Error al dar de baja.");
-      setConfirmOpen(false);
+    }).catch((error) => {
+      if (error.response?.status === 400) {
+        toast.error("No podés darte de baja porque no estás asignado a ninguna comisión.");
+      } else {
+        toast.error("Error al dar de baja");
+        setConfirmOpen(false);
+      }
     })
   };
 
   return (
-    <div className="h-[calc(100vh-6rem)] sm:h-[calc(100vh-8rem)] w-full flex flex-col items-center justify-center">
-      <div className="w-full max-w-2xl px-4">
+    <div className="h-[calc(100vh-6rem)] sm:h-[calc(100vh-8rem)] w-full flex flex-col items-center">
+      <div className="w-full max-w-2xl">
         <button
           onClick={() => navigate("/estudiante/" + id)}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
@@ -69,7 +73,7 @@ const PaginaDarDeBaja = () => {
           <p className="text-sm text-muted-foreground mb-8">
             Lamentamos que quieras dejar el taller. Contanos el motivo para poder mejorar.
           </p>
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
             <div className="space-y-2">
               <Label htmlFor="reason">Motivo *</Label>
               <Select value={reason} onValueChange={setReason}>
@@ -92,6 +96,7 @@ const PaginaDarDeBaja = () => {
               <Textarea
                 id="detail"
                 placeholder="Contanos un poco más..."
+                autoComplete="off"
                 value={detail}
                 onChange={e => setDetail(e.target.value)}
                 rows={5}
@@ -101,7 +106,7 @@ const PaginaDarDeBaja = () => {
             <div className="pt-4">
               <button
                 type="submit"
-                className="w-full sm:w-auto px-6 py-2.5 bg-destructive text-destructive-foreground rounded-lg text-sm font-medium hover:bg-destructive/90 transition-colors"
+                className="w-full sm:w-auto px-6 py-2.5 bg-black text-destructive-foreground rounded-lg text-sm font-medium hover:bg-black/90 transition-colors"
               >
                 Confirmar baja
               </button>
@@ -123,7 +128,7 @@ const PaginaDarDeBaja = () => {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-black text-destructive-foreground hover:bg-black/90"
             >
               Sí, darme de baja
             </AlertDialogAction>

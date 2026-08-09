@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom"; // Corregido el import de react-router a react-router-dom
+import { useNavigate, useParams } from "react-router-dom";
 import ComisionDetalle from "@/components/ComisionDetalle";
 import { Comision } from "@/types/comisionType";
 import { getObtenerComision } from "@/service/apiComision";
@@ -7,11 +7,9 @@ import { isAxiosError } from "axios";
 import { ArrowLeft } from "lucide-react";
 import { useLayoutContext } from "@/App";
 
-export default function AdminComision() {
+export default function RolGestionComision() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  
-  // Consumimos el rol desde el layout centralizado
+  const navigate = useNavigate();  
   const { role } = useLayoutContext();
 
   const [comision, setComision] = useState<Comision | null>(null);
@@ -39,7 +37,7 @@ export default function AdminComision() {
   }, [id]);
 
   // Si no es admin, no renderizamos el contenido (protección de ruta básica)
-  if (role !== "admin") return null;
+  if (role !== "admin" && role !== "tutor") return null;
 
   if (loading) {
     return (
@@ -53,7 +51,7 @@ export default function AdminComision() {
         <div className="text-center mt-10">
            <p className="text-muted-foreground mb-4">No se encontró la comisión solicitada.</p>
            <button
-            onClick={() => navigate("/?view=comisiones")}
+            onClick={() => navigate(-1)}
             className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
           >
             <ArrowLeft size={16} />
@@ -66,7 +64,7 @@ export default function AdminComision() {
   return (
     <div className="w-full max-w-7xl mx-auto">
       <button
-        onClick={() => navigate("/?view=comisiones")}
+        onClick={() => navigate(-1)}
         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
       >
         <ArrowLeft size={16} />
@@ -76,7 +74,7 @@ export default function AdminComision() {
       {/* Eliminado el punto y coma (;) erróneo que estaba al final de este componente 
         y le pasamos explícitamente el rol de admin
       */}
-      <ComisionDetalle comision={comision} role="admin" />
+      <ComisionDetalle comision={comision} role={role} />
     </div>
   );
 }
